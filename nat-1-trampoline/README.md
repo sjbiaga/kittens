@@ -128,7 +128,7 @@ what happens behind the scene:
      Scala monad’s methods
    - because `F[_]` is not known upon the occurrence of `M.pure(1)` in either middle or bottom snippet, the compiler turns
      this `F[Int]` into a constructor parameter of a _rich wrapper_ class, and it is this one that uses instead the
-     `kittensMonadTrampolineInstance` `Cats` `Monad`’s methods (see 6. below)
+     `kittensMonadTrampolineInstance` `Cats` `Monad`’s methods (see (6) below)
 
 1. note how the type parameters in the result of `flatMap` or `map` methods is always the same: `Double`
 

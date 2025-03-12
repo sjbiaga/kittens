@@ -27,6 +27,6 @@ object Builder:
 
 The second parameter to `close` is an `Int`eger, specifying how many times the result of `f` should be inverted.
 
-[Next](https://github.com/sjbiaga/kittens/blob/main/queens-4-trampoline/README.md)
+[Next](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md)
 
 [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-06-builder/README.md)
