@@ -8,3 +8,16 @@ Lessons of Scala Cats
 [Lesson 03: A Rich Language of Expressions](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md)
 
 [Lesson 04: Trampoline and Monads](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md)
+
+[Lesson 05: Monoids](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md)
+
+[Lesson 06: Natural Transformations](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md)
+
+Examples
+========
+
+Make a backup of `~/.dotty_history`, then copy the `.dotty_history` from some lesson, and launch the `REPL`:
+
+    scala-cli repl -S 3.6.4-RC2 --dep org.typelevel::cats-effect:3.6-28f8f29 --dep org.typelevel::cats-core:2.13.0 --dep org.typelevel::cats-free:2.13.0 --dep org.typelevel::algebra:2.13.0 --dep org.scala-lang.modules::scala-parser-combinators:2.4.0
+
+Execute _each_ line from the beginning, in that order.

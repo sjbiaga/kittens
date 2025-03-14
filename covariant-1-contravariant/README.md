@@ -101,11 +101,11 @@ val c: A[Cat] = a
 ```
 
 [Note that `A` is _not a collection_, where from we might have supposedly obtained elements of type `P` in the return types
-of some method(s).]
+of some other method(s).]
 
 We can, henceforth, invoke the method `c.m` with argument the instances of `Cat`. Of course, we could have invoked method
 `a.m` with argument instances of `Dog`. So, the question is: we did before pass `Dog`s to method `m`, and after we restrict
-to the use of `Cat`s? But note again that we did _not_ "add/remove" dogs to/from a purported "collection". The implementation
+to the use of `Cat`s? But note again that we did _not_ "add/remove" dogs to/from a purported "collection"! The implementation
 of `m` prints the (name of the) `Class` of a pet, and forgets all about this parameter.
 
 So, the answer is that, after the assignment to `c`, from then on, value `a` may _only_ be used as a generic of type `A[Cat]`.

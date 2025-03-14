@@ -2,15 +2,15 @@ Lesson 04: Trampoline and Monads
 ================================
 
 The code in this lesson makes the passage from closures to monads and is _originally_ adapted from section
-"6 Free Monads: A Generalization of Trampoline" in
+"6 Free Monads: A Generalization of Trampoline" in the article
 [Stackless Scala With Free Monads](https://days2012.scala-lang.org/sites/days2012/files/bjarnason_trampolines.pdf) by
 Rúnar Óli Bjarnason; the `resume` method therein has been originally rewritten as `apply`, which we hope is much more clearer
 to the reader.
 
-In [Lesson 02](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md) it is mentioned that trading stack for
-heap was done in a “primitive manner”. Let us see now a more advanced style of programming in Scala, using types with `map`
-and `flatMap` methods - a tiny language. Another basic observation is that `Heap` worked only for functions returning
-`Unit`: so let us relax this condition.
+In [Lesson 02 - Heap](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md) it is mentioned that trading
+stack for heap was done in a “primitive manner”. Let us see now a more advanced style of programming in Scala, using types
+with `map` and `flatMap` methods - a tiny language. Another basic observation is that `Heap` worked only for functions
+returning `Unit`: so let us relax this condition.
 
 Thus, in general, if we had a `method` of type `Trampoline[T]` with several consecutive calls
 
@@ -37,7 +37,7 @@ the obvious error that we make is that retrieving the results of each closure us
 will place the calls to `method` on the stack, so we’re back where we started. If we want to keep the closure as a (first)
 parameter to `Call`, what is needed is to separate the usage of the result; we do not want to use the result immediately,
 quite the opposite, we want to use the result when we want it (especially not from inside the body of `method`),
-so we intend to add a block as a second parameter to `Call`, thus delaying and relaying the use to the function.
+so we intend to add a block as a second parameter to `Call`, thus _delaying_ and relaying the use to the function.
 
 ```Scala
 // A failed intent to reach stack safety
@@ -69,7 +69,7 @@ def method(arg1, arg2, ...): Trampoline[T] =
   })
 ```
 
-Note how these blocks are nested in `method` and have the same return type. We also added a `resume` method to the
+Note how these blocks are _nested_ in `method` and have _the same_ return type. We also added a `resume` method to the
 `Trampoline` trait, that obtains the result from the closure and applies it the block, yielding an unevaluated
 `Trampoline`. This is _partially_ what we wanted (`method` is invoked from outside its body, i.e., from `resume` - so the
 calls to `method` are stack–safe), as this solution is still not yet satisfactory: through
@@ -91,8 +91,7 @@ object Trampoline:
   case class Call[A](closure: () => Trampoline[A]) extends Trampoline[A]
 ```
 
-leaving the association between the closure and the block to the (missing) implementation of `Trampoline`. Scala also
-provides a much more readable syntactic sugar known as a `for`–comprehension.
+leaving the association between the closure and the block to the implementation of `flatMap`.
 
 ```Scala
 // The proper mode to achieve stack safety
@@ -109,6 +108,11 @@ def method(arg1, arg2, ...): Trampoline[T] = // translation
 }
 ```
 
+What `flatMap` does here is that it indroduces a _delay_ between the capture of the closure and its use: _compiling_, in
+other words.
+
+Scala also provides a much more readable syntactic sugar known as a `for`–comprehension.
+
 ```Scala
 // The proper mode to achieve stack safety
 
@@ -122,7 +126,7 @@ def method(arg1, arg2, ...): Trampoline[T] = // for-comprehension
      combine(resK*)
 ```
 
-The simplest way to associate a closure of a `Call` with a `flatMap` block is trough a mediating definition:
+The simplest way to _associate_ a closure of a `Call` with a `flatMap` block is trough a mediating definition:
 
 ```Scala
 def flatMap[B](block: A => Trampoline[B]): Trampoline[B] = FlatMap(this, block)
@@ -144,11 +148,11 @@ a method `map` defined in terms of `flatMap`:
 final def map[B](fun: A => B): Trampoline[B] = this.flatMap(fun andThen pure)
 ```
 
-Trampoline Monad
-----------------
+`Trampoline` `Monad`
+--------------------
 
-So the final code for the `Trampoline` is given below. In the `apply` method, `closure :: sequel` and `prequel :: sequel` are
-compositions of two functions via `flatMap`. This extension method (`::`) is defined in the companion object. The line
+So the final code for the `Trampoline` is given below. In the `apply` method, "`closure :: sequel`" and "`prequel :: sequel`"
+are compositions of two functions via `flatMap`. This extension method (`::`) is defined in the companion object. The line
 `prequel(_).flatMap(sequel)` is an anonymous function, standing for `{ a => prequel(a).flatMap(sequel) }`: if passed the
 argument `a`, it obtains a `Trampoline` and with it as the receiver it compiles into the state `FlatMap(prequel(a), sequel)`.
 
@@ -189,45 +193,61 @@ object Trampoline:
 Let us analyze line #e, which we can rewrite as:
 
 ```Scala
-    case FlatMap(outer @ FlatMap(inner, prequel), sequel) => FlatMap(inner, prequel :: sequel)()
+case FlatMap(outer @ FlatMap(inner, prequel), sequel) => FlatMap(inner, prequel :: sequel)()
 ```
 
 We know that `FlatMap` states result straight from calls to `flatMap`; hence, reverse engineering the pattern-matching in
 line #e, this resulted from `outer.flatMap(sequel)`; but, given that `outer` is `FlatMap(inner, prequel)`, line #e further
-resulted from `inner.flatMap(prequel).flatMap(sequel)`. Thus, going the other way around, the pattern-matching transforms
-into `FlatMap(inner, prequel :: sequel)`, which is another saying for `inner.flatMap(prequel :: sequel)`.
-
-So, we passed from `inner.flatMap(prequel).flatMap(sequel)` to `inner.flatMap(prequel :: sequel)`. But how did we obtain the
-former in the first place? Definitely _not_ from a translation of a `for`-comprehension! Can you guess why? It is because
-the `flatMap`s in `for`-comprehensions are _nested_:
+resulted from
 
 ```Scala
-  for
-    x <- outer
-    y <- inner
-  yield
-    ...
+inner.flatMap(prequel).flatMap(sequel)
+```
+
+Thus, going the other way around, the pattern-matching transforms into
+
+```Scala
+FlatMap(inner, prequel :: sequel)
+```
+
+which is another saying for
+
+```Scala
+inner.flatMap(prequel :: sequel)
+```
+
+So, we passed from `inner.flatMap(prequel).flatMap(sequel)` to `inner.flatMap(prequel :: sequel)`, or from two consecutive
+`flatMap`s to just one: in this way, our programs' evaluation reduces towards results. But how did we obtain the former in
+the first place? Definitely _not_ from a translation of a `for`-comprehension! Can you guess why? It is because the
+`flatMap`s in `for`-comprehensions are _nested_:
+
+```Scala
+for
+  x <- outer
+  y <- inner
+yield
+  ...
 ```
 
 translates to:
 
 ```Scala
-  outer.flatMap { x =>
-    inner.flatMap { y =>
-      ...
-    }
+outer.flatMap { x =>
+  inner.flatMap { y =>
+    ...
   }
+}
 ```
 
 which results in `FlatMap(outer, { x => FlatMap(inner { y => ... }) })`. This definitely does not pattern-match in line #e!
-Yet, this does not stop anyone from writing:
+Yet, this does not stop somebody from writing:
 
 ```Scala
-  Done(())
-    .flatMap(f)
-    .flatMap(g)
-    .flatMap(h)
-    ...
+Done(())
+  .flatMap(f)
+  .flatMap(g)
+  .flatMap(h)
+  ...
 ```
 
 only it is a different style (often with the `Future` monad) of programming than `for`-comprehensions.
@@ -285,8 +305,8 @@ Call { _ => tqueens(k, q.row x q.col + 1) }
 }
 ```
 
-So let us compile this program into a state of the `FSM` (note that the `if-then-else` in the block cannot be yet evaluated
-because it occurs in a function body not yet applied the argument to):
+There are no recursive invocations! So let us compile this program into a state of the `FSM` (note that the `if-then-else` in
+the block cannot be yet evaluated because it occurs in a function body not yet applied the argument to):
 
 ```Scala
 FlatMap(Call { _ => tqueens(k, q.row x q.col + 1) }, { _ =>
@@ -301,8 +321,8 @@ again, we obtain:
 
 ```Scala
 FlatMap(Done(()), { _ =>
-  Call { () => if !board(q.row)(q.col) then tqueens(k-1, q.row x q.col + 1)(currentSolution :+ q)
-               else Done(())
+  Call { _ => if !board(q.row)(q.col) then tqueens(k-1, q.row x q.col + 1)(currentSolution :+ q)
+              else Done(())
        }.map { _ => () }
 })
 ```
@@ -310,8 +330,8 @@ FlatMap(Done(()), { _ =>
 which in turn - by line #c - reduces to:
 
 ```Scala
-Call { () => if !board(q.row)(q.col) then tqueens(k-1, q.row x q.col + 1)(currentSolution :+ q)
-             else Done(())
+Call { _ => if !board(q.row)(q.col) then tqueens(k-1, q.row x q.col + 1)(currentSolution :+ q)
+            else Done(())
      }.map { _ => () }
 ```
 
@@ -319,8 +339,8 @@ which further compiles to:
 
 ```Scala
 FlatMap(
-  Call { () => if !board(q.row)(q.col) then tqueens(k-1, q.row x q.col + 1)(currentSolution :+ q)
-               else Done(()) }
+  Call { _ => if !board(q.row)(q.col) then tqueens(k-1, q.row x q.col + 1)(currentSolution :+ q)
+              else Done(()) }
 , { _ => () } andThen pure
 )
 ```
@@ -334,6 +354,4 @@ Done(()).flatMap({ _ => () } andThen pure)
 which further compiles to `FlatMap(Done(()), { _ => () } andThen pure)` which finally - by line #c - reduces to `Done(())`
 and - by line #a - to `()`.
 
-[Next](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md)
-
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-07-builder/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-07-builder/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md)

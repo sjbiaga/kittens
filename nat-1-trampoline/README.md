@@ -1,8 +1,8 @@
 Lesson 04: Trampoline and Monads (cont'd)
 =========================================
 
-The [definition](https://scalawithcats.com/dist/scala-with-cats-1.html#what-is-a-monad) in the book “Scala with Cats” is:
-"A monad is a mechanism for sequencing computations."
+The [definition](https://scalawithcats.com/dist/scala-with-cats-1.html#what-is-a-monad) of monad in the book
+“Scala with Cats” is: "A monad is a mechanism for sequencing computations."
 
 But in `Cats` is perhaps best to introduce the `Monad` trait as derived from `FlatMap` (with a `flatten` method) and
 `Applicative` (with a `pure` method) traits, given that both extend `Apply` (with an `ap` method) which extends `Functor`
@@ -25,7 +25,7 @@ trait Monad[F[_]] extends FlatMap[F] with Applicative[F]:
 
 Type parameter `F[_]` here is a placeholder for the type (constructor) we want to implement a `Monad` typeclass instance of.
 Next is  given an instance of `Cats`’ `Monad` for `Trampoline`: it is enough to directly implement `flatMap` and `pure` by
-invoking the homologue methods in `Trampoline`, and the rest indirectly.
+invoking the homologue methods in `Trampoline`, and the rest be inherited.
 
 ```Scala
 implicit val kittensMonadTrampolineInstance: Monad[Trampoline] =
@@ -49,8 +49,8 @@ return type has one, which means there is some (`case`) `class` in the closed hi
 parameterized constructor, and hence the `sealed trait` / `abstract class` (such as `List` or `Option`) must be parameterized
 too.
 
-[For type constructors with multiple parameters, for instance `Either[A, B]`, all but one parameter should be replaced with
-types, e.g., `A` with `Throwable` in `Either[Throwable, B]`, and let
+[For type constructors with multiple parameters, for instance `Either[A, B]`, all but one parameter should be fixed, e.g.,
+`A` with `Throwable` in `Either[Throwable, B]`, and let
 
 ```Scala
 def pure[A](a: A): Either[Throwable, A] = Right(a)
@@ -61,7 +61,12 @@ while all the other methods `ap`, `flatten`, `flatMap`, and `map`, should return
 
 Note that even if the type is `Monad[Trampoline]`, the anonymous class is a `StackSafeMonad`: this is because the `Cats`
 `FlatMap` trait also declares a method named `tailRecM` not yet implemented, so it suffices to instantiate an anonymous
-`StackSafeMonad` that provides a definition for it.
+`StackSafeMonad` that provides a definition for it:
+
+```Scala
+override def tailRecM[A, B](a: A)(f: A => F[Either[A, B]]): F[B] =
+  flatMap(f(a))(_.fold(tailRecM(_)(f), pure))
+```
 
 Now that the `Monad[Trampoline]` instance is marked `implicit`, we can `summon` it in the `apply` method of the companion
 object `Monad`:
@@ -128,23 +133,23 @@ what happens behind the scene:
      Scala monad’s methods
    - because `F[_]` is not known upon the occurrence of `M.pure(1)` in either middle or bottom snippet, the compiler turns
      this `F[Int]` into a constructor parameter of a _rich wrapper_ class, and it is this one that uses instead the
-     `kittensMonadTrampolineInstance` `Cats` `Monad`’s methods (see (6) below)
+     `kittensMonadTrampolineInstance` `Monad`’s methods (see (6) below)
 
 1. note how the type parameters in the result of `flatMap` or `map` methods is always the same: `Double`
 
-   – top, it occurs explicit as the second type argument
-   – bottom, the return type is made explicit - `F[Double]`
+   - top, it occurs explicit as the second type argument
+   - bottom, the return type is made explicit - `F[Double]`
 
 1. the result of the top snippet, or of invoking `test` (either middle or bottom snippet) without a pair of empty parentheses
    equals `FlatMap(Done(1), …)` where ellipsis is a lambda; when `test()` is invoked, we know that the lambda is applied `1`;
    but the lambda is the block from #a (top or bottom): hence this function is invoked with the _argument_ equal to `1`
 
-1. yet what else `1` becomes, if not a “parameter” `x` to - i.e., a captured value by - the other closures: hence, `x`
-   switches from being an argument, to becoming a _parameter_ in other computations (albeit snippets used just “pure” values)
+1. yet what else `1` becomes, if not a “_parameter_” `x` to - i.e., a captured value by - the other closures: hence, `x`
+   switches from being an argument, to becoming a parameter in other computations (albeit snippets used just “`pure`” values)
 
 1. thus, if it were only for the involvement of the parameters, the computations would be _pure_; but there are also the
    arguments and how are these arrived at, for example, sizes (`Long`) or checksums (`String`) of text files from the local
-   file system or downloaded from the Internet: opening file descriptors or IP ports is called a _side-effect_
+   file system or downloaded from the Internet: opening file descriptors or IP ports is known as a _side-effect_
 
 1. trying to compile the method `test` from the middle snippet without the commented `imports`, will give errors: why, can be
    seen from the bottom equivalent snippet, where `flatMap` and `map` are not methods invoked on a receiver of type
@@ -173,7 +178,7 @@ object functor:
    and turned into its constructor parameter; the latter instance _is_ the receiver for the syntactic sugar methods
    `Ops#flatMap` or `Ops#map`, whose each implementation eventually invokes the `Monad[F]` typeclass’ corresponding method
    (through the implicit parameter `F`): just as applying the Scala translation scheme for monads requires them in the bottom
-   snippet, the commented imports are also required for the middle snippet
+   snippet, the commented imports are also required for the middle snippet (although not manifest)
 
 6. note that in (6) `Monad[F]` is both a subtype of `FlatMap[F]` and of `Functor[F]`, which is why either `Ops` instantiates
    with an `implicit` `Monad[F]`, too
@@ -181,5 +186,7 @@ object functor:
 6. Scala can apply the translation scheme for monads with `flatMap` and `map` from _different_ `Ops`, because `F` is _the
    same_: `Trampoline`
 
-6. so in the `for`-comprehension from middle, we have on the left hand side of the arrows, the parameters, and on the right
-   hand side, the computations of the arguments: neat, no need for nested blocks, but beware the issue with the imports.
+6. so in the `for`-comprehension from middle snippet, we have on the left hand side of the arrows, the parameters, and on the
+   right hand side, the computations of the arguments: neat, no need for nested blocks, but beware the issue with the imports.
+
+[Previous](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md)

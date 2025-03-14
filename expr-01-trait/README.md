@@ -20,7 +20,7 @@ enum Expr[+T]:
 
 Above, depending on which "part" (additive or multiplicative) is the group and which the semigroup, we can have either `Zero`
 or `One` be the identity element of the semigroup. This will matter when we handle division by zero, which is modelled by the
-`Inv` `enum` `case`: if the unit is `One`, then `Inv(Zero)` - or Div(_, Zero) - will be the emblematic division by zero.
+`Inv` `enum` `case`: if the unit is `One`, then `Inv(Zero)` - or `Div(_, Zero)` - will be the emblematic division by zero.
 
 We know from [Lesson 01](https://github.com/sjbiaga/kittens/blob/main/covariant-1-contravariant/README.md) that `Expr` above
 is covariant in the type parameter `T`: this allows for the objects `Zero` and `One` to extend `Expr[Nothing]` and be
@@ -41,6 +41,4 @@ or
 Mul(Add(One, Val(0)), Val(1)): Expr[Int]
 ```
 
-[Next](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md)
-
-[Previous](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md)

@@ -10,7 +10,7 @@ as `Int | Double`). For this particular case, we give a recursive evaluation alg
 ```Scala
 import Expr._
 def eval(expr: Expr[Int | Double])(implicit unit: unit): Double =
-  expr match 
+  expr match
     case Zero => 0d
     case One => 1d
     case Val(n: Int) => n.toDouble
@@ -32,7 +32,7 @@ interpretation of `Add`itions and `Sub`tractions as maximums, respectively, mini
 
 ```Scala
 def eval(expr: Expr[Int | Double])(implicit unit: unit): Double =
-  expr match 
+  expr match
     case Zero => 0d
     case One => 1d
     case Val(n: Int) => n.toDouble
@@ -48,6 +48,4 @@ def eval(expr: Expr[Int | Double])(implicit unit: unit): Double =
 Although a program is the same in both cases (e.g., `Mul(Add(One, Val(-1)), One)`), the "machine" (architecture) differs, with
 the results of evaluation equal to, respectively, `0d` and `1d`.
 
-[Next](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md)
-
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md)

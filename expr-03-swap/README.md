@@ -12,8 +12,8 @@ Theory branch of `Mathematics` (hence the name "Cats"), functors have a source a
 
 In Scala, `Option`, `List` or `Future` are examples of functors. `Expr` as well is a functor, but in order to be so too in
 `Cats`, a [_typeclass instance_](https://scalawithcats.com/dist/scala-with-cats-1.html#type-class-instances) of the
-higher-kinded (`(* -> *) -> *`) `Functor`
-[typeclass](https://scalawithcats.com/dist/scala-with-cats-1.html#type-class-instances) must be given for `Functor[Expr]`.
+higher-kinded (`(* -> *) -> *`) `Functor` [typeclass](https://scalawithcats.com/dist/scala-with-cats-1.html#the-type-class)
+must be given for `Functor[Expr]`.
 
 What is `Functor`? It is a Scala _trait_ with one defined method named `map`. It does exactly what it says: it represents a
 trait of some higher-kinded types of kind `* -> *`, namely to have the ability to _map_ a function `f: A => B` in the domain
@@ -45,8 +45,7 @@ implicit val kittensExprFunctor: Functor[Expr] =
 ```
 
 In order to _use_ the `map` method, the `functor` syntax must be in scope. `Cats` employs a sophisticated system of implicits
-to this end. This mechanism is explained in [Lesson 00](https://github.com/sjbiaga/kittens/blob/main/monoid-4-resolve/README.md).
-Thus:
+to this end. This mechanism is explained in [Lesson 05 - Resolving `Monoid`s](https://github.com/sjbiaga/kittens/blob/main/monoid-4-resolve/README.md). Thus:
 
 ```scala
 scala> import cats.syntax.functor._
@@ -64,8 +63,8 @@ defines a `SAM` method `apply[A](fa: F[A]): G[A]`.
 
 Nevertheless, a very straightforward "function" or natural transformation of signature `Expr ~> Expr` is that of swapping the
 additive and the multiplicative parts with one another: by pattern-matching on the parameter `expr: Expr[T]`, we can swap
-operators `Zero` with `One`, `Add` with `Mul`, and `Sub` with `Div`. The operands are swapped in a recursive manner. The
-implementation is also very intuitive - much like [`eval`](https://github.com/sjbiaga/kittens/blob/main/eval-02-eval/README.md).
+operators `Zero` with `One`, `Add` with `Mul`, and `Sub` with `Div` - and vice-versa. The operands are swapped in a recursive
+manner. The implementation is also very intuitive - much like [`eval`](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md).
 
 ```Scala
 import cats.~>
@@ -85,6 +84,14 @@ val swap: Expr ~> Expr =
 
 Note that applying `swap` _twice_ is the identity natural transformation.
 
-[Next](https://github.com/sjbiaga/kittens/blob/main/expr-04-parser/README.md)
+Since swapping can be performed otherwise without the appearance of a natural transformation, it raises the question as to
+why use a natural transformation. Many `trait`s in `Cats` have a `mapK` method with a natural transformation as
+parameter. For instance, the `cats.free.Free` monad allows to change its suspension functor via a natural transformation:
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md)
+```Scala
+import cats.free.Trampoline, cats.~>
+
+Trampoline.delay(()).mapK(FunctionK.id)
+```
+
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-04-parser/README.md)

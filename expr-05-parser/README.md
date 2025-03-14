@@ -57,7 +57,7 @@ Next, a `factor` is simply a `literal`, possibly prefixed by unary plus or minus
 
 We may see that the `implicit` `unit` parameter is used here to _prevent_ turning a negated expression via `Inv` into a
 subtraction via `Sub`; this is why all parser have this `implicit` parameter, though unused: it cannot be omitted, because of
-the hierarchical way in which parsers depend on each other.
+the linear way in which parsers depend on each other.
 
 As [before](https://github.com/sjbiaga/kittens/blob/main/expr-04-parser/README.md), the literal parser is a method `literal`
 of type `Parser[Expr[Int | Double]]`; it can be either a `decimalNumber` or a `floatingPointNumber`, or else specifically
@@ -80,8 +80,8 @@ of type `Parser[Expr[Int | Double]]`; it can be either a `decimalNumber` or a `f
     "("~> expr <~")" ^^ { identity }
 ```
 
-[The `expr`ession in parentheses could have been a `factor`, but because of the unary operators, we want to be able to negate
-an `expr`ession in parentheses as well.]
+[The `expr`ession in parentheses could have been part of `factor`, but because of the unary operators, we want to be able to
+negate an `expr`ession in parentheses as well.]
 
 A `String` Interpolator for `Expr`essions
 -----------------------------------------
@@ -105,7 +105,7 @@ accumulator function that basically puts a part before the argument. Finally, we
 parser, and input - the concatenated parts and arguments.
 
 We slightly modify the `swap` natural transformation to take into account the inverse of `Zero` if the `given` `unit` is
-`One` (i.e., the multiplicative part is a semigroup with identity) and translate it as `Div`ision by `Zero`:
+`One` (i.e., the _multiplicative_ part is a semigroup with identity) and translate it as `Div`ision by `Zero`:
 
 ```Scala
  val swap: unit ?=> Expr ~> Expr =
@@ -124,11 +124,9 @@ We slightly modify the `swap` natural transformation to take into account the in
         case it            => it
 ```
 
-Thus, `given` `unit` is `One`, `Inv(Zero)` and `swap(swap(Inv(Zero)))` are no longer identical.
+Thus, `given` `unit` is `One`, `Inv(Zero)` and `swap(swap(Inv(Zero)))` are no longer identical!
 
 Here, `unit ?=>` means there is an implicit parameter of type `unit` that is always passed implicitly to `swap` in the body
 of method `apply[T]`; such function type is specific to Scala 3 only.
 
-[Next](https://github.com/sjbiaga/kittens/blob/main/expr-06-builder/README.md)
-
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-04-parser/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-04-parser/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-06-builder/README.md)

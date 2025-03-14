@@ -88,7 +88,7 @@ When the latter reaches the row outside the board, it means there is still at le
 coordinates where to place it.
 
 When the former reaches zero, the current solution is validated, and if this succeeds, it is printed. A maximum number of
-solutions reached, throws the `MaxSolutionsReached` exception and 
+solutions reached, throws the `MaxSolutionsReached` exception.
 
 Otherwise, if the current column has reached outside the board, the algorithm recurses with the next row and column 0.
 
@@ -186,6 +186,4 @@ Notice two complementary facts resulting from this refactoring:
 1. each recursive call has been “detached” as a thunk from its hardcoded original form. The notion of closure can prevent (1)
    as it welcomes (2).
 
-[Next](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md)
-
-[Previous](https://github.com/sjbiaga/kittens/blob/main/covariant-1-contravariant/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/covariant-1-contravariant/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md)

@@ -19,8 +19,8 @@ object Expr extends JavaTokenParsers:
   import Expr._
   def expr: Parser[Expr[Int | Double]] =
     term ~ ("+"|"-") ~ term ^^ {
-      case lhs ~ "+" ~ rhs => Add(lhs, rhs)        
-      case lhs ~ "-" ~ rhs => Sub(lhs, rhs)        
+      case lhs ~ "+" ~ rhs => Add(lhs, rhs)
+      case lhs ~ "-" ~ rhs => Sub(lhs, rhs)
     } |
     ("+"|"-") ~ term ^^ {
       case "+" ~ rhs => Add(Zero, rhs)
@@ -30,7 +30,7 @@ object Expr extends JavaTokenParsers:
 ```
 
 Note that because we inherit `JavaTokenParsers`, the type `Parser` is a visible nested class. Also, `p ^^ f` is short for
-function application (of `f` to parser `p`).
+functor `map`ping (of `f` upon `Parser` functor `p`).
 
 The term parser is a method `term` of type `Parser[Expr[Int | Double]]`; we can multiply or divide two `factor`s, or else a
 `term` is just a `factor`; operators map directly to `Mul` or `Div`:
@@ -38,15 +38,15 @@ The term parser is a method `term` of type `Parser[Expr[Int | Double]]`; we can 
 ```Scala
   def term: Parser[Expr[Int | Double]] =
     factor ~ ("*"|"/") ~ factor ^^ {
-      case lhs ~ "*" ~ rhs => Mul(lhs, rhs)        
-      case lhs ~ "/" ~ rhs => Div(lhs, rhs)        
+      case lhs ~ "*" ~ rhs => Mul(lhs, rhs)
+      case lhs ~ "/" ~ rhs => Div(lhs, rhs)
     } |
     factor ^^ { identity }
 ```
 
 The factor parser is a method `factor` of type `Parser[Expr[Int | Double]]`; it can be either a `decimalNumber` or a
 `floatingPointNumber`, or else an `expr`ession in parentheses. Numbers zero and one are intercepted and mapped to objects
-`Zero`, respectively, `One`; else, a number - either `Int` or `Double` (hence the union type in the ``Parser`) - is wrapped
+`Zero`, respectively, `One`; else, a number - either `Int` or `Double` (hence the union type in the `Parser`) - is wrapped
 in a `Val`.
 
 ```Scala
@@ -77,11 +77,9 @@ parseAll(expr, "2*5+7")
 but should we try to add more terms than two:
 
 ```Scala
-parseAll(expr, "2*5+7+1")
+parseAll(expr, "2*5+7+1") // runtime error
 ```
 
 we get an error. This is because our parser is weak: it can parse at most two terms with two factors each.
 
-[Next](https://github.com/sjbiaga/kittens/blob/main/expr-05-parser/README.md)
-
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-05-parser/README.md)

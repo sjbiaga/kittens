@@ -12,7 +12,7 @@ interfaces; in fact, in Java, a _lambda_ is an object, instance of an anonymous 
 
 But a closure is more involved, able to capture variables that are not final, thus being functional programming specific. And
 let us just say from the onset that the alternative to the stack is the _heap_. There would have been probably no use for
-creating closures, had it not been for the possibility of placing them elsewhere than piling them up on the stack. 
+creating closures, had it not been for the possibility of placing them elsewhere than piling them up on the stack.
 
 Heap
 ----
@@ -67,8 +67,8 @@ There are two more issues that need to be settled:
 1. how can a sequence of consecutive closures be _not_ modeled with a single `Call` - which would not only be confusing, but
    wrong, since the closures being just values, solely the last one will be retained.
 
-The N Queens Problem - the "closure" algorithm
-----------------------------------------------
+The N Queens Problem - the "heap" algorithm
+-------------------------------------------
 
 But prior to that, let us implement the `queens` method using `Heap` and (only) closures, as follows:
 
@@ -104,7 +104,7 @@ def queens(using M: Long, board: Board): Unit =
       )
 ```
 
-A closer look at the `def`inition of `htqueens` shows that the return type of this function is `Heap` - a type defined in the
+A closer look at the `def`inition of `hqueens` shows that the return type of this function is `Heap` - a type defined in the
 previous listing. So in this approach to the N Queens Problem, based on closures, instead of piling up a recursive call on
 the stack, there is rather a small amount of heap that is returned and which contains the necessary calls to `hqueens`, if
 any, as one or more closures.
@@ -133,6 +133,4 @@ Of course, when a row is done and line #a is reached, then line #25 will pattern
 “pushed on” the heap. Otherwise, the `FSM` will continue with the tail of the heap, until there are no more closures, which
 signifies the end of the algorithm.
 
-[Next](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md)
-
-[Previous](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md)
