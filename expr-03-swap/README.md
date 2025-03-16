@@ -85,13 +85,16 @@ val swap: Expr ~> Expr =
 Note that applying `swap` _twice_ is the identity natural transformation.
 
 Since swapping can be performed otherwise without the appearance of a natural transformation, it raises the question as to
-why use a natural transformation. Many `trait`s in `Cats` have a `mapK` method with a natural transformation as
-parameter. For instance, the `cats.free.Free` monad allows to change its suspension functor via a natural transformation:
+why use a natural transformation. Many `trait`s in `Cats` have a `mapK` method with a natural transformation as parameter.
+For instance, the `cats.free.Free` monad allows to change its suspension functor via a natural transformation - so let us do
+it trivially:
 
 ```Scala
 import cats.free.Trampoline, cats.~>
 
 Trampoline.delay(()).mapK(FunctionK.id)
 ```
+
+We will come back to this topic in [Lesson 06](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md).
 
 [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-04-parser/README.md)

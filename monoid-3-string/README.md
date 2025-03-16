@@ -16,7 +16,7 @@ finds in scope - among those afore mentioned.
 `String` `Monoid`
 -----------------
 
-Let us now show how "`2 plus 2 does not equal 4`":
+Let us now show how "`2 plus 2 equals not 4`":
 
 ```Scala
 import cats.syntax.invariant._
@@ -25,11 +25,63 @@ implicit val kittensMonoidForInt: Monoid[Int] = Monoid[String].imap(_.toInt)(_.t
 2 |+| 2
 ```
 
-So `invariant` is an object in package `syntax` which directly extends the `InvariantSyntax` trait and further indirectly the
-`ToInvariantOps` trait (from the companion object `Invariant`). The latter defines an `implicit` method, in this case with
-`Monoid[String]` as parameter and a typeclass instance `Invariant[Monoid]` as `implicit` parameter. The method instantiates
-an `Ops` trait which is a _rich wrapper_, through an anonymous class. Thus, when the method `imap` is invoked, this rewrites
-as:
+So `invariant` is an object in package `syntax` which directly extends the `InvariantSyntax` trait:
+
+```Scala
+object invariant extends InvariantSyntax
+```
+
+and further indirectly the `ToInvariantOps` trait (from the companion object `Invariant`):
+
+```Scala
+package cats
+package syntax
+
+import cats.Invariant
+
+trait InvariantSyntax extends Invariant.ToInvariantOps
+```
+
+The latter defines an `implicit` method `toInvariantOps[F[_], A]`:
+
+```Scala
+object Invariant:
+  trait ToInvariantOps extends Serializable {
+    implicit def toInvariantOps[F[_], A](target: F[A])(implicit tc: Invariant[F]): Ops[F, A] {
+      type TypeClassType = Invariant[F]
+    } =
+      new Ops[F, A] {
+        type TypeClassType = Invariant[F]
+        protected val self: F[A] = target
+        protected val typeClassInstance: TypeClassType = tc
+      }
+  }
+```
+
+returning a _refined type_:
+
+```Scala
+Ops[F, A] {
+  type TypeClassType = Invariant[F]
+}
+```
+
+in this case with `Monoid[String]` as parameter and a typeclass instance `Invariant[Monoid]` as `implicit` parameter.
+
+Through an anonymous class (`new Ops[F, A]`), the method instantiates an `Ops` trait which is a _rich wrapper_ with a single
+public method `imap`:
+
+```Scala
+object Invariant:
+  trait Ops[F[_], A] extends Serializable {
+    type TypeClassType <: Invariant[F]
+    protected def self: F[A]
+    protected val typeClassInstance: TypeClassType
+    def imap[B](f: A => B)(g: B => A): F[B] = typeClassInstance.imap[A, B](self)(f)(g)
+  }
+```
+
+Thus, when the method `imap` is invoked, this rewrites as:
 
 ```Scala
 implicitly[Invariant[Monoid]].imap(cats.kernel.instances.StringMonoid@4125bc3c)(_.toInt)(_.toString)

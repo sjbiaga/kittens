@@ -189,4 +189,4 @@ object functor:
 6. so in the `for`-comprehension from middle snippet, we have on the left hand side of the arrows, the parameters, and on the
    right hand side, the computations of the arguments: neat, no need for nested blocks, but beware the issue with the imports.
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md)

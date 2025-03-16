@@ -65,12 +65,13 @@ But let us suppose that if the result is `Some(0)`, then as `0` is the identity 
 
 ```Scala
 import cats.syntax.invariant._
-implicit def kittensMonoidForOption[A](implicit M: Monoid[A]): Monoid[Option[A]] = M.imap(Option.apply)(_.get)
+implicit def kittensMonoidForOption[A: Monoid]: Monoid[Option[A]] =
+  Monoid[A].imap(Option.apply)(_.get)
 Option(1) |+| Option(2)
 Option(1) |+| None // runtime error
 ```
 
-What `M.imap` does is that it takes two functions: one which wraps an `A` into an `Option[A]` and the second which unwraps
+What `imap` does is that it takes two functions: one which _wraps_ an `A` into an `Option[A]` and the second which _unwraps_
 the latter into the former. This means that combining two `Option`s happens by `get`ting the values, combining them with a
 `Monoid` (for example, the `implicitly[Monoid[Int]]`) and then creating an `Option` out of the result.
 

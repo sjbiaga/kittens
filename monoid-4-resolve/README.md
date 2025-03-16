@@ -18,26 +18,26 @@ resulting in: `List(None, Option(List(4,4)))`. Using implicits, we can do this i
 import cats.Monoid, cats.instances.int._
 
 object Ops:
-  implicit class SemigroupOps[A: Monoid] private[Ops] (lhs: A): // line #7
+  implicit class SemigroupOps[A: Monoid] private[Ops] (lhs: A): // line #6
     def <+>(rhs: A) = implicitly[Monoid[A]].combine(lhs, rhs)
 
 import Ops._
 
-implicit class ListMonoid[A: Monoid] extends Monoid[List[A]]: // line #12
+implicit class ListMonoid[A: Monoid] extends Monoid[List[A]]: // line #11
   def empty: List[A] = Nil
   def combine(a: List[A], b: List[A]): List[A] =
-    (a zip b).map(_ <+> _) // line #15
+    (a zip b).map(_ <+> _) // line #14
 
-class OptionMonoid[A: Monoid] extends Monoid[Option[A]]: // line #17
+class OptionMonoid[A: Monoid] extends Monoid[Option[A]]: // line #16
   def empty: Option[A] = None
   def combine(a: Option[A], b: Option[A]): Option[A] =
-    (a zip b).map(_ <+> _) // line #20
+    (a zip b).map(_ <+> _) // line #19
 
 object ListMonoid:
   implicit val listOfIntMonoid: Monoid[List[Int]] = new ListMonoid[Int]
 
 object OptionMonoid:
-  implicit def optionMonoid[A: Monoid]: Monoid[Option[A]] = new OptionMonoid[A] // line #26
+  implicit def optionMonoid[A: Monoid]: Monoid[Option[A]] = new OptionMonoid[A] // line #25
 
 import ListMonoid._, OptionMonoid._
 ```
@@ -61,7 +61,7 @@ must exist an instance of `Monoid[A]` as well.
 To make `Option[A]` a `Monoid`, we have to provide with instances of `Monoid[Option[A]]`, where for the type parameter `A`,
 there must exist an instance of `Monoid[A]` as well.
 
-Note how lines #15 and #20 are identical. The method `zip` on lists returns pairs as many as the minimum of the two operand
+Note how lines #14 and #19 are identical. The method `zip` on lists returns pairs as many as the minimum of the two operand
 lists’ sizes; while the method `zip` on options returns `None` unless both operands are non–empty: the pairs are mapped
 through the `(_:A) <+> (_:A)` function literal.
 
@@ -71,7 +71,7 @@ In the expression we want to be evaluated:
 List(Option(List(1)), Option(List(2, 0)), Option(List(3)) <+> List(None, Option(List(0, 2)))
 ```
 
-1. because of the main operator `<+>`, type `A` in line #7 is identified as `List[Option[List[Int]]]`
+1. because of the main operator `<+>`, type `A` in line #6 is identified as `List[Option[List[Int]]]`
 
 1. hence, the compiler tries to instantiate a `Monoid[List[Option[List[Int]]]]`, so it looks for _either_
 
@@ -81,7 +81,7 @@ List(Option(List(1)), Option(List(2, 0)), Option(List(3)) <+> List(None, Option(
 
 2. (cont'd)
    however, it finds the next best thing: the `implicit` `class` `ListMonoid`, extending `Monoid[List[A]]`, with a type
-   parameter `A: Monoid` - constraining an `implicit` `Monoid[Option[List[Int]]]` to be in scope: thus, type `A` in line #12,
+   parameter `A: Monoid` - constraining an `implicit` `Monoid[Option[List[Int]]]` to be in scope: thus, type `A` in line #11,
    is identified as `Option[List[Int]]`
 
 2. hence, the compiler tries to instantiate a `Monoid[Option[List[Int]]]`, so it looks for either
@@ -92,13 +92,12 @@ List(Option(List(1)), Option(List(2, 0)), Option(List(3)) <+> List(None, Option(
 
 3. (cont'd)
    however, because of the last `import`, it finds the next best thing: the `implicit` method `optionMonoid` with the return
-   type `Monoid[Option[A]]` (which instantiates `OptionMonoid[A]` from line #17) and a type parameter `A: Monoid` - constraining
-   an `implicit` `Monoid[List[Int]]` to be in scope: thus, type `A` in line #26 is identified as `List[Int]`
+   type `Monoid[Option[A]]` (which instantiates `OptionMonoid[A]` from line #16) and a type parameter `A: Monoid` - constraining an `implicit` `Monoid[List[Int]]` to be in scope: thus, type `A` in line #25 is identified as `List[Int]`
 
 3. hence, the compiler tries to instantiate a `Monoid[List[Int]]`, so because of the `import`, it finds the `implicit` value
    `listOfIntMonoid` of type `Monoid[List[Int]]`
 
-   – which instantiates `ListMonoid[Int]` from #12
+   – which instantiates `ListMonoid[Int]` from #11
    – by identifying the type `A` as `Int`;
 
 4. (cont'd)
@@ -109,13 +108,15 @@ List(Option(List(1)), Option(List(2, 0)), Option(List(3)) <+> List(None, Option(
    for (2) and (4), the two instances are of the same `ListMonoid[?]` class.
 
 Of course, we can drop `object`s `ListMonoid` and `OptionMonoid` altogether and rely only on the `implicit` `class`es in line
-#12 and #17. However, as in `Cats`, the preferred way is to instantiate _anonymous_ `class`es from inside `implicit` methods:
+#11 and #16. However, as in `Cats`, the preferred way is to instantiate _anonymous_ `class`es from inside `implicit` methods:
 `implicit` `class`es having public constructors can be instantiated at random.
 
-Note that the constructor for the `SemigroupOps` `implicit` `class` in line #7 has `private[Ops]` modifier, restricting it
+Note that the constructor for the `SemigroupOps` `implicit` `class` in line #6 has `private[Ops]` modifier, restricting it
 from being instantiated, except by the compiler in `implicit` conversions of the receivers to the `<+>` method call.
 
 [As to the difference between `implicit` parameters and `using` clauses, the latter can mark any parameter list, whereas the
 former must occur only in the last parameter list. When passing explicit parameters to `using` clauses, the keyword must
 precede the arguments; otherwise, the parentheses can be completely left out, if `given` instances or `implicit` / `using`
 parameters are in scope.]
+
+[Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-3-string/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md)

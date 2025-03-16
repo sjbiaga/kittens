@@ -190,6 +190,8 @@ object Trampoline:
     inline def apply[A](closure: => Trampoline[A]): Trampoline[A] = new Call(_ => closure)
 ```
 
+[In the literature, `::` is known as _left-to-right composition of Kleisli arrows_. [Exercise 04.1](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md) shows how `Kleisli` arrow types can be used instead.]
+
 Let us analyze line #e, which we can rewrite as:
 
 ```Scala
@@ -354,4 +356,4 @@ Done(()).flatMap({ _ => () } andThen pure)
 which further compiles to `FlatMap(Done(()), { _ => () } andThen pure)` which finally - by line #c - reduces to `Done(())`
 and - by line #a - to `()`.
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-07-builder/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md)
