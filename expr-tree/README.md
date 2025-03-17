@@ -52,7 +52,8 @@ Solution
 --------
 
 Because the trees cache the result of their evaluation in the `result` member, we first define a helper method `evalʹ`, which
-knows how to evaluate an `Expr`ession with base type `A` given an `implicit` typeclass instance of `DivisionRing` for `A`.
+knows how to evaluate an `Expr`ession with base type `A` given an `implicit` typeclass instance of the `DivisionRing`
+typeclass for `A`.
 
 ```Scala
 implicit def evalʹ[A](expr: Expr[A])(implicit R: DivisionRing[A], unit: unit): A =
@@ -93,9 +94,9 @@ val eval: unit ?=> FunctionKʹ[Ring, Expr, Tree] =
         xa match
           case Inv(n)    =>
             val rhs = evalʹ(n)
-            val i = () match
-               case _ if summon[unit] eq Zero => given_DivisionRing_A.negate(rhs.result)
-               case _ if summon[unit] eq One  => given_DivisionRing_A.reciprocal(rhs.result)
+            val i = summon[unit] match
+              case Zero => given_DivisionRing_A.negate(rhs.result)
+              case One  => given_DivisionRing_A.reciprocal(rhs.result)
             Node(i, Op.Inv, None, Some(rhs))
           case Add(m, n) =>
             val (lhs, rhs) = evalʹ(m) -> evalʹ(n)

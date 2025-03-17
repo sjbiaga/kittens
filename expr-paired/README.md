@@ -63,9 +63,9 @@ Solution
 --------
 
 We first have to define a helper method `evalʹ`, which knows how to evaluate an `Expr`ession with base type `A` given an
-`implicit` typeclass instance of `DivisionRing` for `A`; second, as type `Pair` is a functor, we can define a natural
-transformation from `Expr` to `Pair` as the pair of evaluating the expression and its swap using `evalʹ`, and given a
-typeclass instance of `Ring` for `A` (as instance of `DivisionRing[A]`):
+`implicit` typeclass instance of the `DivisionRing` typeclass for `A`; second, as type `Pair` is a functor, we can define a
+natural transformation from `Expr` to `Pair` as the pair of evaluating the expression and its swap using `evalʹ`, and given a
+typeclass instance of the `Ring` typeclass for `A` (as instance of `DivisionRing[A]`):
 
 ```Scala
 def evalʹ[A](expr: Expr[A])(implicit R: DivisionRing[A], unit: unit): A =

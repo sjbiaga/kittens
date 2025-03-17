@@ -9,8 +9,9 @@ to the reader.
 
 In [Lesson 02 - Heap](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md) it is mentioned that trading
 stack for heap was done in a “primitive manner”. Let us see now a more advanced style of programming in Scala, using types
-with `map` and `flatMap` methods - a tiny language. Another basic observation is that `Heap` worked only for functions
-returning `Unit`: so let us relax this condition.
+with `map` and `flatMap` methods - a tiny language (we have already seen a
+[language for expressions](https://github.com/sjbiaga/kittens/blob/main/expr-07-builder/README.md)). Another basic
+observation is that `Heap` worked only for functions returning `Unit`: so let us relax this condition.
 
 Thus, in general, if we had a `method` of type `Trampoline[T]` with several consecutive calls
 
@@ -132,7 +133,7 @@ The simplest way to _associate_ a closure of a `Call` with a `flatMap` block is 
 def flatMap[B](block: A => Trampoline[B]): Trampoline[B] = FlatMap(this, block)
 ```
 
-which - at the most basic level - _compiles_ the invocation of `flatMap` upon a receiver of type `Trampoline` to an
+which - at the most basic level - _compiles_ the invocation of `flatMap` upon a receiver (`Call`) of type `Trampoline` to an
 intermediary state (heap), where the definition of `FlatMap` from the companion object is:
 
 ```Scala
@@ -190,7 +191,7 @@ object Trampoline:
     inline def apply[A](closure: => Trampoline[A]): Trampoline[A] = new Call(_ => closure)
 ```
 
-[In the literature, `::` is known as _left-to-right composition of Kleisli arrows_. [Exercise 04.1](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md) shows how `Kleisli` arrow types can be used instead.]
+[In the literature, `::` is known as _left-to-right composition of Kleisli arrows_. [Exercise 04.1](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md) shows how `Kleisli` types can be used instead.]
 
 Let us analyze line #e, which we can rewrite as:
 

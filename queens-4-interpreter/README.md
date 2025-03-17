@@ -118,7 +118,7 @@ def queens[M[_]: Monad](using M: Long, board: Board): M[Unit] =
 with the exception that the outer `queens` method instantiates an interpreter:
 
 ```Scala
-val I = MonadInterpreter[M].TrampolineInterpreter`
+val I = MonadInterpreter[M].TrampolineInterpreter
 ```
 
 and applies it to the very first return - _compiled_ - value of `tqueens`:
@@ -141,7 +141,7 @@ def qId = try queens[Id] catch MaxSolutionsReached => ()
 ```
 
 which will translate from `Trampoline` low-level language to monad's high-level tiny - `pure` and `flatMap` - language; as
-well as - via the typeclass instance of `Monad` for `Trampoline`:
+well as - via the typeclass instance of the `Monad` typeclass for `Trampoline`:
 
 ```Scala
 import cats.StackSafeMonad
@@ -176,6 +176,6 @@ qTrampoline
 qId
 ```
 
-The last - `qId` -, however, is _not_ stack safe.
+The last - `qId` -, however, is _not stack safe_.
 
 [Previous](https://github.com/sjbiaga/kittens/blob/main/nat-3-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-simplify/README.md)

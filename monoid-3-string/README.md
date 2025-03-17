@@ -87,7 +87,7 @@ Thus, when the method `imap` is invoked, this rewrites as:
 implicitly[Invariant[Monoid]].imap(cats.kernel.instances.StringMonoid@4125bc3c)(_.toInt)(_.toString)
 ```
 
-where `cats.kernel.instances.StringMonoid@4125bc3c` is an object instance of the class `StringMonoid` in the
+where `cats.kernel.instances.StringMonoid@4125bc3c` is an object - instance of the class `StringMonoid` in the
 `cats.kernel.instances` package. This can be checked with:
 
 ```scala

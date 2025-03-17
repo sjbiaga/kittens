@@ -28,6 +28,8 @@ Next is  given an instance of `Cats`’ `Monad` for `Trampoline`: it is enough t
 invoking the homologue methods in `Trampoline`, and the rest be inherited.
 
 ```Scala
+import cats.StackSafeMonad
+
 implicit val kittensMonadTrampolineInstance: Monad[Trampoline] =
   new StackSafeMonad[Trampoline]:
     //override def ap[A, B](ff: Trampoline[A => B])(fa: Trampoline[A]): Trampoline[B] =
@@ -151,10 +153,10 @@ what happens behind the scene:
    arguments and how are these arrived at, for example, sizes (`Long`) or checksums (`String`) of text files from the local
    file system or downloaded from the Internet: opening file descriptors or IP ports is known as a _side-effect_
 
-1. trying to compile the method `test` from the middle snippet without the commented `imports`, will give errors: why, can be
-   seen from the bottom equivalent snippet, where `flatMap` and `map` are not methods invoked on a receiver of type
+1. trying to compile the method `test` from the middle snippet without the commented `imports`, will raise errors: why, can
+   be seen from the bottom equivalent snippet, where `flatMap` and `map` are not methods invoked on a receiver of type
    `Monad[F]`, but on a value of type `F[?]`, implicitly converted to an instance of a _rich wrapper_ class similar to the
-   following `Ops`:
+   following `Ops` `implicit` `class`:
 
 ```Scala
 package cats
@@ -176,9 +178,9 @@ object functor:
 
 6. (cont'd)
    and turned into its constructor parameter; the latter instance _is_ the receiver for the syntactic sugar methods
-   `Ops#flatMap` or `Ops#map`, whose each implementation eventually invokes the `Monad[F]` typeclass’ corresponding method
-   (through the implicit parameter `F`): just as applying the Scala translation scheme for monads requires them in the bottom
-   snippet, the commented imports are also required for the middle snippet (although not manifest)
+   `Ops#flatMap` or `Ops#map`, whose each implementation eventually invokes the `Monad[F]` typeclass instance’s corresponding
+   method (through the implicit parameter `F`): just as applying the Scala translation scheme for monads requires them in the
+   bottom snippet, the commented imports are also required for the middle snippet (although not manifest)
 
 6. note that in (6) `Monad[F]` is both a subtype of `FlatMap[F]` and of `Functor[F]`, which is why either `Ops` instantiates
    with an `implicit` `Monad[F]`, too

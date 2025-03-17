@@ -90,7 +90,7 @@ For instance, the `cats.free.Free` monad allows to change its suspension functor
 it trivially:
 
 ```Scala
-import cats.free.Trampoline, cats.~>
+import cats.free.Trampoline, cats.arrow.FunctionK
 
 Trampoline.delay(()).mapK(FunctionK.id)
 ```

@@ -5,14 +5,14 @@ Exercise 03.1 - Part 1
 ----------------------
 
 Knowing that `Val(2): Expr[Int]` can always be "inflated" to `Val(Val(2)): Expr[Expr[Int]]`, give a typeclass instance of
-`CoflatMap` typeclass for `Expr`. [Hint: implement the `coflatten` method.]
-Why is it impossible to give a typeclass instance of `FlatMap` for `Expr`?
+the `CoflatMap` typeclass for `Expr`. [Hint: implement the `coflatten` method.]
+Why is it impossible to give a typeclass instance of the `FlatMap` typeclass for `Expr`?
 
 Solution
 --------
 
 Because `CoflatMap` inherits `Functor`, we have to give implementations only for `map` and `coflatten`; then `coflatMap` can
-be defined using them.
+be defined in their terms.
 
 ```
 def coflatMap[A, B](xa: Expr[A])(f: Expr[A] => B): Expr[B] =
@@ -20,7 +20,7 @@ def coflatMap[A, B](xa: Expr[A])(f: Expr[A] => B): Expr[B] =
 ```
 
 We already introduced the value [`kittensExprFunctor`](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md)
-as typeclass instance of `Functor` for `Expr`:
+as typeclass instance of the `Functor` typeclass for `Expr`:
 
 ```Scala
 implicit val kittensExprFunctor: Functor[Expr] =
@@ -68,13 +68,14 @@ It is now obvious that `coflatten` does _not_ change the original `Expr`ession, 
 `kittensExprFunctor`, which will bind `a` to `Val(1)`, so, an expression of type `Expr[Int]` - this `eval` knows how to
 evaluate.
 
-Note that we cannot evaluate with `eval` an "higher-order" expression of type `Expr[Expr[Int]]`:
+Note that we cannot evaluate with `eval` a "higher-order" expression of type `Expr[Expr[Int]]`:
 
 ```Scala
 eval(kittensExprCoflatMap.coflatten(Inv(Mul(One, Add(Val(1), Zero))))) // compile error
 ```
 
-It is impossible to give a typeclass instance of `FlatMap` for `Expr` because there is no way to implement `flatten`.
+It is impossible to give a typeclass instance of the `FlatMap` typeclass for `Expr` because there is no way to implement
+`flatten`.
 
 Exercise 03.1 - Part 2
 ----------------------

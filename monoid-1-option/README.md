@@ -25,7 +25,8 @@ List(1, 2, 3).foldMap(_.toString) == "123"
  - methods `exists` and `forall` with parameter a predicate `A => Boolean` can be implemented via `foldMap` with,
    respectively, a `Boolean` "or" monoid and a `Boolean` "and" monoid
 
- - endomorphisms (functions `A => A`) form a monoid with function composition as operation and `identity` as identity:
+ - endomorphisms (functions `A => A`) form a monoid with function composition as operation and the `identity` function as
+   identity:
 
 ```Scala
 import cats.data.NonEmptyList
@@ -72,8 +73,19 @@ Option(1) |+| None // runtime error
 ```
 
 What `imap` does is that it takes two functions: one which _wraps_ an `A` into an `Option[A]` and the second which _unwraps_
-the latter into the former. This means that combining two `Option`s happens by `get`ting the values, combining them with a
-`Monoid` (for example, the `implicitly[Monoid[Int]]`) and then creating an `Option` out of the result.
+the latter into the former:
+
+```Scala
+def wrap[A]: A => Option[A] = Option(_)
+def unwrap[A]: Option[A] => A = _.get
+```
+
+This means that combining two `Option`s happens by `get`ting the values, combining them with a `Monoid` (for example, the
+`implicitly[Monoid[Int]]`), and then creating an `Option` out of the result:
+
+```Scala
+{ ((opt1: Option[A]), (opt2: Option[A])) => wrap(unwrap(opt1) |+| unwrap(opt2)) }
+```
 
 Of course, with this `Option` monoid we _cannot_ `get` a value from `None`. Aside being said, we can find out where does the
 automagically created monoid comes from:
@@ -97,8 +109,8 @@ implicit val catsInvariantMonoidalSemigroup: InvariantMonoidal[Semigroup] = new 
 }
 ```
 
-We can see that the `catsInvariantMonoidalSemigroup` value is a typeclass instance for `Semigroup` of the `Invariant`
-functor (meaning `Semigroup` is an `Invariant` - monoidal - functor), which we mentioned in
+We can see that the `catsInvariantMonoidalSemigroup` value is a typeclass instance for the `Semigroup` typeclass of the
+`Invariant` functor (meaning `Semigroup` _is_ an `Invariant` - monoidal - functor), which we mentioned in
 [Lesson 03 - `Expr` as `Functor`](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md). The magic is thus in
 lines #5-#6, specifically `f(fa.combine(g(x), g(y)))`: `g` represents unwrapping, while `f` - the wrapping.
 
@@ -121,7 +133,7 @@ implicit def kittensMonoidForOption[A](implicit M: Monoid[A], E: Eq[A]): Monoid[
   M.imap { (it: A) => if E.eqv(it, M.empty) then Option.empty[A] else Option.apply[A](it) } (_.getOrElse(M.empty))
 ```
 
-Now, all the following equal `None`:
+Now, all the following `eq`ual `None`:
 
 ```Scala
 Option(0) |+| None

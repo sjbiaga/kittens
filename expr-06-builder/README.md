@@ -56,8 +56,8 @@ The argument to `close` is a method with a `Builder[T]` receiver and one paramet
 Obviously, `invert` cannot fit this type, so a second `Boolean` parameter to `close` is used to `invert` the parenthesized
 expresssion, if set to `true`.
 
-The resulting value - however long - is stored in the heap of `JVM`. The code that builds is just a language that is
+The resulting value - however long - is stored in the heap of `JVM`. The code that builds it is just a language that is
 evaluated by the `JVM`. Such a language can be even as tiny as two verbs, like `flatMap` and `map` methods used by Scala to
-translate `for`-comprehensions (although there may also be `withFilter`).
+translate `for`-comprehensions (although there may also be a third - `withFilter`).
 
 [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-05-parser/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-07-builder/README.md)

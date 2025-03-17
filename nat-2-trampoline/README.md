@@ -79,7 +79,7 @@ val kittensTrampolineToTailRec: Trampoline ~> TailRec =
 kittensTrampolineToTailRec.apply(fibonacci(15)).result
 ```
 
-Also `Cats` has its own implementation in the `cats.free` package:
+Also `Cats` has its own implementation of a trampoline in the `cats.free` package:
 
 ```Scala
 package cats
@@ -133,8 +133,8 @@ recursive. If we proceed our analysis by cases,
    `apply` method will process it next.
 
 1. `case FlatMap(s, g)` transforms the source `s`, and then invokes the `flatMap` method upon, which in all three cases is
-   known to compile to a `FlatMap`-like state. `apply` occurs a third time as part of the composition `g andThen apply`, so
-   it one more transformation will be performed prior to the `FlatMap`-like state finish pattern-matching.
+   known to compile to a `FlatMap`-like state. `apply` occurs a third time as part of the composition `g andThen apply`, but
+   virtually (pattern-matching might not even reach it).
 
 the answer is _twice_ yes: the source `Trampoline` is stack safe anyway, and the target, respectively, `TailRec`,
 `CatsTrampoline`, and `Eval`, is anyway too.

@@ -5,8 +5,20 @@ Exercise 04.1
 -------------
 
 If a `Functor` were the identity of functors (types with a `map` method), a `Kleisli` would be the study of the `flatMap`
-parameter `f: A => F[B]`; which is why composition of `Kleisli` objects with `andThen` can replace the composition function
-`::` of `f: A => F[B]` with `g: B => F[C]`:
+parameter `f: A => F[B]`:
+
+```Scala
+package cats
+package data
+
+/**
+ * Represents a function `A => F[B]`.
+ */
+final case class Kleisli[F[_], -A, B](run: A => F[B]) ...
+```
+
+which is why composition of `Kleisli` values with `andThen` can replace the composition function `::` of `f: A => F[B]` with
+`g: B => F[C]`:
 
 ```Scala
 object Trampoline:
@@ -15,7 +27,7 @@ object Trampoline:
       f(_).flatMap(g)
 ```
 
-Re-implement `Trampoline` with `Kleisli` objects instead of arrows, via composition with `andThen` of `Kleisli` objects
+Re-implement `Trampoline` with `Kleisli` values instead of arrows, via composition with method `andThen` of `Kleisli` type
 instead of the left-to-right composition of Kleisli arrows. Give a natural transformation from `Trampoline` to `cats.Eval`.
 
 Solution
@@ -29,8 +41,8 @@ import cats.data.Kleisli
 type Kleisliʹ[A, B] = Kleisli[Trampoline, A, B]
 ```
 
-The composition with `andThen` of `Kleisli` objects requires an implicit typeclass instance of `FlatMap` for `Trampoline`;
-for this, we anonymously instantiate the `StackSafeMonad` trait, implementing `pure` and `flatMap`:
+The composition with method `andThen` of `Kleisli` type requires an implicit typeclass instance of the `FlatMap` typeclass
+for `Trampoline`; for this, we anonymously instantiate the `StackSafeMonad` trait, implementing `pure` and `flatMap`:
 
 ```Scala
 import cats.StackSafeMonad
@@ -89,13 +101,13 @@ object Trampoline:
     def apply[A](thunk: => Trampoline[A]): Trampoline[A] = Call(Kleisli(_ => thunk))
 ```
 
-The only change is in the use of the substitute `g.run` - where `g` binds a `Kleisli` object - instead of the Kleisli arrow.
+The only change is in the use of the substitute `g.run` - where `g` binds a `Kleisli` value - instead of the Kleisli arrow.
 
 ```Scala
-import cats.Eval
+import cats.Eval, cats.~>
 
 val nat: Trampoline ~> Eval =
-  new FunctionK[Trampoline, Eval]:
+  new (Trampoline ~> Eval):
     def apply[A](ta: Trampoline[A]): Eval[A] =
       ta match
         case Done(a)       => Eval.now(a)

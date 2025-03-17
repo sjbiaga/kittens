@@ -21,7 +21,7 @@ Note that `R[_]` in `FunctionKʹ[R[_], F[_], G[_]]` is a context bound.
 Solution
 --------
 
-First, define a typeclass instance of `DivisionRing` for `Double`:
+First, define a typeclass instance of the `DivisionRing` typeclass for `Double`:
 
 ```Scala
 implicit val kittensDoubleRing: Ring[Double] =
@@ -36,20 +36,20 @@ implicit val kittensDoubleRing: Ring[Double] =
     override def div(m: Double, n: Double) = m / n
 ```
 
-Second, define a recursive evaluation of an `Expr`ession given a typeclass instance of `DivisionRing` for `A`:
+Second, define a recursive evaluation of an `Expr`ession given a typeclass instance of the `DivisionRing` typeclass for `A`:
 
 ```Scala
 def evalʹ[A](expr: Expr[A])(implicit R: DivisionRing[A], unit: unit): A =
-     |   expr match
-     |     case Zero      => R.zero
-     |     case One       => R.one
-     |     case Val(v)    => v
-     |     case Inv(n) if unit eq Zero => R.negate(n)
-     |     case Inv(n) if unit eq One  => R.reciprocal(n)
-     |     case Add(m, n) => R.plus(m, n)
-     |     case Mul(m, n) => R.times(m, n)
-     |     case Sub(m, n) => R.minus(m, n)
-     |     case Div(m, n) => R.div(m, n)
+  expr match
+    case Zero      => R.zero
+    case One       => R.one
+    case Val(v)    => v
+    case Inv(n) if unit eq Zero => R.negate(n)
+    case Inv(n) if unit eq One  => R.reciprocal(n)
+    case Add(m, n) => R.plus(m, n)
+    case Mul(m, n) => R.times(m, n)
+    case Sub(m, n) => R.minus(m, n)
+    case Div(m, n) => R.div(m, n)
 ```
 
 Now, because `Id[A]` and `A` are the same type, the implementation is straightforward:

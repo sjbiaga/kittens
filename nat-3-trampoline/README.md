@@ -92,7 +92,7 @@ where
 1. the `Visitor` methods are in one-to-one correspondence with the `FSM` implemented for `Trampoline[A]` using the three
    `case class`es: `Done`, `Call`, and `FlatMap` - a "low-level" language.
 
-1. the `Visitor`s `call` method though delegates to another (`fMap`).
+1. the `Visitor`'s `call` method though delegates to another (`fMap`).
 
 The first time we invoke the algorithm with `apply(a.fib)`, the method `visit` from line #06 will be called in line #25 with
 _receiver_ the result from `a.fib` - either `Done`, or `Call`, or `FlatMap`.
@@ -120,9 +120,10 @@ will recurse exactly _once_ from #b to #a (and then jump back).
 
 It is important that `apply` is _not_ recursive, for otherwise we could not guarantee stack safety.
 
-There is another invocation of `apply` in line #b, composed with the `cont`inuation function-parameter, but this is virtual.
+There is another invocation of `apply` in line #b, composed with the `cont`inuation function-parameter, but this is virtual
+(pattern-matching might not even reach it).
 
-Next Scala `REPL` session shows how the same interpreter can be used with various monads, include `Id`.
+Next Scala `REPL` session shows how the same interpreter can be used with various monads, including `Id`.
 
 ```Scala
 import cats.Eval
@@ -148,7 +149,7 @@ MonadInterpreter[Id].TrampolineInterpreter.apply(a.fib)
 ```
 
 In this last case, the return value of `apply` is also the direct result, while `fMap` instead of compiling, it invokes
-`M.flatMap` which is encoded as direct function application - hence, this translation is not stack safe.
+`M.flatMap` which is encoded as direct function application - hence, this translation is _not stack safe_.
 
 It is even possible to translate into _the same_ language, by giving a typeclass instance of `Monad` for `Trampoline`:
 
