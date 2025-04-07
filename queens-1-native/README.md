@@ -186,4 +186,4 @@ Notice two complementary facts resulting from this refactoring:
 1. each recursive call has been “detached” as a thunk from its hardcoded original form. The notion of closure can prevent (1)
    as it welcomes (2).
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/covariant-1-contravariant/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/covariant-2-contravariant/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md)

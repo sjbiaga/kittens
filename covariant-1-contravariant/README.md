@@ -188,4 +188,4 @@ def updated(index: Int, elem: A): List[A] // compile error
 would generate a compile error, as the covariant type parameter `A` would occurr in contravariant positions. The occurrence
 of `A` in `A1 >: A` or `B >: A`, is also in a covariant position.
 
-[Next](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md)
+[Next](https://github.com/sjbiaga/kittens/blob/main/covariant-2-contravariant/README.md)
