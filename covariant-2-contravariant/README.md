@@ -171,7 +171,7 @@ object Factory:
         fa.dimap(f)(g)
 ```
 
-We also provided the `kittensFactoryProfunctor`, a typeclass instance of the `Profunctor[F[_, _]]` typeclass for the
+We also provided the `kittensFactoryProfunctor` typeclass instance of the `Profunctor[F[_, _]]` typeclass for the
 `Factory[_, _]` trait. We may see that the implementation is straightforward.
 
 We can now create a `Factory` from the concrete factory `C(4)`, which sums a `String` with an `Int`eger (by consuming) and
@@ -186,6 +186,72 @@ scala> res7.consume("2")
 
 scala> res7.produce
 val res: Int = 8
+```
+
+Or, we can use the `lmap` and `rmap` syntax by importing it:
+
+```Scala
+import cats.syntax.profunctor._
+import Factory._
+C(4).lmap((_: String).toInt)
+C(4).rmap(_ * 2)
+```
+
+Exercise 01.1
+-------------
+
+Combine `produce` and `consume` into a single method `def process(i: I): O`. Implement `contramap` and `comap`, and give a
+typeclass instance of the `Profunctor` typeclass; give also an example of a concrete "factory".
+
+Solution
+--------
+
+Nothing else changes - in terms of the variance of the type parameters `-I` and `+O` - except a new method `process` is added:
+
+```Scala
+trait Factoryʹ[-I, +O] { self =>
+  def process(i: I): O
+  def contramap[A](f: A => I): Factoryʹ[A, O] =
+    new Factoryʹ[A, O]:
+      def process(a: A): O = self.process(f(a))
+  def comap[U](g: O => U): Factoryʹ[I, U] =
+    new Factoryʹ[I, U]:
+      def process(i: I): U = g(self.process(i))
+}
+
+import cats.arrow.Profunctor
+
+object Factoryʹ {
+  implicit val kittensFactoryʹProfunctor: Profunctor[Factoryʹ] =
+    new Profunctor[Factoryʹ]:
+      def dimap[I, O, A, U](fa: Factoryʹ[I, O])(f: A => I)(g: O => U): Factoryʹ[A, U] =
+        new Factoryʹ[A, U]:
+          def process(a: A): U = g(fa.process(f(a)))
+}
+
+case class Cʹ(n: Int) extends Factoryʹ[Int, String] {
+  def process(k: Int): String = (n + k).toString
+}
+```
+
+The `process` method for the concrete factory `Cʹ` has return type `String`.
+Using `lmap`, we can still _sum_ a `String` with an `Int`eger and return a `String`. Or, using `rmap` we can sum and _repeat_
+this value as a `String` _twice_.
+
+```scala
+scala> import cats.syntax.profunctor._
+
+scala> Cʹ(4).lmap((_: String).toInt)
+val res0: Factoryʹ[String, String] = anon$2@24690f54
+
+scala> res0.process("2")
+val res1: String = 6
+
+scala> Cʹ(4).rmap(_ * 2)
+val res2: Factoryʹ[Int, String] = anon$2@682d85e8
+
+scala> res2.process(3)
+val res3: String = 77
 ```
 
 [Previous](https://github.com/sjbiaga/kittens/blob/main/covariant-1-contravariant/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md)
