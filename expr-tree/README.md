@@ -1,3 +1,5 @@
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-paired/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-eert/README.md)
+
 Lesson 06: Natural Transformations (cont'd)
 ===========================================
 
@@ -73,10 +75,10 @@ val eval: unit ?=> FunctionKʹ[Ring, Expr, Tree] =
     given DivisionRing[A] = implicitly[Ring[A]].asInstanceOf[DivisionRing[A]]
     def apply[A: Ring](xa: Expr[A]): Tree[A] =
       xa match
-        case Inv(n)    => Node(evalʹ(xa), Op.Inv, None, Some(apply(n)))
+        case Inv(n)    => Node(evalʹ(xa), Op.Inv, None,           Some(apply(n)))
         case Add(m, n) => Node(evalʹ(xa), Op.Add, Some(apply(m)), Some(apply(n)))
         case Mul(m, n) => Node(evalʹ(xa), Op.Mul, Some(apply(m)), Some(apply(n)))
-        case Sub(m, n) => Node(evalʹ(xa), Op.Sub,  Some(apply(m)), Some(apply(n)))
+        case Sub(m, n) => Node(evalʹ(xa), Op.Sub, Some(apply(m)), Some(apply(n)))
         case Div(m, n) => Node(evalʹ(xa), Op.Div, Some(apply(m)), Some(apply(n)))
         case _         => Leaf(evalʹ(xa))
 ```

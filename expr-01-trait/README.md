@@ -1,3 +1,5 @@
+[Previous](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md)
+
 Lesson 03: A Rich Language of Expressions
 =========================================
 

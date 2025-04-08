@@ -1,3 +1,5 @@
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md)
+
 Lesson 03: A Rich Language of Expressions (cont'd)
 ==================================================
 

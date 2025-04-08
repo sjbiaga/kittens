@@ -1,3 +1,5 @@
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-CoflatMap/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md)
+
 Lesson 03: A Rich Language of Expressions (cont'd)
 ==================================================
 

@@ -1,3 +1,5 @@
+[Previous](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md)
+
 Lesson 04: Trampoline and Monads (cont'd)
 =========================================
 

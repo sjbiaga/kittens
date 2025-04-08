@@ -1,3 +1,5 @@
+[Previous](https://github.com/sjbiaga/kittens/blob/main/covariant-1-contravariant/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md)
+
 Lesson 01: Covariant vs Contravariant Types (cont'd)
 ====================================================
 
@@ -234,12 +236,13 @@ case class Cʹ(n: Int) extends Factoryʹ[Int, String] {
 }
 ```
 
-The `process` method for the concrete factory `Cʹ` has return type `String`.
+The `process` method for the concrete "factory" `Cʹ` has return type `String`.
 Using `lmap`, we can still _sum_ a `String` with an `Int`eger and return a `String`. Or, using `rmap` we can sum and _repeat_
-this value as a `String` _twice_.
+this value as a `String`.
 
 ```scala
 scala> import cats.syntax.profunctor._
+scala> import Factoryʹ._
 
 scala> Cʹ(4).lmap((_: String).toInt)
 val res0: Factoryʹ[String, String] = anon$2@24690f54

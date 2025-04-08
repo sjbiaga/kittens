@@ -1,3 +1,5 @@
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md)
+
 Lesson 04: Trampoline and Monads
 ================================
 

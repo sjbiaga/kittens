@@ -1,3 +1,5 @@
+[Previous](https://github.com/sjbiaga/kittens/blob/main/covariant-2-contravariant/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md)
+
 Lesson 02: Closures and Stack Safety
 ====================================
 

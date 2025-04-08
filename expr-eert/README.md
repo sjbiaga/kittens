@@ -1,3 +1,5 @@
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-tree/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/eval-1-function0/README.md)
+
 Lesson 06: Natural Transformations (cont'd)
 ===========================================
 
@@ -64,4 +66,4 @@ This is the opposite of `eval` from the previous Exercise 06.3, so we call it `l
           case Leaf(r)                           => Val(r)
 ```
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-tree/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-tree/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/eval-1-function0/README.md)

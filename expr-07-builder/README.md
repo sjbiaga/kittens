@@ -1,3 +1,5 @@
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-06-builder/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-CoflatMap/README.md)
+
 Lesson 03: A Rich Language of Expressions (cont'd)
 ==================================================
 

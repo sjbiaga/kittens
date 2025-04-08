@@ -1,3 +1,5 @@
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-07-builder/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md)
+
 Lesson 03: A Rich Language of Expressions (cont'd)
 ==================================================
 
@@ -6,7 +8,6 @@ Exercise 03.1 - Part 1
 
 Knowing that `Val(2): Expr[Int]` can always be "inflated" to `Val(Val(2)): Expr[Expr[Int]]`, give a typeclass instance of
 the `CoflatMap` typeclass for `Expr`. [Hint: implement the `coflatten` method.]
-Why is it impossible to give a typeclass instance of the `FlatMap` typeclass for `Expr`?
 
 Solution
 --------
@@ -74,8 +75,9 @@ Note that we cannot evaluate with `eval` a "higher-order" expression of type `Ex
 eval(kittensExprCoflatMap.coflatten(Inv(Mul(One, Add(Val(1), Zero))))) // compile error
 ```
 
-It is impossible to give a typeclass instance of the `FlatMap` typeclass for `Expr` because there is no way to implement
-`flatten`.
+To give a typeclass instance of the `FlatMap` typeclass for `Expr`,
+see [Lesson 06 - Exercise 06.6](https://github.com/sjbiaga/kittens/blob/main/eval-2-expr-tree/README.md) for an implementation
+of `flatten`.
 
 Exercise 03.1 - Part 2
 ----------------------
@@ -111,8 +113,10 @@ bound `f` is directly used as a return value.
 
 ```scala
 scala> given unit = One
+
 scala> kittensExprCoflatMap.coflatten(Inv(Mul(Val((_: Double).+(1)), Add(Val((_: Double).*(0)), Val((_: Double).-(1))))))
 val res2: Expr[Expr[Double => Double]] = Inv(Mul(Val(Val(rs$line$20$$$Lambda/0x00007fe53766dfc0@4d4b0e1a)),Add(Val(Val(rs$line$20$$$Lambda/0x00007fe53766e3b0@5c4de465)),Val(Val(rs$line$20$$$Lambda/0x00007fe53766e7a0@36e6ea6c)))))
+
 scala> kittensExprCoflatMap.coflatMap(Inv(Mul(Val((_: Double).+(1)), Add(Val((_: Double).*(0)), Val((_: Double).-(1))))))(evalʹ)
 val res3: Expr[Double => Double] = Inv(Mul(Val(rs$line$10$$$Lambda/0x00007f3c43624220@783a8ec4),Add(Val(rs$line$10$$$Lambda/0x00007f3c43625978@34afee7c),Val(rs$line$10$$$Lambda/0x00007f3c43650000@7e632933))))
 ```
@@ -123,6 +127,7 @@ Now, because `Expr` is a functor, we can map the _application function_ with som
 ```Scala
 scala> res3.map(_(0d))
 val res4: Expr[Double] = Inv(Mul(Val(1.0),Add(Val(0.0),Val(-1.0))))
+
 scala> eval(res4)
 val res5: Double = -1.0
 ```
@@ -132,8 +137,10 @@ We might have avoided the use of `coflatMap` altogether and straightly rely only
 ```scala
 scala> Inv(Mul(Val((_: Double).+(1)), Add(Val((_: Double).*(0)), Val((_: Double).-(1)))))
 val res6: Expr[Double => Double] = Inv(Mul(Val(rs$line$9$$$Lambda/0x00007f504b6613d8@6467ce1a),Add(Val(rs$line$9$$$Lambda/0x00007f504b6617c8@5637ed9d),Val(rs$line$9$$$Lambda/0x00007f504b661bb8@45174eba))))
+
 scala> evalʹ(res6)
 val res7: Double => Double = Lambda/0x00007f504b6a6000@2c8542d4
+
 scala> res7(0d)
 val res8: Double = -1.0
 ```

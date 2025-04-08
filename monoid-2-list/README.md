@@ -1,3 +1,5 @@
+[Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-3-string/README.md)
+
 Lesson 05: Monoids (cont'd)
 ===========================
 

@@ -1,3 +1,5 @@
+[Previous](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md)
+
 Lesson 02: Closures and Stack Safety (cont'd)
 =============================================
 

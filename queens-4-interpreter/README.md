@@ -1,3 +1,5 @@
+[Previous](https://github.com/sjbiaga/kittens/blob/main/nat-3-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-simplify/README.md)
+
 Lesson 06: Natural Transformations (cont'd)
 ===========================================
 

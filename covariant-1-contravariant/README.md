@@ -1,3 +1,5 @@
+[Next](https://github.com/sjbiaga/kittens/blob/main/covariant-2-contravariant/README.md)
+
 Lesson 01: Covariant vs Contravariant Types
 ===========================================
 

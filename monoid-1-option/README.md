@@ -1,3 +1,5 @@
+[Previous](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-2-list/README.md)
+
 Lesson 05: Monoids
 ==================
 

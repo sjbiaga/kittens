@@ -1,3 +1,5 @@
+[Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-4-resolve/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md)
+
 Lesson 05: Monoids (cont'd)
 ===========================
 
