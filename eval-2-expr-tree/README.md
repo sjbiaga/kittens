@@ -13,15 +13,15 @@ and `factorial` algorithms implementation for the `Free` monad with `Expr` as th
 import cats.Free
 import Free._
 
-case class Algorithms(n: Int) {
+case class Algorithms(n: Int):
   private def fibonacci(k: Int): Free[Expr, Expr[Int]] =
     if k < 2
     then
       liftF { if k < 1 then Zero else One }
     else
       for
-        m <- defer {  fibonacci(k - 2) }
-        n <- defer {  fibonacci(k - 1) }
+        m <- defer { fibonacci(k - 2) }
+        n <- defer { fibonacci(k - 1) }
       yield
         Add(m, n)
   private def factorial(k: Int): Free[Expr, Expr[Int]] =
@@ -35,7 +35,6 @@ case class Algorithms(n: Int) {
         Mul(Val(k), n)
   def fib: Free[Expr, Expr[Int]] = fibonacci(n)
   def fac: Free[Expr, Expr[Int]] = factorial(n)
-}
 ```
 
 use a natural transformation `treeify` (see
@@ -227,8 +226,8 @@ case class Algorithmsʹ(n: Int):
       liftF { Leaf(Leaf(if k < 1 then Zero else One)) }
     else
       for
-        m <- defer {  fibonacci(k - 2) }
-        n <- defer {  fibonacci(k - 1) }
+        m <- defer { fibonacci(k - 2) }
+        n <- defer { fibonacci(k - 1) }
       yield
         Node(Add(m.result, n.result), Op.Add, Some(m), Some(n))
   private def factorial(k: Int): Free[Tree, Tree[Expr[Int]]] =
