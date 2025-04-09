@@ -75,9 +75,8 @@ Note that we cannot evaluate with `eval` a "higher-order" expression of type `Ex
 eval(kittensExprCoflatMap.coflatten(Inv(Mul(One, Add(Val(1), Zero))))) // compile error
 ```
 
-To give a typeclass instance of the `FlatMap` typeclass for `Expr`,
-see [Lesson 06 - Exercise 06.6](https://github.com/sjbiaga/kittens/blob/main/eval-2-expr-tree/README.md) for an implementation
-of `flatten`.
+To give a typeclass instance of the `FlatMap` typeclass for `Expr`, see
+[Exercise 06.6](https://github.com/sjbiaga/kittens/blob/main/eval-2-expr-tree/README.md) for an implementation of `flatten`.
 
 Exercise 03.1 - Part 2
 ----------------------

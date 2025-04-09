@@ -42,9 +42,9 @@ case class Algorithms(n: Int, var counter: Int):
       liftF { () => 1 min (0 max k) }
     else
       for
-        m <- fibonacci(k - 2)
-        n <- fibonacci(k - 1)
-      yield
+        m <- defer {  fibonacci(k - 2) }
+        n <- defer {  fibonacci(k - 1) }
+      yieldOB
         n + m
   private def factorial(k: Int): Trampoline[Int] =
     if k < 1
@@ -52,14 +52,14 @@ case class Algorithms(n: Int, var counter: Int):
       liftF { () => 1 }
     else
       for
-        n <- factorial(k - 1)
+        n <- defer { factorial(k - 1) }
       yield
         k * n
   def fib: Trampoline[Int] = { counter = 0; fibonacci(n) }
   def fac: Trampoline[Int] = { counter = 0; factorial(n) }
 ```
 
-define a `Function0ʹ[A]` class that wraps another function `() => A` - which it invokes on `apply` -, and use it to implement
+define a `Function0ʹ[A]` class that wraps another function `() => A` - which it invokes on `apply` -, and uses it to implement
 a natural transformation `counting` from `Function0` to `Function0ʹ`, that just counts in the above `counter` how many times
 its `apply` method is invoked.
 

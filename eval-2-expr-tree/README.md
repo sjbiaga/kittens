@@ -20,8 +20,8 @@ case class Algorithms(n: Int) {
       liftF { if k < 1 then Zero else One }
     else
       for
-        m <- fibonacci(k - 2)
-        n <- fibonacci(k - 1)
+        m <- defer {  fibonacci(k - 2) }
+        n <- defer {  fibonacci(k - 1) }
       yield
         Add(m, n)
   private def factorial(k: Int): Free[Expr, Expr[Int]] =
@@ -30,7 +30,7 @@ case class Algorithms(n: Int) {
       liftF { One }
     else
       for
-        n <- factorial(k - 1)
+        n <- defer { factorial(k - 1) }
       yield
         Mul(Val(k), n)
   def fib: Free[Expr, Expr[Int]] = fibonacci(n)
@@ -39,8 +39,8 @@ case class Algorithms(n: Int) {
 ```
 
 use a natural transformation `treeify` (see
-[Lesson 06 - Exercise 06.3](https://github.com/sjbiaga/kittens/blob/main/expr-tree/README.md)) to modify the suspension
-functor from `Expr` to `Tree`:
+[Exercise 06.3](https://github.com/sjbiaga/kittens/blob/main/expr-tree/README.md)) to modify the suspension functor from
+`Expr` to `Tree`:
 
 ```Scala
 enum Op:
@@ -64,10 +64,10 @@ Solution - Part 1
 
 The typeclass instance of the `Monad` typeclass for `Expr` is _not_ stack safe: the implementation of the `tailRecM` method
 cannot be annotated `@tailrec`. The `flatMap` method is defined in terms of `flatten` and `map`. Both are recursive
-algorithms, with just one interesting case: `Val`. The former deflates from `Val(it: Expr[A]): Expr[Expr[A]]` to `it`. The
-latter - in the case when it is being called from `flatMap` - inflates using the function `f: A => Expr[B]` from `Val(it: A)`
-to `Val(f(it)): Expr[Expr[B]]`. The trivial cases just _unwrap_ the (two) operand(s) - call either `flatten` or `map` - and
-then _wrap_ the result(s) back:
+algorithms, with just one interesting _base_ case: `Val`. The former deflates from `Val(it: Expr[A]): Expr[Expr[A]]` to
+`it`. The latter - in the case when it is being called from `flatMap` - inflates using the function `f: A => Expr[B]` from
+`Val(it: A)` to `Val(f(it)): Expr[Expr[B]]`. The _recursive_ cases just _unwrap_ the (two) operand(s) - call either `flatten`
+or `map` - and then _wrap_ the result(s) back:
 
 ```Scala
 import cats.Monad
@@ -208,34 +208,36 @@ val res3: Int = 55
 
 The value `res1` contains a "listing" of the computation of fibonacci: we may see that the _same_ computation repeats many
 times, e.g., `Add(One,Add(Zero,One))`; if these were real numbers and arithmetic operators, the `Expr`ession shows precisely
-how they are computed. Note that `runTailRec` expects an implicit `Monad[Tree]` which is `kittensTreeMonad`, through which we
-are also able to evaluate the `Expr`ession as the `res3` `Int`eger.
+how they are computed, i.e., `1 + (0 + 1)`.
+
+Note that `runTailRec` expects an implicit `Monad[Tree]` which is `kittensTreeMonad`, through which we are also able to
+evaluate the `Expr`ession as the `res3` `Int`eger.
 
 Solution - Part 3
 -----------------
 
-We _cannot_ use `liftF` in `Algorithmsʹ` as we did with `Algorithms`; also, because the type of `Tree` is `Expr[Int]` (and
-not `Int`), the `result` fields in `Leaf`s and `Node`s are `Expr`essions (rather than `Int`egers):
+Because the type of `Tree` is `Expr[Int]` (and not `Int`), the `result` fields in `Leaf`s and `Node`s are `Expr`essions
+(rather than `Int`egers):
 
 ```Scala
 case class Algorithmsʹ(n: Int):
   private def fibonacci(k: Int): Free[Tree, Tree[Expr[Int]]] =
     if k < 2
     then
-      pure { Leaf(if k < 1 then Zero else One) }
+      liftF { Leaf(Leaf(if k < 1 then Zero else One)) }
     else
       for
-        m <- fibonacci(k - 2)
-        n <- fibonacci(k - 1)
+        m <- defer {  fibonacci(k - 2) }
+        n <- defer {  fibonacci(k - 1) }
       yield
         Node(Add(m.result, n.result), Op.Add, Some(m), Some(n))
   private def factorial(k: Int): Free[Tree, Tree[Expr[Int]]] =
     if k < 1
     then
-      pure(Leaf(One))
+      liftF { Leaf(Leaf(One)) }
     else
       for
-        n <- factorial(k - 1)
+        n <- defer { factorial(k - 1) }
       yield
         Node(Mul(Val(k), n.result), Op.Mul, Some(Leaf(Val(k))), Some(n))
   def fib: Free[Tree, Tree[Expr[Int]]] = fibonacci(n)
