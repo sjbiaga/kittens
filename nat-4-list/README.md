@@ -447,7 +447,7 @@ override def tailRecM[A, B](a: A)(f: A => List[Either[A, B]]): List[B] =
 But - although possible - in doing so, we have this time turned `tailRecM` into a recursive non-`@tailrec`ursive method. So
 we are back where we started.
 
-1. Let us, first, modify the return type of `loop` to `Eval[List[B]]`:
+2. Let us, first, modify the return type of `loop` to `Eval[List[B]]`:
 
 ```Scala
 override def tailRecM[A, B](a: A)(f: A => List[Either[A, B]]): List[B] =
@@ -464,7 +464,7 @@ override def tailRecM[A, B](a: A)(f: A => List[Either[A, B]]): List[B] =
   loop(f(a), Nil).value
 ```
 
-1. Nothing changed as to the recursive nature of `tailRecM`; second, we need to get rid of the recursive "`tailRecM(a)(f)`"
+3. Nothing changed as to the recursive nature of `tailRecM`; second, we need to get rid of the recursive "`tailRecM(a)(f)`"
    call, by introducing a nested method with almost the same name ("`tailRecMʹ`") which - for now - does the same thing:
 
 ```Scala
@@ -484,13 +484,13 @@ override def tailRecM[A, B](a: A)(f: A => List[Either[A, B]]): List[B] =
   tailRecMʹ(a)
 ```
 
-1. We would want the two lines #09 and #10 in Scala to be rewritten as a "stack safe" `flatMap` operation:
+4. We would want the two lines #09 and #10 in Scala to be rewritten as a "stack safe" `flatMap` operation:
 
 ```Scala
 tailRecMʹ(a) >>= { bsʹ => loop(tl, bs ::: bsʹ) }
 ```
 
-1. But this would mean that we would need to operate in the `Eval` monad, and thus change the return type of `tailRecMʹ` (in
+5. But this would mean that we would need to operate in the `Eval` monad, and thus change the return type of `tailRecMʹ` (in
    line #a; we would also need to remove the `@tailrec` annotation):
 
 ```Scala
@@ -508,7 +508,7 @@ override def tailRecM[A, B](a: A)(f: A => List[Either[A, B]]): List[B] =
   tailRecMʹ(a).value
 ```
 
-1. Still, we have not eliminated the recursive call, which must be trampolined by changing line #b into:
+6. Still, we have not eliminated the recursive call, which must be trampolined by changing line #b into:
 
 ```Scala
 Eval.unit >> tailRecMʹ(a) >>= { bsʹ => loop(tl, bs ::: bsʹ) }
@@ -532,7 +532,7 @@ def listʹ: List ~> ʹ.List =
       ls.foldRight(Nil: ʹ.List[T])(_ :: _)
 ```
 
-We exemplify some trivial operators, the monadic interface, and finally stack safety.
+We exemplify some trivial operators, the monadic interface, the natural transformation, and finally stack safety.
 
 ```Scala
 try
