@@ -45,7 +45,7 @@ object Expr:
                 Eval.now(it)
               case Val(Left(a)) =>
                 for
-                  _   <- Eval.Unit
+                  _  <- Eval.Unit
                   xb <- tailRecMʹ(a)
                 yield
                   xb

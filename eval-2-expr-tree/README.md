@@ -17,7 +17,7 @@ case class Algorithms(n: Int):
   private def fibonacci(k: Int): Free[Expr, Expr[Int]] =
     if k < 2
     then
-      liftF { if k < 1 then Zero else One }
+      liftF { Val(if k < 1 then Zero else One) }
     else
       for
         m <- defer { fibonacci(k - 2) }
@@ -27,7 +27,7 @@ case class Algorithms(n: Int):
   private def factorial(k: Int): Free[Expr, Expr[Int]] =
     if k < 1
     then
-      liftF { One }
+      liftF { Val(One) }
     else
       for
         n <- defer { factorial(k - 1) }
