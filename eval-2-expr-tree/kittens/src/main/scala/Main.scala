@@ -41,5 +41,5 @@ case class Algorithms(n: Int):
 
 object Main:
   def main(args: Array[String]): Unit =
-    val as = Algorithms(10)
+    val as = Algorithms(30)
     println(as.fib.mapK(treeify(kittensExprRing)).runTailRec.map(eval).result)

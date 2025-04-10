@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/eval-1-function0/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/eval-1-function0/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)
 
 Lesson 06: Natural Transformations (cont'd)
 ===========================================
@@ -6,8 +6,8 @@ Lesson 06: Natural Transformations (cont'd)
 Exercise 06.6
 -------------
 
-First, implement a typeclass instance `kittensExprMonad` of the `Monad` typeclass for `Expr`; second, given the `fibonacci`
-and `factorial` algorithms implementation for the `Free` monad with `Expr` as the suspension functor:
+First, implement a _stack safe_ typeclass instance `kittensExprMonad` of the `Monad` typeclass for `Expr`; second, given the
+`fibonacci` and `factorial` algorithms implementation for the `Free` monad with `Expr` as the suspension functor:
 
 ```Scala
 import cats.Free
@@ -53,20 +53,22 @@ enum Tree[+T]:
                 right: Option[Tree[T]]) extends Tree[T]
 ```
 
-and actually use a typeclass instance `kittensTreeMonad` of the `Monad` typeclass for `Tree` to perform the computation.
+and actually use a (_stack safe_ again) typeclass instance `kittensTreeMonad` of the `Monad` typeclass for `Tree` to perform
+the computation.
 
 Third, implement `Algorithmsʹ` to directly return `Free[Tree, Expr[Int]]` and run using the `kittensTreeMonad`. Evaluate the
 result in a `DivisionRing[Int]`: should it be used directly or implicitly?
 
+Hint: use `cats.Eval` for the stack safe part.
+
 Solution - Part 1
 -----------------
 
-The typeclass instance of the `Monad` typeclass for `Expr` is _not_ stack safe: the implementation of the `tailRecM` method
-cannot be annotated `@tailrec`. The `flatMap` method is defined in terms of `flatten` and `map`. Both are recursive
-algorithms, with just one interesting _base_ case: `Val`. The former deflates from `Val(it: Expr[A]): Expr[Expr[A]]` to
-`it`. The latter - in the case when it is being called from `flatMap` - inflates using the function `f: A => Expr[B]` from
-`Val(it: A)` to `Val(f(it)): Expr[Expr[B]]`. The _recursive_ cases just _unwrap_ the (two) operand(s) - call either `flatten`
-or `map` - and then _wrap_ the result(s) back:
+The `flatMap` method is defined in terms of `flatten` and `map`. Both are recursive algorithms, with just one interesting
+_base_ case: `Val`. The former deflates from `Val(it: Expr[A]): Expr[Expr[A]]` to `it`. The latter - in the case when it is
+being called from `flatMap` - inflates using the function `f: A => Expr[B]` from `Val(it: A)` to `Val(f(it)): Expr[Expr[B]]`.
+The _recursive_ cases just _unwrap_ the (two) operand(s) - call either `flatten` or `map` - and then _wrap_ the result(s)
+back:
 
 ```Scala
 import cats.Monad
@@ -93,9 +95,58 @@ implicit val kittensExprMonad: Monad[Expr] =
         case Inv(n)    => Inv(map(n)(f))
         case it @ (Zero | One ) => it
     def flatMap[A, B](fa: Expr[A])(f: A => Expr[B]): Expr[B] = flatten(map(fa)(f))
-    def tailRecM[A, B](a: A)(f: A => Expr[Either[A, B]]): Expr[B] =
-      flatMap(f(a))(_.fold(tailRecM(_)(f), pure))
+    // def tailRecM[A, B](a: A)(f: A => Expr[Either[A, B]]): Expr[B] = // NOT stack safe!
+    //   flatMap(f(a))(_.fold(tailRecM(_)(f), pure))
+    def tailRecM[A, B](a: A)(f: A => Expr[Either[A, B]]): Expr[B] = // stack safe!
+      def tailRecMʹ(a: A): Eval[Expr[B]] =
+        def loop(xe: Expr[Either[A, B]]): Eval[Expr[B]] =
+          xe match
+            case it @ (Zero | One) =>
+              Eval.now(it)
+            case Val(Left(a)) =>
+              for
+                _  <- Eval.Unit
+                xb <- tailRecMʹ(a)
+              yield
+                xb
+            case Val(Right(b)) =>
+              Eval.now(Val(b))
+            case Inv(xn) =>
+              for
+                n <- loop(xn)
+              yield
+                Inv(n)
+            case Add(xm, xn) =>
+              for
+                m <- loop(xm)
+                n <- loop(xn)
+              yield
+                Add(m, n)
+            case Sub(xm, xn) =>
+              for
+                m <- loop(xm)
+                n <- loop(xn)
+              yield
+                Sub(m, n)
+            case Mul(xm, xn) =>
+              for
+                m <- loop(xm)
+                n <- loop(xn)
+              yield
+                Mul(m, n)
+            case Div(xm, xn) =>
+              for
+                m <- loop(xm)
+                n <- loop(xn)
+              yield
+                Div(m, n)
+        loop(f(a))
+      tailRecMʹ(a).value
 ```
+
+By the same implementation of `tailRecM` as in `cats.StackSafeMonad`, the typeclass instance of the `Monad` typeclass for
+`Expr` is _not_ stack safe: what is required for _stack safety_ is a lazy evaluation using the `cats.Eval` monad. See
+[Exercise 06.7](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md) for an explanation of the implementation.
 
 Solution - Part 2
 -----------------
@@ -138,9 +189,9 @@ def treeify(R: DivisionRing[?]): FunctionK[Expr, Tree] =
         case _         => Leaf(eval(xa))
 ```
 
-The typeclass instance of the `Monad` typeclass for `Tree` is _not_ stack safe either. The `flatMap` method is defined in
-terms of `flatten` and `map`, again. But only `map` is a recursive algorithm, whereas `flatten` is straight the `result`
-field from any `Tree`:
+The typeclass instance of the `Monad` typeclass for `Tree` can be made _stack safe_ using the same `cats.Eval` monad. The
+`flatMap` method is defined in terms of `flatten` and `map`, again. But only `map` is a recursive algorithm, whereas
+`flatten` is straight the `result` field from any `Tree`:
 
 ```Scala
 implicit val kittensTreeMonad: Monad[Tree] =
@@ -156,8 +207,90 @@ implicit val kittensTreeMonad: Monad[Tree] =
         case Node(a, Op.Mul, Some(m), Some(n)) => Node(f(a), Op.Mul, Some(map(m)(f)), Some(map(n)(f)))
         case Node(a, Op.Div, Some(m), Some(n)) => Node(f(a), Op.Div, Some(map(m)(f)), Some(map(n)(f)))
     def flatMap[A, B](fa: Tree[A])(f: A => Tree[B]): Tree[B] = flatten(map(fa)(f))
-    def tailRecM[A, B](a: A)(f: A => Tree[Either[A, B]]): Tree[B] =
-      flatMap(f(a))(_.fold(tailRecM(_)(f), pure))
+    // def tailRecM[A, B](a: A)(f: A => Tree[Either[A, B]]): Tree[B] = // NOT stack safe!
+    //   flatMap(f(a))(_.fold(tailRecM(_)(f), pure))
+    def tailRecM[A, B](a: A)(f: A => Tree[Either[A, B]]): Tree[B] = // stack safe!
+      def tailRecMʹ(a: A): Eval[Tree[B]] =
+        def loop(te: Tree[Either[A, B]]): Eval[Tree[B]] =
+          te match
+            case Leaf(Left(a)) =>
+              for
+                _  <- Eval.Unit
+                tb <- tailRecMʹ(a)
+              yield
+                Leaf(tb.result)
+            case Leaf(Right(b)) =>
+              Eval.now(Leaf(b))
+            case Node(Left(a), Op.Inv, _,        Some(tn)) =>
+              for
+                _  <- Eval.Unit
+                tb <- tailRecMʹ(a)
+                n  <- loop(tn)
+              yield
+                Node(tb.result, Op.Inv, None, Some(n))
+            case Node(Right(b), Op.Inv, _,       Some(tn)) =>
+              for
+                n <- loop(tn)
+              yield
+                Node(b, Op.Inv, None, Some(n))
+            case Node(Left(a), Op.Add, Some(tm), Some(tn)) =>
+              for
+                _  <- Eval.Unit
+                tb <- tailRecMʹ(a)
+                m  <- loop(tm)
+                n  <- loop(tn)
+              yield
+                Node(tb.result, Op.Add, Some(m), Some(n))
+            case Node(Right(b), Op.Add, Some(tm), Some(tn)) =>
+              for
+                m <- loop(tm)
+                n <- loop(tn)
+              yield
+                Node(b, Op.Add, Some(m), Some(n))
+            case Node(Left(a), Op.Sub, Some(tm), Some(tn)) =>
+              for
+                _  <- Eval.Unit
+                tb <- tailRecMʹ(a)
+                m  <- loop(tm)
+                n  <- loop(tn)
+              yield
+                Node(tb.result, Op.Sub, Some(m), Some(n))
+            case Node(Right(b), Op.Sub, Some(tm), Some(tn)) =>
+              for
+                m <- loop(tm)
+                n <- loop(tn)
+              yield
+                Node(b, Op.Sub, Some(m), Some(n))
+            case Node(Left(a), Op.Mul, Some(tm), Some(tn)) =>
+              for
+                _  <- Eval.Unit
+                tb <- tailRecMʹ(a)
+                m  <- loop(tm)
+                n  <- loop(tn)
+              yield
+                Node(tb.result, Op.Mul, Some(m), Some(n))
+            case Node(Right(b), Op.Mul, Some(tm), Some(tn)) =>
+              for
+                m <- loop(tm)
+                n <- loop(tn)
+              yield
+                Node(b, Op.Mul, Some(m), Some(n))
+            case Node(Left(a), Op.Div, Some(tm), Some(tn)) =>
+              for
+                _  <- Eval.Unit
+                tb <- tailRecMʹ(a)
+                m  <- loop(tm)
+                n  <- loop(tn)
+              yield
+                Node(tb.result, Op.Div, Some(m), Some(n))
+            case Node(Right(b), Op.Div, Some(tm), Some(tn)) =>
+              for
+                m <- loop(tm)
+                n <- loop(tn)
+              yield
+                Node(b, Op.Div, Some(m), Some(n))
+        loop(f(a))
+      tailRecMʹ(a).value
 ```
 
 Before the actual computation, we must make implicits the `DivisionRing`s which we use (perhaps implicitly, later):
@@ -270,4 +403,4 @@ val res7: Int = 3628800
 Because the type of the tree in `res5` is `Expr[Int]`, when for the computation of `res6` we use `eval`, the implicit
 `DivisionRing[Int]` is `kittensIntRing` - so, it is used _implicitly_, not directly.
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/eval-1-function0/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/eval-1-function0/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)

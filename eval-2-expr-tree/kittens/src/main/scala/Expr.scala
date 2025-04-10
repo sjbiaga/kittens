@@ -1,5 +1,5 @@
 import algebra.ring.DivisionRing
-import cats.Monad
+import cats.{ Eval, Monad }
 
 enum Expr[+T]:
   case Add[+T](lhs: Expr[T], rhs: Expr[T]) extends Expr[T]
@@ -35,8 +35,53 @@ object Expr:
           case it @ (Zero | One) => it
       def flatMap[A, B](fa: Expr[A])(f: A => Expr[B]): Expr[B] =
         flatten(map(fa)(f))
-      final def tailRecM[A, B](a: A)(f: A => Expr[Either[A, B]]): Expr[B] =
-        flatMap(f(a))(_.fold(tailRecM(_)(f), pure))
+      // def tailRecM[A, B](a: A)(f: A => Expr[Either[A, B]]): Expr[B] = // NOT stack safe!
+      //   flatMap(f(a))(_.fold(tailRecM(_)(f), pure))
+      def tailRecM[A, B](a: A)(f: A => Expr[Either[A, B]]): Expr[B] = // stack safe!
+        def tailRecMʹ(a: A): Eval[Expr[B]] =
+          def loop(xe: Expr[Either[A, B]]): Eval[Expr[B]] =
+            xe match
+              case it @ (Zero | One) =>
+                Eval.now(it)
+              case Val(Left(a)) =>
+                for
+                  _   <- Eval.Unit
+                  xb <- tailRecMʹ(a)
+                yield
+                  xb
+              case Val(Right(b)) =>
+                Eval.now(Val(b))
+              case Inv(xn) =>
+                for
+                  n <- loop(xn)
+                yield
+                  Inv(n)
+              case Add(xm, xn) =>
+                for
+                  m <- loop(xm)
+                  n <- loop(xn)
+                yield
+                  Add(m, n)
+              case Sub(xm, xn) =>
+                for
+                  m <- loop(xm)
+                  n <- loop(xn)
+                yield
+                  Sub(m, n)
+              case Mul(xm, xn) =>
+                for
+                  m <- loop(xm)
+                  n <- loop(xn)
+                yield
+                  Mul(m, n)
+              case Div(xm, xn) =>
+                for
+                  m <- loop(xm)
+                  n <- loop(xn)
+                yield
+                  Div(m, n)
+          loop(f(a))
+        tailRecMʹ(a).value
 
   implicit def eval[A](expr: Expr[A])(implicit R: DivisionRing[A]): A =
     expr match
