@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/queens-4-interpreter/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-paired/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/queens-4-interpreter/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-paired/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)
 
 Lesson 06: Natural Transformations (cont'd)
 ===========================================
@@ -45,7 +45,6 @@ val simplify: unit ?=> Expr ~> Expr =
         case Div(lhs, rhs) => Div(apply(lhs), apply(rhs))
         case Inv(rhs) => Inv(apply(rhs))
         case it => it
-
 ```
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/queens-4-interpreter/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-paired/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/queens-4-interpreter/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-paired/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)

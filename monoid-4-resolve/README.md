@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-3-string/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-3-string/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md)
 
 Lesson 05: Monoids (cont'd)
 ===========================
@@ -118,4 +118,4 @@ former must occur only in the last parameter list. When passing explicit paramet
 precede the arguments; otherwise, the parentheses can be completely left out, if `given` instances or `implicit` / `using`
 parameters are in scope.]
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-3-string/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-3-string/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md)

@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/eval-2-expr-tree/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/eval-2-expr-tree/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/traverse-1-list/README.md)
 
 Lesson 06: Natural Transformations (cont'd)
 ===========================================
@@ -14,9 +14,14 @@ import scala.annotation.unchecked.uncheckedVariance
 
 object ʹ:
 
-  class List[+T] private (private val node: List.Node[T], val size: Int):  // because constructor is private, Nil is unique
+  // because constructor is private, Nil is unique
+  class List[+T] private (private val node: List.Node[T], val size: Int) extends IterableOnce[T]:
 
     import List._
+
+    override val knownSize: Int = size
+
+    override def iterator: Iterator[T]
 
     override def toString: String = "List(" + node + ")"
 
@@ -47,9 +52,13 @@ object ʹ:
     private final case class Node[+T](head: T, var tail: Node[T @uncheckedVariance]):
 
       override def toString: String =
-        tail match
-          case null => "" + head
-          case _ => "" + head + "," + tail
+        @tailrec
+        def show(self: Node[T], res: String): String =
+          val head = res + self.head
+          self.tail match
+            case null => head
+            case tail => show(tail, head + ",")
+        show(this, "")
 
       ...
 
@@ -77,7 +86,7 @@ Comment about the difference between `ʹ.List` and `scala.collection.immutable.L
 
 Based on those operators, implement a typeclass instance `kittensʹListMonad` of the `Monad` typeclass for `ʹ.List`; and give
 an implementation of a natural transformation `list` from `ʹ.List` to `scala.collection.immutable.List`, accompanied by some
-examples. (Hint: the implementation of `tailRecM` should also be stack safe, using the `cats.Eval` monad, but not through the
+examples. (Hint: the implementation of `tailRecM` should also be stack safe, using the `cats.Eval` monad, but _not_ via the
 `ʹ.List.foldRight` stack safe method.)
 
 Solution
@@ -140,7 +149,7 @@ The third kind of operators are `foldLeft`, `foldRight`, and `toList`:
 1. `foldRight` invokes the "recursive" `loop` method wrapped in a `cats.Eval.defer` call-by-name method call, and thus,
    provided by the `cats.Eval` monad, is _stack safe_; the application of the accumulator binary function upon the current
    item and the result from the trampolined recursion, is wrapped also in a `cats.Eval.later` call-by-name method call, and,
-   hence, stack safe; these two wrapping methods are used inside a for-comprehension
+   hence, stack safe; these two wrapping methods are used inside a `for`-comprehension
 
 1. `toList` prepends the items to the `scala.collection.immutable.List` accumulator using the `scala.collection.immutable.::`
    operator, and so must start with the rightmost item, which `foldRight` does.
@@ -157,9 +166,20 @@ import cats.Eval
 
 object ʹ:
 
-  class List[+T] private (private val node: List.Node[T], val size: Int):
+  class List[+T] private (private val node: List.Node[T], val size: Int) extends IterableOnce[T]:
 
     import List._
+
+    override val knownSize: Int = size
+
+    override def iterator: Iterator[T] =
+      new Iterator[T]:
+        var it = node
+        override def next: T =
+          val res = it.head
+          it = it.tail
+          res
+        override def hasNext: Boolean = it ne null
 
     override def toString: String = "List(" + node + ")"
 
@@ -223,6 +243,7 @@ object ʹ:
       while it ne null
       do
         res = acc(res, it.head)
+        it = it.tail
       res
 
     def foldRightʹ[A](ini: A)(acc: (T, A) => A): A = // NOT stack safe!
@@ -285,9 +306,13 @@ object ʹ:
     private final case class Node[+T](head: T, var tail: Node[T @uncheckedVariance]):
 
       override def toString: String =
-        tail match
-          case null => "" + head
-          case _ => "" + head + "," + tail
+        @tailrec
+        def show(self: Node[T], res: String): String =
+          val head = res + self.head
+          self.tail match
+            case null => head
+            case tail => show(tail, head + ",")
+        show(this, "")
 
       @tailrec
       final def reverse[S >: T](acc: Node[S]): Node[S] =
@@ -387,12 +412,12 @@ Like the `scala.collection.immutable.List` original, the implementation of the t
 `Monad` typeclass for `ʹ.List` is straightforward, in terms of the three operators of the fourth kind (except `foreach`):
 
 ```Scala
-import cats.{ Eval, Monad, ~> }
+import cats.{ Eval, Monad, StackSafeMonad, ~> }
 
 implicit val kittensʹListMonad: Monad[ʹ.List] =
   import ʹ.List
   import List._
-  new Monad[List]:
+  new StackSafeMonad[List]:
     override def pure[A](x: A): List[A] = x :: Nil
     override def map[A, B](fa: List[A])(f: A => B): List[B] = fa.map(f)
     override def flatMap[A, B](fa: List[A])(f: A => List[B]): List[B] = fa.flatMap(f)
@@ -427,7 +452,7 @@ The second _not stack safe_ implementation of `tailRecM` is quite illustrative t
 actual implementation.
 
 1. We will iterate pattern matching through the list `f(a)` in a recursive method `loop`, to which we make the accumulator
-   `bs` a second parameter; we would like this method to be `@tailrec`ursive, if possible:
+   `bs` a second parameter; we would like this method to be as `@tailrec`ursive as possible:
 
 ```Scala
 override def tailRecM[A, B](a: A)(f: A => List[Either[A, B]]): List[B] =
@@ -444,10 +469,10 @@ override def tailRecM[A, B](a: A)(f: A => List[Either[A, B]]): List[B] =
   loop(f(a), Nil)
 ```
 
-But - although possible - in doing so, we have this time turned `tailRecM` into a recursive non-`@tailrec`ursive method. So
-we are back where we started.
+But - although entirely possible - in doing so, we have this time turned `tailRecM` into a recursive non-`@tailrec`ursive
+method. So we are back where we started.
 
-2. Let us, first, modify the return type of `loop` to `Eval[List[B]]`:
+2. Let us, first, modify the return type of `loop` to be `Eval[List[B]]`:
 
 ```Scala
 override def tailRecM[A, B](a: A)(f: A => List[Either[A, B]]): List[B] =
@@ -491,17 +516,17 @@ tailRecMʹ(a) >>= { bsʹ => loop(tl, bs ::: bsʹ) }
 ```
 
 5. But this would mean that we would need to operate in the `Eval` monad, and thus change the return type of `tailRecMʹ` (in
-   line #a; we would also need to remove the `@tailrec` annotation):
+   line #a below; we would also need to remove the "`@tailrec`" annotation):
 
 ```Scala
 override def tailRecM[A, B](a: A)(f: A => List[Either[A, B]]): List[B] =
-  def tailRecMʹ(a: A): Eval[List[B]] =                              // line #a
+  def tailRecMʹ(a: A): Eval[List[B]] =                                    // line #a
     def loop(ls: List[Either[A, B]], bs: List[B]): Eval[List[B]] =
       ls match
         case Nil =>
           Eval.now(bs)
         case Left(a) :: tl =>
-          tailRecMʹ(a) >>= { bsʹ => loop(tl, bs ::: bsʹ) }          // line #b
+          tailRecMʹ(a) >>= { bsʹ => loop(tl, bs ::: bsʹ) }                // line #b
         case Right(b) :: tl =>
           loop(tl, bs :+ b)
     loop(f(a), Nil)
@@ -514,7 +539,7 @@ override def tailRecM[A, B](a: A)(f: A => List[Either[A, B]]): List[B] =
 Eval.unit >> tailRecMʹ(a) >>= { bsʹ => loop(tl, bs ::: bsʹ) }
 ```
 
-Now we can rewrite the sequence of `flatMap`s as a for-comprehension.
+Now we can rewrite the sequence of `flatMap`s as a `for`-comprehension.
 
 As to the natural transformations, in either direction, we can use `foldRight`, which is stack safe; but in the forward
 direction we already have the `toList` method:
@@ -555,4 +580,4 @@ catch
     ???
 ```
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/eval-2-expr-tree/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/eval-2-expr-tree/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/traverse-1-list/README.md)

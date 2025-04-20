@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md)
 
 Lesson 04: Trampoline and Monads (cont'd)
 =========================================
@@ -117,4 +117,4 @@ val nat: Trampoline ~> Eval =
         case FlatMap(s, g) => apply(s).flatMap(g.run andThen apply)
 ```
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md)

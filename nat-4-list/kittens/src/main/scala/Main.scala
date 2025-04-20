@@ -1,10 +1,10 @@
-import cats.{ Eval, Monad, ~> }
+import cats.{ Eval, Monad, StackSafeMonad, ~> }
 import cats.syntax.flatMap._
 
 implicit val kittensʹListMonad: Monad[ʹ.List] =
   import ʹ.List
   import List._
-  new Monad[List]:
+  new StackSafeMonad[List]:
     override def pure[A](x: A): List[A] = x :: Nil
     override def map[A, B](fa: List[A])(f: A => B): List[B] = fa.map(f)
     override def flatMap[A, B](fa: List[A])(f: A => List[B]): List[B] = fa.flatMap(f)

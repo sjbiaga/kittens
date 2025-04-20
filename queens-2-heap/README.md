@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md)
 
 Lesson 02: Closures and Stack Safety (cont'd)
 =============================================
@@ -135,4 +135,4 @@ Of course, when a row is done and line #a is reached, then line #25 will pattern
 “pushed on” the heap. Otherwise, the `FSM` will continue with the tail of the heap, until there are no more closures, which
 signifies the end of the algorithm.
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md)

@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-4-resolve/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-4-resolve/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md)
 
 Lesson 05: Monoids (cont'd)
 ===========================
@@ -27,8 +27,9 @@ implicit def kittensExprMonoidK(implicit unit: unit): MonoidK[Expr] =
         case One  => Mul(x, y)
 ```
 
-Via the [builder for `Expr`essions](https://github.com/sjbiaga/kittens/blob/main/expr-07-builder/README.md), we can use two
-`Expr` operands at a higher combination level using the `<+>` rich wrapper method:
+Via the
+[builder for `Expr`essions](https://github.com/sjbiaga/kittens/blob/main/expr-07-builder/README.md#an-expression-builder-contd),
+we can use two `Expr` operands at a higher combination level using the `<+>` rich wrapper method:
 
 ```scala
 scala> import cats.syntax.semigroupk._
@@ -73,4 +74,4 @@ scala> eval(res3)
 val res4: Double = Infinity
 ```
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-4-resolve/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-4-resolve/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md)

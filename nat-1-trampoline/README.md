@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md)
 
 Lesson 04: Trampoline and Monads (cont'd)
 =========================================
@@ -193,4 +193,4 @@ object functor:
 6. so in the `for`-comprehension from middle snippet, we have on the left hand side of the arrows, the parameters, and on the
    right hand side, the computations of the arguments: neat, no need for nested blocks, but beware the issue with the imports.
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md)

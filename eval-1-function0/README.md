@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-eert/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/eval-2-expr-tree/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-eert/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/eval-2-expr-tree/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)
 
 Lesson 06: Natural Transformations (cont'd)
 ===========================================
@@ -160,4 +160,4 @@ val res4: Int = 10946
 
 The value of the counter is exactly the number of _base cases_ (which coincides with that of `liftF` invocations).
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-eert/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/eval-2-expr-tree/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-eert/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/eval-2-expr-tree/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)

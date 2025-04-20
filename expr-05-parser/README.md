@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-04-parser/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-06-builder/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-04-parser/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-06-builder/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md)
 
 Lesson 03: A Rich Language of Expressions (cont'd)
 ==================================================
@@ -131,4 +131,4 @@ Thus, `given` `unit` is `One`, `Inv(Zero)` and `swap(swap(Inv(Zero)))` are no lo
 Here, `unit ?=>` means there is an implicit parameter of type `unit` that is always passed implicitly to `swap` in the body
 of method `apply[T]`; such function type is specific to Scala 3 only.
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-04-parser/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-06-builder/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-04-parser/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-06-builder/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md)

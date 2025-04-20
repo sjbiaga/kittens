@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-4-interpreter/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-4-interpreter/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)
 
 Lesson 06: Natural Transformations (cont'd)
 ===========================================
@@ -172,5 +172,4 @@ implicit val kittensTrampolineMonadInstance: Monad[Trampoline] =
 
 MonadInterpreter[Trampoline].TrampolineInterpreter.apply(a.fac)()
 ```
-
-[Previous](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-4-interpreter/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-4-interpreter/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)

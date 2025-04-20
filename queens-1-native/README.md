@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/covariant-2-contravariant/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/covariant-2-contravariant/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md)
 
 Lesson 02: Closures and Stack Safety
 ====================================
@@ -9,7 +9,7 @@ that computing the factorial of a number) can be transformed into loops if they 
 (like having the result passed as an argument) - without the need of monads or anything related to them. Conversely, monads
 are independent of recursion, but the `Cats-Effect` `IO` monad, for instance, executes a `FSM` of fibers via an iterative loop
 disguised as a `@tailrec`-annotated method called `runLoop`; nevertheless, if there is an invocation not in the scope of
-either `flatMap` or `map` (like a first invocation), it is not stack–safe.
+either `flatMap` or `map` (like a first invocation), it is not stack safe.
 
 In order to pass through those intermediary steps and analyze those relations, we use as a running example a (variant of a)
 puzzle known as the `N Queens Problem`. Given a chess board - a square grid of `NxN` - and `N` queens, with other possible
@@ -188,4 +188,4 @@ Notice two complementary facts resulting from this refactoring:
 1. each recursive call has been “detached” as a thunk from its hardcoded original form. The notion of closure can prevent (1)
    as it welcomes (2).
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/covariant-2-contravariant/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/covariant-2-contravariant/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md)

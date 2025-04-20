@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-paired/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-eert/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-paired/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-eert/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)
 
 Lesson 06: Natural Transformations (cont'd)
 ===========================================
@@ -125,4 +125,4 @@ val eval: unit ?=> FunctionKʹ[Ring, Expr, Tree] =
       evalʹ(xa)
 ```
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-paired/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-eert/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-paired/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-eert/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)

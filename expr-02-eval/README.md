@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md)
 
 Lesson 03: A Rich Language of Expressions (cont'd)
 ==================================================
@@ -50,4 +50,4 @@ def eval(expr: Expr[Int | Double])(implicit unit: unit): Double =
 Although a program is the same in both cases (e.g., `Mul(Add(One, Val(-1)), One)`), the "machine" (architecture) differs, with
 the results of evaluation equal to, respectively, `0d` and `1d`.
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md)

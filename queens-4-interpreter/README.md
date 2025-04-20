@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/nat-3-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-simplify/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/nat-3-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-simplify/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)
 
 Lesson 06: Natural Transformations (cont'd)
 ===========================================
@@ -79,7 +79,8 @@ import cats.effect.unsafe.implicits.global, cats.effect.IO
 The N Queens Problem - the "trampoline" algorithm: with Natural Transformations
 -------------------------------------------------------------------------------
 
-We will use the same implementation as in [Lesson 04 - The N Queens Problem - the "trampoline" algorithm](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md):
+We will use the same implementation as in
+[Lesson 04 - The N Queens Problem - the "trampoline" algorithm](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md#the-n-queens-problem---the-trampoline-algorithm):
 
 ```Scala
 def queens[M[_]: Monad](using M: Long, board: Board): M[Unit] =
@@ -180,4 +181,4 @@ qId
 
 The last - `qId` -, however, is _not stack safe_.
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/nat-3-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-simplify/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/nat-3-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-simplify/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)

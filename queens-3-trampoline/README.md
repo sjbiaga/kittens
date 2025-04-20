@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md)
 
 Lesson 04: Trampoline and Monads
 ================================
@@ -9,11 +9,11 @@ The code in this lesson makes the passage from closures to monads and is _origin
 Rúnar Óli Bjarnason; the `resume` method therein has been originally rewritten as `apply`, which we hope is much more clearer
 to the reader.
 
-In [Lesson 02 - Heap](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md) it is mentioned that trading
+In [Lesson 02 - Heap](https://github.com/sjbiaga/kittens/blob/main/queens-2-heap/README.md#heap) it is mentioned that trading
 stack for heap was done in a “primitive manner”. Let us see now a more advanced style of programming in Scala, using types
 with `map` and `flatMap` methods - a tiny language (we have already seen a
-[language for expressions](https://github.com/sjbiaga/kittens/blob/main/expr-07-builder/README.md)). Another basic
-observation is that `Heap` worked only for functions returning `Unit`: so let us relax this condition.
+[language for expressions](https://github.com/sjbiaga/kittens/blob/main/expr-07-builder/README.md#an-expression-builder-contd)).
+Another basic observation is that `Heap` worked only for functions returning `Unit`: so let us relax this condition.
 
 Thus, in general, if we had a `method` of type `Trampoline[T]` with several consecutive calls
 
@@ -75,9 +75,9 @@ def method(arg1, arg2, ...): Trampoline[T] =
 Note how these blocks are _nested_ in `method` and have _the same_ return type. We also added a `resume` method to the
 `Trampoline` trait, that obtains the result from the closure and applies it the block, yielding an unevaluated
 `Trampoline`. This is _partially_ what we wanted (`method` is invoked from outside its body, i.e., from `resume` - so the
-calls to `method` are stack–safe), as this solution is still not yet satisfactory: through
+calls to `method` are stack safe), as this solution is still not yet satisfactory: through
 line `Left(block(closure()()))` - where the second pair of parentheses invokes it -, the final method ”`apply(): T`“ becomes
-_indirectly_ recursive, hence not stack–safe, resulting in the failure of the whole construction.
+_indirectly_ recursive, hence not stack safe, resulting in the failure of the whole construction.
 
 If the two methods ”`resume`“ and “`apply`“ in the base `trait` `Trampoline` represent the _execution_ of a `FSM`, then the
 body of `method` composed of instances of `case class`es surely represents the _compilation_ of the program into states of the
@@ -193,7 +193,9 @@ object Trampoline:
     inline def apply[A](closure: => Trampoline[A]): Trampoline[A] = new Call(_ => closure)
 ```
 
-[In the literature, `::` is known as _left-to-right composition of Kleisli arrows_. [Exercise 04.1](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md) shows how `Kleisli` types can be used instead.]
+[In the literature, `::` is known as _left-to-right composition of Kleisli arrows_.
+[Exercise 04.1](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md#exercise-041) shows how `Kleisli`
+types can be used instead.]
 
 Let us analyze line #e, which we can rewrite as:
 
@@ -359,4 +361,4 @@ Done(()).flatMap({ _ => () } andThen pure)
 which further compiles to `FlatMap(Done(()), { _ => () } andThen pure)` which finally - by line #c - reduces to `Done(())`
 and - by line #a - to `()`.
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md)

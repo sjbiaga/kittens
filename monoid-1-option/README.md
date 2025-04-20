@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-2-list/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-2-list/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md)
 
 Lesson 05: Monoids
 ==================
@@ -113,8 +113,8 @@ implicit val catsInvariantMonoidalSemigroup: InvariantMonoidal[Semigroup] = new 
 
 We can see that the `catsInvariantMonoidalSemigroup` value is a typeclass instance for the `Semigroup` typeclass of the
 `Invariant` functor (meaning `Semigroup` _is_ an `Invariant` - monoidal - functor), which we mentioned in
-[Lesson 03 - `Expr` as `Functor`](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md). The magic is thus in
-lines #5-#6, specifically `f(fa.combine(g(x), g(y)))`: `g` represents unwrapping, while `f` - the wrapping.
+[Lesson 03 - `Expr` as `Functor`](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md#expr-as-functor). The
+magic is thus in lines #5-#6, specifically `f(fa.combine(g(x), g(y)))`: `g` represents unwrapping, while `f` - the wrapping.
 
 The runtime error is due to _unwrapping_: we must check for `None` and use `M.empty` rather than `None.get`:
 
@@ -144,4 +144,4 @@ Option.empty[Int] |+| Option(0)
 Option.empty[String] |+| Option("")
 ```
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-2-list/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/nat-1-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-2-list/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md)

@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-06-builder/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-CoflatMap/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-06-builder/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-CoflatMap/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md)
 
 Lesson 03: A Rich Language of Expressions (cont'd)
 ==================================================
@@ -29,4 +29,4 @@ object Builder:
 
 The second parameter to `close` is an `Int`eger, specifying how many times the result of `f` should be inverted.
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-06-builder/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-CoflatMap/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-06-builder/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-CoflatMap/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md)

@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-3-trampoline/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-3-trampoline/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)
 
 Lesson 06: Natural Transformations
 ==================================
@@ -6,8 +6,8 @@ Lesson 06: Natural Transformations
 We return to this topic started in [Lesson 03 - Natural Transformations: Swapping the Additive with the Multiplicative](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md).
 
 We already introduced in a previous
-[Lesson 04 - `Trampoline` `Monad`](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md) the
-implementation of a `Trampoline`, let us recall it here:
+[Lesson 04 - `Trampoline` `Monad`](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md#trampoline-monad)
+the implementation of a `Trampoline`, let us recall it here:
 
 ```Scala
 sealed abstract trait Trampoline[+A]:
@@ -144,4 +144,4 @@ the answer is _twice_ yes: the source `Trampoline` is stack safe anyway, and the
 Note that there are two `FSM`s involved: the source of the natural transformation, i.e., `Trampoline`, and, the target, i.e.,
 respectively, `TailRec`, `CatsTrampoline`, and `Eval`.
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-3-trampoline/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-3-trampoline/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)

@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-CoflatMap/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-CoflatMap/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md)
 
 Lesson 03: A Rich Language of Expressions (cont'd)
 ==================================================
@@ -7,9 +7,9 @@ Exercise 03.2
 -------------
 
 Combine the specification of method `eval` in
-[Evaluation of Expressions](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md) with the concept behind
-`swap` from
-[Natural Transformations: Swapping the Additive with the Multiplicative](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md)
+[Evaluation of Expressions](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md#evaluation-of-expressions)
+with the concept behind `swap` from
+[Natural Transformations: Swapping the Additive with the Multiplicative](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md#natural-transformations-swapping-the-additive-with-the-multiplicative)
 to design a _natural transformation_ from `Expr` to `Id` which evaluates an `Expr`ession in a `DivisionRing` typeclass.
 Hint: implement the following trait instead of `Cats`' `FunctionK`.
 
@@ -63,4 +63,4 @@ val eval: unit ?=> FunctionKʹ[Ring, Expr, Id] =
       evalʹ(xa)(implicitly[Ring[A]].asInstanceOf[DivisionRing[A]])
 ```
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-CoflatMap/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-CoflatMap/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md)

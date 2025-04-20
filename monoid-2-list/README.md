@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-3-string/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-3-string/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md)
 
 Lesson 05: Monoids (cont'd)
 ===========================
@@ -28,4 +28,4 @@ import cats.syntax.monoid._
 ((Nil: List[Int]) |+| List(0, 1, 3, 7)) == List(11)
 ```
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-3-string/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-3-string/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md)

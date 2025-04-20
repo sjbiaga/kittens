@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/covariant-1-contravariant/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/covariant-1-contravariant/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/covariant-1-contravariant/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md)
 
 Lesson 01: Covariant vs Contravariant Types (cont'd)
 ====================================================
@@ -257,4 +257,4 @@ scala> res2.process(3)
 val res3: String = 77
 ```
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/covariant-1-contravariant/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/covariant-1-contravariant/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/covariant-1-contravariant/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md)

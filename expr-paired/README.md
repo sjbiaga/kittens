@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-simplify/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-tree/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-simplify/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-tree/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)
 
 Lesson 06: Natural Transformations (cont'd)
 ===========================================
@@ -89,4 +89,4 @@ val eval: unit ?=> FunctionKʹ[Ring, Expr, Pair] =
       evalʹ(xa) -> evalʹ(swap(xa)(using if summon[unit] eq Zero then One else Zero))
 ```
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-simplify/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-tree/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-simplify/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-tree/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)

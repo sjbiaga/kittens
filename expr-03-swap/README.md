@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-04-parser/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-04-parser/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md)
 
 Lesson 03: A Rich Language of Expressions (cont'd)
 ==================================================
@@ -47,7 +47,7 @@ implicit val kittensExprFunctor: Functor[Expr] =
 ```
 
 In order to _use_ the `map` method, the `functor` syntax must be in scope. `Cats` employs a sophisticated system of implicits
-to this end. This mechanism is explained in [Lesson 05 - Resolving `Monoid`s](https://github.com/sjbiaga/kittens/blob/main/monoid-4-resolve/README.md). Thus:
+to this end. This mechanism is explained in [Lesson 05 - Resolving `Monoid`s](https://github.com/sjbiaga/kittens/blob/main/monoid-4-resolve/README.md#resolving-monoids). Thus:
 
 ```scala
 scala> import cats.syntax.functor._
@@ -66,7 +66,7 @@ defines a `SAM` method `apply[A](fa: F[A]): G[A]`.
 Nevertheless, a very straightforward "function" or natural transformation of signature `Expr ~> Expr` is that of swapping the
 additive and the multiplicative parts with one another: by pattern-matching on the parameter `expr: Expr[T]`, we can swap
 operators `Zero` with `One`, `Add` with `Mul`, and `Sub` with `Div` - and vice-versa. The operands are swapped in a recursive
-manner. The implementation is also very intuitive - much like [`eval`](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md).
+manner. The implementation is also very intuitive - much like [`eval`](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md#evaluation-of-expressions).
 
 ```Scala
 import cats.~>
@@ -99,4 +99,4 @@ Trampoline.delay(()).mapK(FunctionK.id)
 
 We will come back to this topic in [Lesson 06](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md).
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-04-parser/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-04-parser/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md)

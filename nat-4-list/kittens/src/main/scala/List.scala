@@ -5,9 +5,20 @@ import cats.Eval
 
 object ʹ:
 
-  class List[+T] private (private val node: List.Node[T], val size: Int):
+  class List[+T] private (private val node: List.Node[T], val size: Int) extends IterableOnce[T]:
 
     import List._
+
+    override val knownSize: Int = size
+
+    override def iterator: Iterator[T] =
+      new Iterator[T]:
+        var it = node
+        override def next: T =
+          val res = it.head
+          it = it.tail
+          res
+        override def hasNext: Boolean = it ne null
 
     override def toString: String = "List(" + node + ")"
 
@@ -71,6 +82,7 @@ object ʹ:
       while it ne null
       do
         res = acc(res, it.head)
+        it = it.tail
       res
 
     def foldRightʹ[A](ini: A)(acc: (T, A) => A): A = // NOT stack safe!
@@ -133,9 +145,13 @@ object ʹ:
     private final case class Node[+T](head: T, var tail: Node[T @uncheckedVariance]):
 
       override def toString: String =
-        tail match
-          case null => "" + head
-          case _ => "" + head + "," + tail
+        @tailrec
+        def show(self: Node[T], res: String): String =
+          val head = res + self.head
+          self.tail match
+            case null => head
+            case tail => show(tail, head + ",")
+        show(this, "")
 
       @tailrec
       final def reverse[S >: T](acc: Node[S]): Node[S] =

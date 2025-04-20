@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-05-parser/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-05-parser/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md)
 
 Lesson 03: A Rich Language of Expressions (cont'd)
 ==================================================
@@ -84,4 +84,4 @@ parseAll(expr, "2*5+7+1") // runtime error
 
 we get an error. This is because our parser is weak: it can parse at most two terms with two factors each.
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-05-parser/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-05-parser/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md)

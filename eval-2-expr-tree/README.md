@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/eval-1-function0/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/eval-1-function0/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)
 
 Lesson 06: Natural Transformations (cont'd)
 ===========================================
@@ -38,8 +38,8 @@ case class Algorithms(n: Int):
 ```
 
 use a natural transformation `treeify` (see
-[Exercise 06.3](https://github.com/sjbiaga/kittens/blob/main/expr-tree/README.md)) to modify the suspension functor from
-`Expr` to `Tree`:
+[Exercise 06.3](https://github.com/sjbiaga/kittens/blob/main/expr-tree/README.md#exercise-063)) to modify the suspension
+functor from `Expr` to `Tree`:
 
 ```Scala
 enum Op:
@@ -146,7 +146,8 @@ implicit val kittensExprMonad: Monad[Expr] =
 
 By the same implementation of `tailRecM` as in `cats.StackSafeMonad`, the typeclass instance of the `Monad` typeclass for
 `Expr` is _not_ stack safe: what is required for _stack safety_ is a lazy evaluation using the `cats.Eval` monad. See
-[Exercise 06.7](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md) for an explanation of the implementation.
+[Exercise 06.7](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md#exercise-067) for an explanation of the
+implementation.
 
 Solution - Part 2
 -----------------
@@ -403,4 +404,4 @@ val res7: Int = 3628800
 Because the type of the tree in `res5` is `Expr[Int]`, when for the computation of `res6` we use `eval`, the implicit
 `DivisionRing[Int]` is `kittensIntRing` - so, it is used _implicitly_, not directly.
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/eval-1-function0/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/eval-1-function0/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)

@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-2-list/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-4-resolve/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-2-list/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-4-resolve/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md)
 
 Lesson 05: Monoids (cont'd)
 ===========================
@@ -100,4 +100,4 @@ val res0: cats.kernel.Monoid[String] = cats.kernel.instances.StringMonoid@4125bc
 The unwrapping function is `_.toInt`, which parses an `Int`eger from a `String`, while the wrapping function is `_.toString`,
 which converts an `Int`eger to `String`. `2 |+| 2` is - after the _concatenation_ of "2" with "2" - hence the _number_ `22`.
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-2-list/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-4-resolve/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/monoid-1-option/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/monoid-2-list/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/monoid-4-resolve/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-08-monoidK/README.md)

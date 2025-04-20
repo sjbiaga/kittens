@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-07-builder/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-07-builder/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md)
 
 Lesson 03: A Rich Language of Expressions (cont'd)
 ==================================================
@@ -20,8 +20,9 @@ def coflatMap[A, B](xa: Expr[A])(f: Expr[A] => B): Expr[B] =
   map(coflatten(xa))(f)
 ```
 
-We already introduced the value [`kittensExprFunctor`](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md)
-as typeclass instance of the `Functor` typeclass for `Expr`:
+We already introduced the value
+[`kittensExprFunctor`](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md#expr-as-functor) as a typeclass
+instance of the `Functor` typeclass for `Expr`:
 
 ```Scala
 implicit val kittensExprFunctor: Functor[Expr] =
@@ -76,7 +77,8 @@ eval(kittensExprCoflatMap.coflatten(Inv(Mul(One, Add(Val(1), Zero))))) // compil
 ```
 
 To give a typeclass instance of the `FlatMap` typeclass for `Expr`, see
-[Exercise 06.6](https://github.com/sjbiaga/kittens/blob/main/eval-2-expr-tree/README.md) for an implementation of `flatten`.
+[Exercise 06.6](https://github.com/sjbiaga/kittens/blob/main/eval-2-expr-tree/README.md#exercise-066) for an implementation
+of `flatten`.
 
 Exercise 03.1 - Part 2
 ----------------------
@@ -144,4 +146,4 @@ scala> res7(0d)
 val res8: Double = -1.0
 ```
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/expr-07-builder/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/expr-07-builder/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/expr-09-ring/README.md)
