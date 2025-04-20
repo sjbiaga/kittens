@@ -69,7 +69,7 @@ foldLeft(fa, G.pure(Nil: List[B])) {
 ```
 
 we see that there are _exactly two_ occurrences - `acc: G[List[B]]` and `f(a): G[B]` - of a value wrapped in `G[_]`. Since we
-[know](https://github.com/sjbiaga/kittens/blob/main/traverse-1-list/README.md) that `map2` or `map2Eval` are implemented
+know [that](https://github.com/sjbiaga/kittens/blob/main/traverse-1-list/README.md) `map2` or `map2Eval` are implemented
 (in)directly via `map` (inherited from `Functor`) and `ap` (inherited from `Apply`), it seems like having two `G[_]` values is
 suitable for it:
 
@@ -173,8 +173,11 @@ implicit val kittensʹListTraverse: Traverse[Exercise_07_5.ʹ.List] =
 
 Surprisingly, the same problem persists as before; as a proof that the traversal is _right to left_, numbers are `println`ed
 in reverse order. This is because, although `kittensʹListTraverse.foldRight` has `Eval` in its very definition, it is
-implemented in terms of the stack safe method `ʹ.List#foldRightʹ`, yes, but not also abiding to fail fast semantics. Let us
-add a new method `ʹ.List#foldRightʹ` (`foldRight` "prime"):
+implemented in terms of the stack safe method `ʹ.List#foldRight`, yes, but not also abiding to fail fast semantics.
+
+---
+
+Let us add a new method `ʹ.List#foldRightʹ` (`foldRight` "prime"):
 
 ```Scala
 object ʹ:

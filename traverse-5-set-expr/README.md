@@ -395,7 +395,7 @@ List(Mul(Val(1), Val(0)), Mul(Val(1), Val(5)), Mul(Val(4), Val(0)), Mul(Val(4), 
 
 The combinatorics is the same. The only difference is that, while finding and `map`ping _items_ from sub-`Expr`essions,
 unwrapping and wrapping takes place. On either the left hand side or the right hand side, it is possible that _no_ `map`ping
-occurs (there are no terminal `Val`s): these appear the same back in the result.
+occurs (there are no terminal `Val`s): these appear identical back in the result.
 
 The invariant maintained is that the `Expr`essions are always correct, although generated in all possible ways; this may
 sound a bit tricky: there is only one parameter to `Val`, how can we put "more" `Expr`essions instead?! A `for`-comprehension
@@ -412,9 +412,9 @@ for each node in the previous level (previous generator) there are distinct _tre
 that in the following illustration, `Val(n)`s are omitted, only `n`s are shown instead.
 
 ```
-                       for                                                           ___ for ___
-                       / \                                                          /           \
-               _______/   \_____                       Add(Div(One, Sub(Mul(1, 0), Mul(1, 5))), Sub(Mul(4, 0), Mul(4, 5)))
+                      for                                                            ___ for ___
+                      / \                                                           /           \
+               ______/   \______                       Add(Div(One, Sub(Mul(1, 0), Mul(1, 5))), Sub(Mul(4, 0), Mul(4, 5)))
               /                 \                                     /                                   \
              /                   \                                   /                                     \
             /                     \                                 /                                       \
@@ -501,14 +501,16 @@ There are two _different_ things to notice:
 
 We can make an observation in each case:
 
-1. an `Expr`ession has a dynamic part (`Val`), but unlike `Option`, an `Expr`ession generally has a _structure_ that is
-   _constant_: both `fa` from line #a and `fb` from line #b _keep_ their structure upon the return from `map`;
+1. an `Expr`ession has a dynamic part (`Val`), but unlike `Option`, an `Expr`ession generally has a complex _structure_ that
+   is _constant_: both `fa` from line #a and `fb` from line #b _keep_ their structure upon the return from `map`;
 
 1. the pseudo-item as _operand_, can be either a left hand side or a _right hand side_ - in our case, the latter.
 
 Another thing to notice is that, while the `b`s ranged over by line #b vary, the `a` from line #a _does not_. Also, note that
 when `a` varies, the `b`s - ranged overy by line #b - vary unconditionally in _the same_ way: the dependency on `a` is the
 same. The only thing that changes with `a` or `b` is what arguments are passed to `f`.
+
+---
 
 Initially, `fa` equals `Val(Chain())`: an empty `Chain` lifted into `Expr`. Now, if `fb` had several `Val`s (say three,
 `Val(k)`, `Val(m)`, `Val(n)`), - where `k`, `m`, `n` were lists - there would be three `append`ings (yes, applications of the

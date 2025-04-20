@@ -92,9 +92,9 @@ package object instances {
           else
             G match {
               case x: StackSafeMonad[G] =>
-                x.map(Traverse.traverseDirectly[G, A, B](fa)(f)(x))(_.toList)  // line #11
+                x.map(Traverse.traverseDirectly[G, A, B](fa)(f)(x))(_.toList)  // line #12
               case _ =>
-                // see Chain.traverseViaChain                                  // line #12
+                // see Chain.traverseViaChain                                  // line #14
             }
       }
   }
@@ -104,10 +104,10 @@ package object instances {
 For an empty `List`, the result is `Nil` lifted in the applicative `G[_]` - line #08. Otherwise, the implementation does
 (surprisingly or not) revert to a stack safe implementation:
 
-1. a `Chain.traverseViaChain` is chosen - line #12 -, because `Chain` has concatenation (`++`) with `O(1)` complexity,
+1. a `Chain.traverseViaChain` is chosen - line #14 -, because `Chain` has concatenation (`++`) with `O(1)` complexity,
    see [`Traverse[Chain]`](https://github.com/sjbiaga/kittens/blob/main/traverse-2-chain/README.md#traversechain);
 
-1. unless `G` were a `StackSafeMonad` - line #11 -, in which case `Traverse.traverseDirectly` is preferred - available for
+1. unless `G` were a `StackSafeMonad` - line #12 -, in which case `Traverse.traverseDirectly` is preferred - available for
    subtypes of `IterableOnce[A]`, a base trait for `Option` and `scala.collection`s (being a supertrait of `Iterable[A]`);
    appending (`:+`) for a `Chain` has also `O(1)` complexity:
 
@@ -137,7 +137,7 @@ That is how `traverseDirectly` was born: it dropped `foldRight` and chose `Chain
 result: but it requires the collection to be converted to (before the traversal) and from (after the traversal) a `Chain`.
 
 The dual `traverseViaChain` method, on the other hand, chose lazy accumulation mixed with _both_ pseudo-foldRight traversal
-using a `List` and `prepending`, _and_ pseudo-foldLeft traversal using a `Chain` and concatenation.
+using a `List` and `prepend`ing, _and_ pseudo-foldLeft traversal using a `Chain` and `concat`enation.
 
 `Traverse[List]` - via `Eval`
 -----------------------------
@@ -165,10 +165,10 @@ scala> res0.value
 val res2: List[Int] = List(2, 4, 6, 8)
 ```
 
-`Eval.always` will not memoize its argument - which is why the list items are printed each time `value` is invoked on `res1`.
+`Eval.always` will not memoize its argument - which is why the list items are printed each time `value` is invoked on `res0`.
 This entails, of course, that its parameter is _call-by-name_. Another intriguing question, perhaps, is where does "all this
-information" about what to `println` reside in-between invocations? The answer is a rhetoric question: how could `res1.value`
-print lines unless the _program_ `res1` were compiled, residing where else but on heap?!
+information" about what to `println` reside in-between invocations? The answer is a rhetoric question: how could `res0.value`
+print lines unless the _program_ `res0` were compiled, residing where else but on heap?!
 
 The parameter of `Eval.now` is _call-by-value_, which is why the items are `println`ed upon traversal:
 
@@ -366,4 +366,4 @@ def kittensTuple5Traverse[W, X, Y, Z]: Traverse[[A] =>> Tuple5[W, X, Y, Z, A]] =
   }
 ```
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/traverse-2-chain/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/traverse-2-chain/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/traverse-7-poke/README.md)

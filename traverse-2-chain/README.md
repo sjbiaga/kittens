@@ -6,7 +6,7 @@ Lesson 07: Traversable (cont'd)
 `Traverse[Chain]`
 -----------------
 
-We quote from the `documentation` on (https://typelevel.org/cats/datatypes/chain.html) `Chain` in package `cats.data`:
+We quote from the `documentation` on [`Chain`](https://typelevel.org/cats/datatypes/chain.html) in package `cats.data`:
 
     Chain is an immutable sequence data structure that allows constant time prepending, appending and concatenation.
 
@@ -34,7 +34,7 @@ object Chain {
 The implementation is identical with `catsStdInstancesForList` from
 [`Traverse[List]`](https://github.com/sjbiaga/kittens/blob/main/traverse-1-list/README.md#traverselist), except that it does
 not have to convert to and from `Chain`, because `Traverse.traverseDirectly` and `Chain.traverseViaChain` work directly on
-`Chain`s (only half true for the latter). `Chain` is not an `IterableOnce`, but its `Iterator` is (resorting to a `private`
+`Chain`s (only half true). `Chain` is not an `IterableOnce`, but its `Iterator` is (resorting to a `private`
 access `ChainIterator` class).
 
 We [already](https://github.com/sjbiaga/kittens/blob/main/traverse-1-list/README.md#traverselist) discussed
@@ -84,6 +84,8 @@ Thus, more importantly is that the program - having already been compiled (as a 
 depending on the parameters to `G.map2Eval` (stuff on the heap is appended): especially, `Applicative`s with _fail fast_
 semantics can _short circuit_ and terminate the program simply by _not using_ the second argument - if they need, they can
 return `Eval.now(<failure>)`.]
+
+So, let us discuss the processing, in each case.
 
 1. Starting from the `end` of each range, its implementation is a lazy "foldRight" disguised as an iterative `while` loop.
 
@@ -223,7 +225,7 @@ the output.
 What happens is that the defer corresponding to the leftmost number (`10`) is the last value assigned to `flist`: so, like
 the value `a` (bound to `10`) and the function `f`, `rhs100` is _captured_  as part of the _closure_ argument to `G.map2Eval`
 (line #26). But this would mean that the "last" defer captures `rhs100`, which captures `rhs1000` (line #14), and so on,
-upwards... This is the _heap_ that is build, where the program resides.
+upwards... This is the _heap_ that is built, where the program resides.
 
 Now, line #33 has a little added to it, which yields a `FlatMap(flist, identity andThen Now(_))` object - for uniformity. Upon
 the invocation of `Eval#value` (line #33), the "last" defer will be the first to be `evaluate`d: but how can we "pull" it out
@@ -255,7 +257,8 @@ lfb.map { // or: rhs100.map
 In other words, the heap now looks like this:
 
 ```Scala
-FlatMap(rhs100, <function-block #26> andThen Now(_)).flatMap(identity andThen Now(_))
+FlatMap(rhs100, <function-block #26> andThen Now(_))
+  .flatMap(identity andThen Now(_))
 ```
 
 The `flatMap` method intervenes before looping in `evaluate`:
@@ -298,7 +301,7 @@ When this function is applied, the block from line #12 `println`s `5` and applie
 FlatMap(rhs1000
        , <function-block #14> andThen Now(_))
   .flatMap((<function-block #26> andThen Now(_))
-            .flatMap(identity andThen Now(_)))
+             .flatMap(identity andThen Now(_)))
 ```
 
 The `flatMap` method intervenes before looping in `evaluate`:
