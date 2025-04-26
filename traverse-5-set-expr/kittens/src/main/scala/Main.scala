@@ -1,6 +1,6 @@
 import scala.util.Random.{ nextInt, shuffle }
 
-import alleycats.{ Zero, One }
+import alleycats.{ Zero => `0`, One => `1` }
 import cats.instances.list._
 import cats.syntax.functor._
 import cats.syntax.traverse._
@@ -13,7 +13,7 @@ enum Op:
 def opsify(ls: List[List[Int]]): List[Expr[List[Int]]] =
   require(ls.size >= 2)
   shuffle {
-    ls.traverse(identity)
+    ls.sequence
       .sliding(2, 3)
       .toList
   }
@@ -39,8 +39,8 @@ def opsify(ls: List[List[Int]]): List[Expr[List[Int]]] =
       case Op.* => Mul(lhs, rhs)
       case Op./ => Div(lhs, rhs)
       case Op.~ => Inv(rhs)
-      case Op.`0` => Expr.Zero
-      case Op.`1` => Expr.One
+      case Op.`0` => Zero
+      case Op.`1` => One
   }
 
 object Main:
@@ -50,7 +50,7 @@ object Main:
     val xs2 = opsify(List(List(1,0,4),List(2,-1,5),List(0,2,3)))
 
     val xs3 = (xs1 ++ xs2)
-      .traverse(identity)
+      .sequence
       .map(_.map(_.toSet))
 
     val xs = xs3.map {
@@ -60,8 +60,59 @@ object Main:
     }
 
     {
-      implicit val zero: Zero[Set[Int]] = Zero(Set.empty)
-      implicit def one(implicit n: Int): One[Set[Int]] = One(Set(-n, n))
+      import scala.util.control.TailCalls._
+      type unit = Expr.Zero.type | Expr.One.type
+      def eval(expr: Expr[Double])(implicit unit: unit, `0`: `0`[Double], `1`: `1`[Double]): Double =
+        def evalʹ(xa: Expr[Double]): TailRec[Double] =
+          xa match
+            case Zero => done(`0`.zero)
+            case One => done(`1`.one)
+            case Val(n) => done(n)
+            case Inv(xn) if Zero eq unit =>
+              for
+                n <- tailcall { evalʹ(xn) }
+              yield
+                `0`.zero - n
+            case Inv(xn) if One eq unit =>
+              for
+                n <- tailcall { evalʹ(xn) }
+              yield
+                `1`.one / n
+            case Add(xm, xn)       =>
+              for
+                m <- tailcall { evalʹ(xm) }
+                n <- tailcall { evalʹ(xn) }
+              yield
+                m + n
+            case Sub(xm, xn)       =>
+              for
+                m <- tailcall { evalʹ(xm) }
+                n <- tailcall { evalʹ(xn) }
+              yield
+                m - n
+            case Mul(xm, xn)       =>
+              for
+                m <- tailcall { evalʹ(xm) }
+                n <- tailcall { evalʹ(xn) }
+              yield
+                m * n
+            case Div(xm, xn)       =>
+              for
+                m <- tailcall { evalʹ(xm) }
+                n <- tailcall { evalʹ(xn) }
+              yield
+                m / n
+        evalʹ(expr).result
+
+      given `0`[Double] = `0`(0d)
+      given `1`[Double] = `1`(1d)
+      given unit = Zero
+      val lb = cats.Traverse[Expr].foldRight(Add(Sub(Zero, One), Val(1d)), cats.Eval.now(0d)) { (x, a) => a.map(x + _) }
+    }
+
+    {
+      implicit val zero: `0`[Set[Int]] = `0`(Set.empty)
+      implicit def one(implicit n: Int): `1`[Set[Int]] = `1`(Set(-n, n))
       implicit val universe: Set[Int] = Set.from(-5 to 5)
 
       given Int = 1

@@ -15,6 +15,8 @@ Lessons of Scala Cats
 
 [Lesson 07: Traversable](https://github.com/sjbiaga/kittens/blob/main/traverse-1-list/README.md)
 
+[Lesson 08: Monad Transformers](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md)
+
 Examples
 ========
 
@@ -23,3 +25,8 @@ Make a backup of `~/.dotty_history`, then copy the `.dotty_history` from some le
     scala-cli repl -S 3.7.0-RC3 --dep org.typelevel::cats-effect:3.7-4972921 --dep org.typelevel::cats-core:2.13.0 --dep org.typelevel::cats-free:2.13.0 --dep org.typelevel::algebra:2.13.0 --dep org.scala-lang.modules::scala-parser-combinators:2.4.0
 
 Execute _each_ line from the beginning, in that order.
+
+Projects
+========
+
+Each project is named `kittens` based on `SBT` developed in Scala 3.

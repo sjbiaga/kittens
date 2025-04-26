@@ -56,4 +56,3 @@ object Trampoline:
   trait Applicativeʹ[F[_]] extends Applicative[F]:
     def map2Trampoline[A, B, Z](fa: F[A], lb: Trampoline[F[B]])(f: (A, B) => Z): Trampoline[F[Z]] =
       lb.map(map2(fa, _)(f))
-  

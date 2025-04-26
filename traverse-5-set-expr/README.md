@@ -6,7 +6,7 @@ Lesson 07: Traversable (cont'd)
 Exercise 07.4
 -------------
 
-Is it possible to add, subtract, multiply, or divide collections using `Expr`essions?
+1. Is it possible to add, subtract, multiply, or divide collections using `Expr`essions?
 
 [Hint:
 because `Set` is not traversable, we first use the `traverse` method from the typeclass instance of the `Traverse`
@@ -23,7 +23,7 @@ enum Op:
 def opsify(ls: List[List[Int]]): List[Expr[List[Int]]] =
   require(ls.size >= 2)
   shuffle {
-    ls.traverse(identity)
+    ls.sequence
       .sliding(2, 3)
       .toList
   }
@@ -58,7 +58,7 @@ The argument `ls` is `traverse`d with `identity`: it will return all possible co
 with items from each argument sub-list:
 
 ```scala
-scala> List(List(1,4),List(0,5)).traverse(identity)
+scala> List(List(1,4),List(0,5)).sequence
 val res0: List[List[Int]] = List(List(1, 0), List(1, 5), List(4, 0), List(4, 5))
 ```
 
@@ -70,8 +70,12 @@ between 2 and 7 items. Finally, we use functions from indices to associate `Op`e
 of type `List[Int]`.
 ]
 
-Solution
---------
+2. Give an implementation as a `kittensExprTraverse` typeclass instance of the `Traverse` typeclass for `Expr`essions.
+
+[Hint: see the typeclass instance `Traverse[ExprF]` in the `Cats` companion object `cats.free.FreeStructuralSuite`.]
+
+Solution - Part 1
+-----------------
 
 Not in general, no, but for the case of `Set`s, we can interpret `Add`ition as _union_ of sets, `Sub`traction as _difference_
 of sets, `Mul`tiplication as _intersection_ of sets, `Div`ision as _symmetric difference_ of sets, and `Inv`ersion as set
@@ -427,8 +431,8 @@ that in the following illustration, `Val(n)`s are omitted, only `n`s are shown i
 Mul(1, 0)   Mul(1, 5)   Mul(4, 0)   Mul(4, 5)     Mul(1, 0)                    Mul(1, 5)   Mul(4, 0)                    Mul(4, 5)
 ```
 
-Solution (cont'd)
------------------
+Solution - Part 1 (cont'd)
+--------------------------
 
 We use two lists of lists wherefrom to generate sets. After we convert sub-lists of them into lists of `Expr`essions of type
 `List[Int]`, we concatenate them in just one `List`, which we `traverse` with `kittensʹExprMonad: Monad[Expr]`:
@@ -438,7 +442,7 @@ val xs1 = opsify(List(List(1,2,3),List(2,3,4),List(0,4,5)))
 val xs2 = opsify(List(List(1,0,4),List(2,-1,5),List(0,2,3)))
 
 val xs3: Expr[List[Set[Int]]] = (xs1 ++ xs2)
-  .traverse(identity)
+  .sequence
   .map(_.map(_.toSet))
 ```
 
@@ -552,8 +556,8 @@ By the first generator from line #a:
 Finally, line #d will `flatten` the occurrences wrapped in `Val` - `Val(fbʹʹkpq)`, `Val(fbʹʹkpq)`, `Val(fbʹʹkpq)` -, into,
 respectively, `fbʹʹkpq`, `fbʹʹkpq`, `fbʹʹkpq`. And so on, and so forth.
 
-Solution (cont'd)
------------------
+Solution - Part 1 (cont'd)
+--------------------------
 
 In order to obtain an `Expr[Set[Int]]`, we use the method `map` of `Expr` to `shuffle` each `List[Set[Int]]`, take between 2
 and 7 sets, and reduce them via intersection (`&`) operator:
@@ -582,5 +586,316 @@ and a universe with numbers from -5 to 5; we `evaluate` our `Expr`essions in `Se
   println(show(Val(eval(xs))))
 }
 ```
+
+Solution - Part 2
+-----------------
+
+The `traverse` method is implemented in a stack safe manner using Scala's `TailRec`ursive monad in a nested `traverseʹ`
+method . For the `Add`, `Mul`, `Sub`, and `Div` cases, `G.map2` is applied on the two results - of type `G[Expr[B]]` - from
+traversing the unwrapped arguments, with a third argument binary function the wrapping back in the respective case. For the
+`Inv` case, the traversal is similar but simpler, using `G.map`. The interesting case is of `Val`: here only the parameter
+function `f` is applied to the value, yielding a `G[B]`, which is then mapped to a `Val` using the same unary method `G.map`.
+
+The `foldLeft` method also is implemented in a stack safe manner using Scala's `TailRec`ursive monad in a nested `foldLeftʹ`
+method . For the `Add`, `Mul`, `Sub`, and `Div` cases, there is a result `b` for the left hand side folding, and using the
+latter as initial value, there is a final result. For the `Inv` case, there is just one result `b`. The interesting cases are
+of:
+
+- `Val`: the parameter binary function `f` is applied to the accumulator `b` and the value `a`;
+
+- `Zero`: the parameter binary function `f` is applied to the accumulator `b` and ````0`.zero```, coerced to an `A`;
+
+- `One`: the parameter binary function `f` is applied to the accumulator `b` and ````1`.one```, coerced to an `A`.
+
+The `foldRight` method is implemented too in a stack safe manner using `Cats`' `Eval` monad in a nested `foldRightʹ` method.
+
+```Scala
+import scala.util.control.TailCalls._
+
+import alleycats.{ Zero => `0`, One => `1` }
+
+import cats.{ Applicative, Eval, Traverse }
+
+implicit def kittensExprTraverse(implicit `0`: `0`[?], `1`: `1`[?]): Traverse[Expr] =
+  new Traverse[Expr]:
+    override def foldLeft[A, B](fa: Expr[A], b: B)(f: (B, A) => B): B =
+      implicit val `0ʹ`: `0`[A] = `0`.asInstanceOf[`0`[A]]
+      implicit val `1ʹ`: `1`[A] = `1`.asInstanceOf[`1`[A]]
+      def foldLeftʹ(xa: Expr[A], b: B): TailRec[B] =
+        xa match
+          case Val(a)    => done(f(b, a))
+          case Add(m, n) =>
+            for
+              b <- tailcall { foldLeftʹ(m, b) }
+              b <- tailcall { foldLeftʹ(n, b) }
+            yield
+              b
+          case Sub(m, n) =>
+            for
+              b <- tailcall { foldLeftʹ(m, b) }
+              b <- tailcall { foldLeftʹ(n, b) }
+            yield
+              b
+          case Mul(m, n) =>
+            for
+              b <- tailcall { foldLeftʹ(m, b) }
+              b <- tailcall { foldLeftʹ(n, b) }
+            yield
+              b
+          case Div(m, n) =>
+            for
+              b <- tailcall { foldLeftʹ(m, b) }
+              b <- tailcall { foldLeftʹ(n, b) }
+            yield
+              b
+          case Inv(n)    =>
+            for
+              b <- tailcall { foldLeftʹ(n, b) }
+            yield
+              b
+          case Zero      => done(f(b, `0ʹ`.zero))
+          case One       => done(f(b, `1ʹ`.one))
+      foldLeftʹ(fa, b).result
+    override def foldRight[A, B](fa: Expr[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
+      implicit val `0ʹ`: `0`[A] = `0`.asInstanceOf[`0`[A]]
+      implicit val `1ʹ`: `1`[A] = `1`.asInstanceOf[`1`[A]]
+      def foldRightʹ(xa: Expr[A], lb: Eval[B]): Eval[B] =
+        xa match
+          case Val(a)    => f(a, lb)
+          case Add(m, n) =>
+            Eval.defer { foldRightʹ(m, Eval.defer { foldRightʹ(n, lb) }) }
+          case Sub(m, n) =>
+            Eval.defer { foldRightʹ(m, Eval.defer { foldRightʹ(n, lb) }) }
+          case Mul(m, n) =>
+            Eval.defer { foldRightʹ(m, Eval.defer { foldRightʹ(n, lb) }) }
+          case Div(m, n) =>
+            Eval.defer { foldRightʹ(m, Eval.defer { foldRightʹ(n, lb) }) }
+          case Inv(n)    =>
+            Eval.defer { foldRightʹ(n, lb) }
+          case Zero      => f(`0ʹ`.zero, lb)
+          case One       => f(`1ʹ`.one, lb)
+      foldRightʹ(fa, lb)
+    override def traverse[G[_]: Applicative, A, B](fa: Expr[A])(f: A => G[B]): G[Expr[B]] =
+      val G = Applicative[G]
+      def traverseʹ(xa: Expr[A]): TailRec[G[Expr[B]]] =
+        xa match
+          case Val(it)   => done(G.map(f(it))(Val(_)))
+          case Add(m, n) =>
+            for
+              mʹ <- tailcall { traverseʹ(m) }
+              nʹ <- tailcall { traverseʹ(n) }
+            yield
+              G.map2(mʹ, nʹ)(Add(_, _))
+          case Sub(m, n) =>
+            for
+              mʹ <- tailcall { traverseʹ(m) }
+              nʹ <- tailcall { traverseʹ(n) }
+            yield
+              G.map2(mʹ, nʹ)(Sub(_, _))
+          case Mul(m, n) =>
+            for
+              mʹ <- tailcall { traverseʹ(m) }
+              nʹ <- tailcall { traverseʹ(n) }
+            yield
+              G.map2(mʹ, nʹ)(Mul(_, _))
+          case Div(m, n) =>
+            for
+              mʹ <- tailcall { traverseʹ(m) }
+              nʹ <- tailcall { traverseʹ(n) }
+            yield
+              G.map2(mʹ, nʹ)(Div(_, _))
+          case Inv(n)    =>
+            for
+              nʹ <- tailcall { traverseʹ(n) }
+            yield
+              G.map(nʹ)(Inv(_))
+          case it @ (Zero | One) => done(G.pure(it))
+      traverseʹ(fa).result
+```
+
+Let us suppose we want to `foldRight` an `Expr`ession, using an "add all" folding function, like this:
+
+```Scala
+val fun: (Double, Eval[Double]) => Eval[Double] = { (n, acc) => acc.map(n + _) }
+val lb = foldRight(Add(Sub(Zero, One), Val(2d)), Eval.now(0d))(fun)
+lb.value
+```
+
+When we assign `lb`, this will pattern match the case:
+
+```Scala
+case Add(m, n) =>
+  Eval.defer { foldRightʹ(m @ Sub(Zero, One), Eval.defer { foldRightʹ(n @ Val(2d), lb @ Eval.now(0d)) }) }
+```
+
+and thus the _first_ return value from `foldRightʹ` is:
+
+```Scala
+Eval.defer { foldRightʹ(Sub(Zero, One), Eval.defer { foldRightʹ(Val(2d), Eval.now(0d)) }) }
+```
+
+When we invoke `lb.value`, the thunk in the `Eval.Defer` will be evaluated to an invocation of `foldRightʹ`, which will
+pattern match the case:
+
+```Scala
+case Sub(m, n) =>
+  Eval.defer { foldRightʹ(m @ Zero, Eval.defer { foldRightʹ(n @ One, lb @ Eval.defer { foldRightʹ(Val(2d), Eval.now(0d)) }) }) }
+```
+
+and thus the _second_ return value from `foldRightʹ` is:
+
+```Scala
+Eval.defer { foldRightʹ(Zero, Eval.defer { foldRightʹ(One, Eval.defer { foldRightʹ(Val(2d), Eval.now(0d)) }) }) }
+```
+
+When this `Eval.Defer` is `evaluate`d in the loop, it will invoke `foldRightʹ` a _third_ time, pattern matching the case:
+
+```Scala
+case Zero => fun(`0ʹ`.zero, lbʹ @ Eval.defer { foldRightʹ(One, Eval.defer { foldRightʹ(Val(2d), Eval.now(0d)) }) })
+```
+
+When `fun` is applied  to `0d` and `lbʹ`, it will result in `lbʹ.map(0d + _)`, which is compiled to:
+
+```Scala
+FlatMap(Eval.Defer { () => foldRightʹ(One, Eval.defer { foldRightʹ(Val(2d), Eval.now(0d)) }) }
+       , (0d + _) andThen Now(_))
+```
+
+Now this `evaluate` can pattern match (and continue to loop):
+
+```Scala
+foldRightʹ(One, Eval.defer { foldRightʹ(Val(2d), Eval.now(0d)) })
+  .flatMap((0d + _) andThen Now(_))
+```
+
+The _fourth_ return value from `foldRightʹ` pattern matching the case:
+
+```Scala
+case One => fun(`1ʹ`.one, lbʹʹ @ Eval.defer { foldRightʹ(Val(2d), Eval.now(0d)) })
+```
+
+and applying `fun`, is `lbʹʹ.map(1d + _)`, which compiles to:
+
+```Scala
+FlatMap(Eval.Defer { () => foldRightʹ(Val(2d), Eval.now(0d)) }
+       , (1d + _) andThen Now(_))
+  .flatMap((0d + _) andThen Now(_))
+```
+
+The computation continues by invoking `flatMap` on the `FlatMap(Eval.Defer { ... }, ...)` receiver, which compiles to:
+
+```Scala
+FlatMap(FlatMap(Eval.Defer { () => foldRightʹ(Val(2d), Eval.now(0d)) }
+               , (1d + _) andThen Now(_))
+       , (0d + _) andThen Now(_))
+```
+
+Now this `evaluate` can pattern match (and continue to loop):
+
+```Scala
+FlatMap(Eval.Defer { () => foldRightʹ(Val(2d), Eval.now(0d)) }
+       , ((1d + _) andThen Now(_))
+           .flatMap((0d + _) andThen Now(_)))
+```
+
+Too this `evaluate` can pattern match (and continue to loop):
+
+```Scala
+foldRightʹ(Val(2d), Eval.now(0d))
+  .flatMap(((1d + _) andThen Now(_))
+             .flatMap((0d + _) andThen Now(_)))
+```
+
+The _fifth_ return value from `foldRightʹ` pattern matching the case:
+
+```Scala
+case Val(a) => fun(a @ 2d, lbʹʹʹ @ Eval.now(0d))
+```
+
+and applying `fun`, is `lbʹʹʹ.map(2d + _)`, which compiles to:
+
+```Scala
+FlatMap(Eval.now(0d)
+       , (2d + _) andThen Now(_))
+  .flatMap(((1d + _) andThen Now(_))
+             .flatMap((0d + _) andThen Now(_)))
+```
+
+The computation continues by invoking `flatMap` on the `FlatMap(Eval.now(0d), ...)` receiver, which compiles to:
+
+```Scala
+FlatMap(FlatMap(Eval.now(0d)
+               , (2d + _) andThen Now(_))
+       , (((1d + _) andThen Now(_))
+            .flatMap((0d + _) andThen Now(_))))
+```
+
+Now this `evaluate` can pattern match (and continue to loop):
+
+```Scala
+FlatMap(Eval.now(0d)
+       , ((2d + _) andThen Now(_))
+           .flatMap(((1d + _) andThen Now(_))
+                      .flatMap((0d + _) andThen Now(_))))
+```
+
+Too this `evaluate` can pattern match (and continue to loop):
+
+```Scala
+(((2d + _) andThen Now(_))
+   .flatMap(((1d + _) andThen Now(_))
+              .flatMap((0d + _) andThen Now(_)))).apply(0d)
+```
+
+The computation continues by applying `0d`:
+
+```Scala
+Eval.Now(2d)
+  .flatMap(((1d + _) andThen Now(_))
+             .flatMap((0d + _) andThen Now(_)))
+```
+
+which compiles to:
+
+```Scala
+FlatMap(Eval.Now(2d)
+       , ((1d + _) andThen Now(_))
+           .flatMap((0d + _) andThen Now(_)))
+```
+
+Now this `evaluate` can pattern match (and continue to loop):
+
+```Scala
+(((1d + _) andThen Now(_))
+   .flatMap((0d + _) andThen Now(_))).apply(2d)
+```
+
+The computation continues by applying `2d`:
+
+```Scala
+Eval.Now(3d)
+  .flatMap((0d + _) andThen Now(_))
+```
+
+which compiles to:
+
+```Scala
+FlatMap(Eval.Now(3d)
+       , (0d + _) andThen Now(_))
+```
+
+Now this `evaluate` can pattern match (and continue to loop):
+
+```Scala
+((0d + _) andThen Now(_)).apply(3d)
+```
+
+The computation continues by applying `3d`:
+
+```Scala
+Eval.Now(3d)
+```
+
+from which `evaluate` returns `3d`.
 
 [First](https://github.com/sjbiaga/kittens/blob/main/traverse-1-list/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/traverse-4-nel/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/traverse-6-list/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/traverse-7-poke/README.md)

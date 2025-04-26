@@ -1,4 +1,4 @@
-[First](https://github.com/sjbiaga/kittens/blob/main/traverse-1-list/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/traverse-6-list/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/traverse-1-list/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/traverse-6-list/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md)
 
 Lesson 07: Traversable (cont'd)
 ===============================
@@ -196,4 +196,4 @@ first method `loop`, and then test fail fast semantics for the `Applicative[Opti
 
 We urge the reader to debug this code refactored for such purpose.
 
-[First](https://github.com/sjbiaga/kittens/blob/main/traverse-1-list/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/traverse-6-list/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/traverse-1-list/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/traverse-6-list/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md)

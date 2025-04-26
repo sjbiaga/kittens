@@ -15,5 +15,5 @@ implicit def kittensTuple5Traverse[W, X, Y, Z]: Traverse[[A] =>> Tuple5[W, X, Y,
 object Main:
   def main(args: Array[String]): Unit =
     println {
-    (None, None, None, None, Some(5)).traverse[Option, Int](_.map(_ + 5))
+      (None, None, None, None, Some(5)).traverse[Option, Int](_.map(_ + 5))
     }
