@@ -100,36 +100,36 @@ object Expr extends JavaTokenParsers:
           for
             n <- tailcall { evalʹ(xn) }
           yield
-            putʹ(0d - n.value)(s"${n.swap.value}invert")
+            putʹ(0d - n.value)(n)("invert")
         case Inv(xn) if One eq unit =>
           for
             n <- tailcall { evalʹ(xn) }
           yield
-            putʹ(1d / n.value)(s"${n.swap.value}invert")
+            putʹ(1d / n.value)(n)("invert")
         case Add(xm, xn)       =>
           for
             m <- tailcall { evalʹ(xm) }
             n <- tailcall { evalʹ(xn) }
           yield
-            putʹ(m.value + n.value)(s"${m.swap.value}${n.swap.value}plus")
+            putʹ(m.value + n.value)(m, n)("plus")
         case Sub(xm, xn)       =>
           for
             m <- tailcall { evalʹ(xm) }
             n <- tailcall { evalʹ(xn) }
           yield
-            putʹ(m.value - n.value)(s"${m.swap.value}${n.swap.value}minus")
+            putʹ(m.value - n.value)(m, n)("minus")
         case Mul(xm, xn)       =>
           for
             m <- tailcall { evalʹ(xm) }
             n <- tailcall { evalʹ(xn) }
           yield
-            putʹ(m.value * n.value)(s"${m.swap.value}${n.swap.value}times")
+            putʹ(m.value * n.value)(m, n)("times")
         case Div(xm, xn)       =>
           for
             m <- tailcall { evalʹ(xm) }
             n <- tailcall { evalʹ(xn) }
           yield
-            putʹ(m.value / n.value)(s"${m.swap.value}${n.swap.value}divides")
+            putʹ(m.value / n.value)(m, n)("divides")
     evalʹ(expr).result
 
   val swap: unit ?=> Expr ~> Expr =
@@ -261,13 +261,13 @@ object Expr extends JavaTokenParsers:
       )
     inline def open = Builder.From("opening", lhs :: save)
     inline def openʹ = open
-    def close(f: (Builder[T], Expr[T]) => Option[String] ?=> Builder[T], invert: Int = 0) =
+    def close(f: (Builder[T], Expr[T]) => String ?=> Builder[T], invert: Int = 0) =
       val self = Builder(save.head, save.tail)
-      f(self, lhs.value)(using Some(putʹ(())(lhs)("closing").swap.value))
+      f(self, lhs.value)(using putʹ(())(lhs)("closing").swap.value)
         .invert(invert)
-    def closeʹ(f: (Builder[T], Exprʹ[T]) => Option[String] ?=> Builder[T], invert: Int = 0) =
+    def closeʹ(f: (Builder[T], Exprʹ[T]) => String ?=> Builder[T], invert: Int = 0) =
       val self = Builder(save.head, save.tail)
-      f(self, lhs)(using Some("closing\n"))
+      f(self, lhs)(using "closing\n")
         .invert(invert)
   object Builder:
     def start[T] = From[T]("starting", Nil)

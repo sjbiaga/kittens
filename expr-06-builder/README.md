@@ -13,7 +13,7 @@ An `Expr`ession Builder
 We may apply the _builder_ design pattern to build an `Expr`ession using a more natural language, without mnemonics:
 
 ```Scala
- final case class Builder[T](private val lhs: Expr[T], private var save: List[Expr[T]]):
+final case class Builder[T](private val lhs: Expr[T], private var save: List[Expr[T]]):
   def build: Expr[T] = lhs
   def swapping(implicit unit: unit): Builder[T] = Builder(swap(lhs), save)
   def add(rhs: Expr[T]): Builder[T] = Builder(Add(lhs, rhs), save)
@@ -23,11 +23,9 @@ We may apply the _builder_ design pattern to build an `Expr`ession using a more 
   def invert: Builder[T] = Builder(Inv(lhs), save)
   def open: Builder.From[T] = Builder.From(build :: save)
   def close(f: (Builder[T], Expr[T]) => Builder[T], invert: Boolean = false): Builder[T] =
-    if invert
-    then
-      Builder(Inv(f(Builder(save.head, Nil), lhs).build), save.tail)
-    else
-      Builder(f(Builder(save.head, Nil), lhs).build, save.tail)
+    val self = Builder(save.head, save.tail)
+    if invert then f(self, lhs).invert
+    else f(self, lhs)
 object Builder:
   def start[T] = From[T](Nil)
   final case class From[T](save: List[Expr[T]]):

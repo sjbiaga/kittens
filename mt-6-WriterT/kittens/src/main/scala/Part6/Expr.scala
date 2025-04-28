@@ -101,36 +101,36 @@ object Expr extends JavaTokenParsers:
           for
             n <- tailcall { evalʹ(xn) }
           yield
-            putʹ(0d - n.value)(s"${n.swap.value}invert")
+            putʹ(0d - n.value)(n)("invert")
         case Inv(xn) if One eq unit =>
           for
             n <- tailcall { evalʹ(xn) }
           yield
-            putʹ(1d / n.value)(s"${n.swap.value}invert")
+            putʹ(1d / n.value)(n)("invert")
         case Add(xm, xn)       =>
           for
             m <- tailcall { evalʹ(xm) }
             n <- tailcall { evalʹ(xn) }
           yield
-            putʹ(m.value + n.value)(s"${m.swap.value}${n.swap.value}plus")
+            putʹ(m.value + n.value)(m, n)("plus")
         case Sub(xm, xn)       =>
           for
             m <- tailcall { evalʹ(xm) }
             n <- tailcall { evalʹ(xn) }
           yield
-            putʹ(m.value - n.value)(s"${m.swap.value}${n.swap.value}minus")
+            putʹ(m.value - n.value)(m, n)("minus")
         case Mul(xm, xn)       =>
           for
             m <- tailcall { evalʹ(xm) }
             n <- tailcall { evalʹ(xn) }
           yield
-            putʹ(m.value * n.value)(s"${m.swap.value}${n.swap.value}times")
+            putʹ(m.value * n.value)(m, n)("times")
         case Div(xm, xn)       =>
           for
             m <- tailcall { evalʹ(xm) }
             n <- tailcall { evalʹ(xn) }
           yield
-            putʹ(m.value / n.value)(s"${m.swap.value}${n.swap.value}divides")
+            putʹ(m.value / n.value)(m, n)("divides")
     evalʹ(expr).result
 
   val swap: unit ?=> Expr ~> Expr =

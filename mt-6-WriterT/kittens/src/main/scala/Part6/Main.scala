@@ -19,32 +19,32 @@ object Main:
 
     val x = x"(1.5+4-2)*3"
 
-    // {
-    //   val (expr, log) = x.listen.value
-    //   println(s"interpolated: ${expr} log:\n${log}")
-    // }
+    {
+      val (expr, log) = x.listen.value
+      println(s"interpolated: ${expr} log:\n${log}")
+    }
 
-    // {
-    //   val xʹ =
-    //     Builder.start(x)
-    //     .add(One)
-    //     .multiply(Val(5d), 4)
-    //       .open(One)
-    //       .add(One, 4)
-    //         .open(One)
-    //         .add(One, 5)
-    //           .open(One)
-    //           .add(One, 6)
-    //           .invert(2)
-    //           .close(_.add(_), 4)
-    //         .close(_.add(_), 3)
-    //       .close(_.add(_), 2)
-    //     .swapping
-    //     .lhs
+    {
+      val xʹ =
+        Builder.start(x)
+        .add(One)
+        .multiply(Val(5d), 4)
+          .open(One)
+          .add(One, 4)
+            .open(One)
+            .add(One, 5)
+              .open(One)
+              .add(One, 6)
+              .invert(2)
+              .close(_.add(_), 4)
+            .close(_.add(_), 3)
+          .close(_.add(_), 2)
+        .swapping
+        .lhs
 
-    //   val (expr, log) = xʹ.listen.value
-    //   println(s"built: ${expr} log:\n${log}")
-    // }
+      val (expr, log) = xʹ.listen.value
+      println(s"built: ${expr} log:\n${log}")
+    }
 
     {
       val xʹ =

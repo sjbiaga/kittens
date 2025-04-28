@@ -3,7 +3,7 @@
 Lesson 06: Natural Transformations
 ==================================
 
-We return to this topic started in [Lesson 03 - Natural Transformations: Swapping the Additive with the Multiplicative](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md).
+We return to this topic started in [Lesson 03 - Natural Transformations: Swapping the Additive with the Multiplicative](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md#natural-transformations-swapping-the-additive-with-the-multiplicative).
 
 We already introduced in a previous
 [Lesson 04 - `Trampoline` `Monad`](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md#trampoline-monad)

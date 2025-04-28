@@ -1,4 +1,4 @@
-[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-5-kleisli/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-7-expr/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-7-expr/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-5-kleisli/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md)
 
 Lesson 08: Monad Transformers (cont'd)
 ======================================
@@ -29,7 +29,7 @@ Traversing or folding methods
 Other methods
 -------------
 
-Companion Object
-----------------
+Methods from the companion object
+---------------------------------
 
-[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-5-kleisli/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-7-expr/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-7-expr/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-5-kleisli/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md)

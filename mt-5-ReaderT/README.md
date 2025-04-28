@@ -29,7 +29,7 @@ Traversing or folding methods
 Other methods
 -------------
 
-Companion Object
-----------------
+Methods from the companion object
+---------------------------------
 
 [First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-4-IorT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-6-WriterT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md)

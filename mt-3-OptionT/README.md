@@ -56,7 +56,7 @@ Other methods
 
 `compare`, `partialCompare`, `===`, `mapk`
 
-Companion Object
-----------------
+Methods from the companion object
+---------------------------------
 
 [First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-2-EitherT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-4-IorT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md)

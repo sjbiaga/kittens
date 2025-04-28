@@ -36,7 +36,7 @@ object Main:
               .open(One)
               .add(One, 6)
               .invert(2)
-              .close(_.add(_), 4)
+              .close(_.add(_, 2), 4)
             .close(_.add(_), 3)
           .close(_.add(_), 2)
         .swapping
@@ -65,7 +65,7 @@ object Main:
         .lhs
 
       val (expr, log) = xʹ.listen.value
-      println(s"built: ${expr} log:\n${log}")
+      println(s"builtʹ: ${expr} log:\n${log}")
     }
 
     {
@@ -77,7 +77,7 @@ object Main:
           .addʹ(x, 2)
           .add(One, 2)
             .openʹ(One)
-            .add(One, 2)
+            .addʹ(x, 2)
             .closeʹ(_.addʹ(_, 2))
           .closeʹ(_.addʹ(_))
         .swapping

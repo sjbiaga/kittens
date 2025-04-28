@@ -1,4 +1,4 @@
-[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-3-optionT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-3-OptionT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md)
 
 Lesson 08: Monad Transformers (cont'd)
 ======================================
@@ -518,7 +518,7 @@ Other methods
 
 `applyAlt`, `compare`, `partialCompare`, `===`, `combine`, `mapk`
 
-Companion Object
-----------------
+Methods from the companion object
+---------------------------------
 
 [First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-3-OptionT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md)

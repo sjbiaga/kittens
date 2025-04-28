@@ -3,7 +3,7 @@
 Lesson 08: Monad Transformers (cont'd)
 ======================================
 
-Exercise 08.1
+Exercise 08.2
 -------------
 
 Give an implementation based on `Expr` for an `ExprT` `case class` as a monad transformer.
