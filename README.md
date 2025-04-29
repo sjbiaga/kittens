@@ -33,4 +33,4 @@ Execute _each_ line from the beginning, in that order.
 Projects
 ========
 
-Each project is named `kittens` based on `SBT` developed in Scala 3.
+Each project is named `kittens` built with `SBT` developed in Scala 3.

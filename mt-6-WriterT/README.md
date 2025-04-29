@@ -1,4 +1,4 @@
-[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-5-ReaderT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-7-StateT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-5-ReaderT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-7-StateT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)
 
 Lesson 08: Monad Transformers (cont'd)
 ======================================
@@ -247,48 +247,48 @@ The builder is modified in the signatures of the "operator" methods (except `inv
 
 ```Scala
   final case class Builder[T](lhs: Exprʹ[T], private var save: List[Exprʹ[T]]):
-    private def fill(rhs: Expr[T])(n: Int) = List.fill(0 max n)(rhs)
+    private def fill(n: Int) = List.fill(0 max n)(())
     def swapping(implicit unit: unit) =
       Builder(putʹ(swap(lhs.value))(lhs)("swapping"), save)
     def add(rhs: Expr[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Add(lhs.value, rhs))(lhs)(m + "adding")
           }
         , save
       )
     def subtract(rhs: Expr[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Sub(lhs.value, rhs))(lhs)(m + "subtracting")
           }
         , save
       )
     def multiply(rhs: Expr[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Mul(lhs.value, rhs))(lhs)(m + "multiplying")
           }
         , save
       )
     def divide(rhs: Expr[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Div(lhs.value, rhs))(lhs)(m + "dividing")
           }
         , save
       )
     def invert(n: Int = 1): Builder[T] =
       Builder (
-        List.fill(0 max n)(())
+        fill(n)
           .foldLeft(lhs) {
             (lhs, _) =>
               putʹ(Inv(lhs.value))(lhs)("inverting")
@@ -379,85 +379,84 @@ The following "prime" methods are added: `_.addʹ(_)`, `_.subtractʹ(_)`, `_.mul
 
 ```Scala
   final case class Builder[T](lhs: Exprʹ[T], private var save: List[Exprʹ[T]]):
-    private def fill(rhs: Expr[T])(n: Int) = List.fill(0 max n)(rhs)
-    private def fill(rhs: Exprʹ[T])(n: Int) = List.fill(0 max n)(rhs)
+    private def fill(n: Int) = List.fill(0 max n)(())
     def swapping(implicit unit: unit) =
       Builder(putʹ(swap(lhs.value))(lhs)("swapping"), save)
     def add(rhs: Expr[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Add(lhs.value, rhs))(lhs)(m + "adding")
           }
         , save
       )
     def addʹ(rhs: Exprʹ[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Add(lhs.value, rhs.value))(lhs, rhs)(m + "adding")
           }
         , save
       )
     def subtract(rhs: Expr[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Sub(lhs.value, rhs))(lhs)(m + "subtracting")
           }
         , save
       )
     def subtractʹ(rhs: Exprʹ[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Sub(lhs.value, rhs.value))(lhs, rhs)(m + "subtracting")
           }
         , save
       )
     def multiply(rhs: Expr[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Mul(lhs.value, rhs))(lhs)(m + "multiplying")
           }
         , save
       )
     def mutiplyʹ(rhs: Exprʹ[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Mul(lhs.value, rhs.value))(lhs, rhs)(m + "multiplying")
           }
         , save
       )
     def divide(rhs: Expr[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Div(lhs.value, rhs))(lhs)(m + "dividing")
           }
         , save
       )
     def divideʹ(rhs: Exprʹ[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Div(lhs.value, rhs.value))(lhs, rhs)(m + "dividing")
           }
         , save
       )
     def invert(n: Int = 1): Builder[T] =
       Builder (
-        List.fill(0 max n)(())
+        fill(n)
           .foldLeft(lhs) {
             (lhs, _) =>
               putʹ(Inv(lhs.value))(lhs)("inverting")
@@ -490,9 +489,9 @@ These prime methods allow _writers_ to be calculated with, too. There is a sligh
 ```Scala
     def addʹ(rhs: Exprʹ[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Add(lhs.value, rhs.value))(lhs, rhs)(m + "adding")  // rhs contains the current log when closing
           }
         , save
@@ -616,85 +615,92 @@ The log lines containing `"parentheses"` only _end with_ this `String`, instead 
   final case class Builder[T](lhs: Exprʹ[T], private var save: List[Exprʹ[T]])(implicit indent: String):
     def indent(rhs: Exprʹ[T]): Exprʹ[T] =
       rhs.mapWritten(_.split("\n").map(indent + _).mkString("", "\n", "\n"))
-    private def fill(rhs: Expr[T])(n: Int) = List.fill(0 max n)(rhs)
-    private def fill(rhs: Exprʹ[T])(n: Int) = List.fill(0 max n)(rhs)
+    private def fill(n: Int) = List.fill(0 max n)(())
     def swapping(implicit unit: unit) =
       Builder(putʹ(swap(lhs.value))(lhs)("swapping"), save)
     def add(rhs: Expr[T], n: Int = 1)(using m: Option[String] = None) =
-      val indentʹ = if m eq None then indent else ""
       Builder (
-        fill(rhs)(n)
-          .foldLeft(lhs) {
-            (lhs, rhs) =>
-              putʹ(Add(lhs.value, rhs))(lhs)(m.map(_ + indent + "adding").getOrElse("adding"))(using indentʹ)
-          }
+        {
+          implicit val indentʹ = if m eq None then indent else ""
+          fill(n)
+            .foldLeft(lhs) {
+              (lhs, _) =>
+                putʹ(Add(lhs.value, rhs))(lhs)(m.map(_ + indent + "adding").getOrElse("adding"))
+            }
+        }
         , save
       )
     def addʹ(rhs: Exprʹ[T], n: Int = 1)(using m: Option[String] = None) =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               val rhsʹ = if m eq None then indent(rhs) else rhs
               putʹ(Add(lhs.value, rhsʹ.value))(lhs, rhsʹ)(m.map(_ + indent + "adding").getOrElse("adding"))
           }
         , save
       )
     def subtract(rhs: Expr[T], n: Int = 1)(using m: Option[String] = None) =
-      val indentʹ = if m eq None then indent else ""
       Builder (
-        fill(rhs)(n)
-          .foldLeft(lhs) {
-            (lhs, rhs) =>
-              putʹ(Sub(lhs.value, rhs))(lhs)(m.map(_ + indent + "subtracting").getOrElse("subtracting"))(using indentʹ)
-          }
+        {
+          implicit val indentʹ = if m eq None then indent else ""
+          fill(n)
+            .foldLeft(lhs) {
+              (lhs, _) =>
+                putʹ(Sub(lhs.value, rhs))(lhs)(m.map(_ + indent + "subtracting").getOrElse("subtracting"))
+            }
+        }
         , save
       )
     def subtractʹ(rhs: Exprʹ[T], n: Int = 1)(using m: Option[String] = None) =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               val rhsʹ = if m eq None then indent(rhs) else rhs
               putʹ(Sub(lhs.value, rhsʹ.value))(lhs, rhsʹ)(m.map(_ + indent + "subtracting").getOrElse("subtracting"))
           }
         , save
       )
     def multiply(rhs: Expr[T], n: Int = 1)(using m: Option[String] = None) =
-      val indentʹ = if m eq None then indent else ""
       Builder (
-        fill(rhs)(n)
-          .foldLeft(lhs) {
-            (lhs, rhs) =>
-              putʹ(Mul(lhs.value, rhs))(lhs)(m.map(_ + indent + "multiplying").getOrElse("multiplying"))(using indentʹ)
-          }
+        {
+          implicit val indentʹ = if m eq None then indent else ""
+          fill(n)
+            .foldLeft(lhs) {
+              (lhs, _) =>
+                putʹ(Mul(lhs.value, rhs))(lhs)(m.map(_ + indent + "multiplying").getOrElse("multiplying"))
+            }
+        }
         , save
       )
     def mutiplyʹ(rhs: Exprʹ[T], n: Int = 1)(using m: Option[String] = None) =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               val rhsʹ = if m eq None then indent(rhs) else rhs
               putʹ(Mul(lhs.value, rhsʹ.value))(lhs, rhsʹ)(m.map(_ + indent + "multiplying").getOrElse("multiplying"))
           }
         , save
       )
     def divide(rhs: Expr[T], n: Int = 1)(using m: Option[String] = None) =
-      val indentʹ = if m eq None then indent else ""
       Builder (
-        fill(rhs)(n)
-          .foldLeft(lhs) {
-            (lhs, rhs) =>
-              putʹ(Div(lhs.value, rhs))(lhs)(m.map(_ + indent + "dividing").getOrElse("dividing"))(using indentʹ)
-          }
+        {
+          implicit val indentʹ = if m eq None then indent else ""
+          fill(n)
+            .foldLeft(lhs) {
+              (lhs, _) =>
+                putʹ(Div(lhs.value, rhs))(lhs)(m.map(_ + indent + "dividing").getOrElse("dividing"))
+            }
+        }
         , save
       )
     def divideʹ(rhs: Exprʹ[T], n: Int = 1)(using m: Option[String] = None) =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               val rhsʹ = if m eq None then indent(rhs) else rhs
               putʹ(Div(lhs.value, rhsʹ.value))(lhs, rhsʹ)(m.map(_ + indent + "dividing").getOrElse("dividing"))
           }
@@ -702,7 +708,7 @@ The log lines containing `"parentheses"` only _end with_ this `String`, instead 
       )
     def invert(n: Int = 1): Builder[T] =
       Builder (
-        List.fill(0 max n)(())
+        fill(n)
           .foldLeft(lhs) {
             (lhs, _) =>
               putʹ(Inv(lhs.value))(lhs)("inverting")
@@ -712,12 +718,12 @@ The log lines containing `"parentheses"` only _end with_ this `String`, instead 
     inline def open = Builder.From("opening", lhs :: save)
     inline def openʹ = open
     def close(f: (Builder[T], Expr[T]) => Option[String] ?=> Builder[T], invert: Int = 0) =
-      implicit val indent = this.indent.substring(2)
+      implicit val indentʹ = indent.substring(2)
       val self = Builder(save.head, save.tail)
       f(self, lhs.value)(using Some(putʹ(())(lhs)("closing").swap.value))
         .invert(invert)
     def closeʹ(f: (Builder[T], Exprʹ[T]) => Option[String] ?=> Builder[T], invert: Int = 0) =
-      implicit val indent = this.indent.substring(2)
+      implicit val indentʹ = indent.substring(2)
       val self = Builder(save.head, save.tail)
       f(self, lhs)(using Some("closing\n"))
         .invert(invert)
@@ -821,4 +827,4 @@ ls = ls.filterNot(_.endsWith("parentheses"))
 println(s"""zipped:\n${(ls zip lsʹ).mkString("\n")}""")
 ```
 
-[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-5-ReaderT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-7-StateT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-5-ReaderT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-7-StateT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)

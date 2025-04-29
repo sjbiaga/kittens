@@ -174,85 +174,84 @@ object Expr extends JavaTokenParsers:
         applyʹ(expr).result
 
   final case class Builder[T](lhs: Exprʹ[T], private var save: List[Exprʹ[T]]):
-    private def fill(rhs: Expr[T])(n: Int) = List.fill(0 max n)(rhs)
-    private def fill(rhs: Exprʹ[T])(n: Int) = List.fill(0 max n)(rhs)
+    private def fill(n: Int) = List.fill(0 max n)(())
     def swapping(implicit unit: unit) =
       Builder(putʹ(swap(lhs.value))(lhs)("swapping"), save)
     def add(rhs: Expr[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Add(lhs.value, rhs))(lhs)(m + "adding")
           }
         , save
       )
     def addʹ(rhs: Exprʹ[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Add(lhs.value, rhs.value))(lhs, rhs)(m + "adding")
           }
         , save
       )
     def subtract(rhs: Expr[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Sub(lhs.value, rhs))(lhs)(m + "subtracting")
           }
         , save
       )
     def subtractʹ(rhs: Exprʹ[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Sub(lhs.value, rhs.value))(lhs, rhs)(m + "subtracting")
           }
         , save
       )
     def multiply(rhs: Expr[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Mul(lhs.value, rhs))(lhs)(m + "multiplying")
           }
         , save
       )
     def mutiplyʹ(rhs: Exprʹ[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Mul(lhs.value, rhs.value))(lhs, rhs)(m + "multiplying")
           }
         , save
       )
     def divide(rhs: Expr[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Div(lhs.value, rhs))(lhs)(m + "dividing")
           }
         , save
       )
     def divideʹ(rhs: Exprʹ[T], n: Int = 1)(using m: String = "") =
       Builder (
-        fill(rhs)(n)
+        fill(n)
           .foldLeft(lhs) {
-            (lhs, rhs) =>
+            (lhs, _) =>
               putʹ(Div(lhs.value, rhs.value))(lhs, rhs)(m + "dividing")
           }
         , save
       )
     def invert(n: Int = 1): Builder[T] =
       Builder (
-        List.fill(0 max n)(())
+        fill(n)
           .foldLeft(lhs) {
             (lhs, _) =>
               putʹ(Inv(lhs.value))(lhs)("inverting")

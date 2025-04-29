@@ -1,4 +1,4 @@
-[Previous](https://github.com/sjbiaga/kittens/blob/main/traverse-7-poke/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-2-EitherT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/traverse-7-poke/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-2-EitherT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)
 
 Lesson 08: Monad Transformers
 =============================
@@ -325,4 +325,4 @@ code may apply methods directly on the instance, rather than its (carried or) wr
 (named) like the traits: `ComposedEither[F[_]]`, `ComposedOption[F[_]]`, etc, but where `F` _cannot_ be abstracted to a
 unique typeclass instance member, if not an `implicit` parameter per method.
 
-[Previous](https://github.com/sjbiaga/kittens/blob/main/traverse-7-poke/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-2-EitherT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/traverse-7-poke/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-2-EitherT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)

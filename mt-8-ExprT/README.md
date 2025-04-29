@@ -1,4 +1,4 @@
-[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-6-writer/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-7-StateT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)
 
 Lesson 08: Monad Transformers (cont'd)
 ======================================
@@ -742,4 +742,4 @@ object ExprT:
         eqf.eqv(x.value, y.value)
 ```
 
-[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-6-writer/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-7-StateT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)

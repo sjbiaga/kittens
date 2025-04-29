@@ -1,14 +1,12 @@
-package Exercise_08_1
-package Part6
-
 import scala.util.control.TailCalls._
 import scala.util.parsing.combinator.JavaTokenParsers
 
-import cats.{ ~>, Id }
+import cats.{ ~>, Monoid, MonoidK }
 import cats.instances.string._
+import cats.instances.vector._
 
-import cats.data.Writer
-import cats.data.WriterT._
+import cats.data.{ Validated, WriterT }
+import WriterT._
 
 enum Expr[+T]:
   case Add[+T](lhs: Expr[T], rhs: Expr[T]) extends Expr[T]
@@ -24,19 +22,79 @@ object Expr extends JavaTokenParsers:
 
   type unit = Expr.Zero.type | Expr.One.type
 
-  type Writerʹ[T] = Writer[String, T]
+  type Validatedʹ[T] = Validated[Vector[String], T]
+
+  type Writerʹ[T] = WriterT[Validatedʹ, String, T]
 
   type Exprʹ[T] = Writerʹ[Expr[T]]
 
-  type Doubleʹ = Writer[String, Double]
+  type Doubleʹ = WriterT[Validatedʹ, String, Double]
+ 
+  given [T]: Conversion[Validatedʹ[T], T] = _.getOrElse(null.asInstanceOf[T])
 
-  def putʹ[T, U](valʹ: T)(log: Writerʹ[U]*)(msg: String)(implicit indent: String): Writerʹ[T] =
-    putT[Id, String, T](valʹ)(log.foldRight(indent + msg)(_.swap.value + _) + "\n")
+  implicit def kittensExprMonoidKʹ(implicit unit: unit): MonoidK[Expr] =
+    new MonoidK[Expr]:
+      def empty[A]: Expr[A] = unit
+      def combineK[A](_x: Expr[A], y: Expr[A]): Expr[A] = y // because of log.foldRight(...)(_.value.combine(_))
 
-  def putʹ[T](valʹ: T)(msg: String)(implicit indent: String): Writerʹ[T] =
-    putʹ(valʹ)()(msg)
+  implicit def kittensExprMonoidʹ[A: Monoid](implicit unit: unit): Monoid[Expr[A]] =
+    kittensExprMonoidKʹ.algebra[A]
 
-  def expr(implicit unit: unit, indent: String): Parser[Exprʹ[Int | Double]] =
+  def putʹ[T: Monoid](valʹ: T)(log: Writerʹ[T]*)(msg: String, isValid: Boolean = true)(implicit indent: String): Writerʹ[T] =
+    val msgʹ = if isValid then Validated.valid(indent + msg + "✓") else Validated.invalid(Vector(indent + "✗" + msg))
+    val valʹʹ = if isValid then Validated.Valid(valʹ) else Validated.invalid(Vector("✗" + msg))
+    val valʹʹʹ = log.foldRight(valʹʹ)(_.value.combine(_))
+    putT(valʹʹʹ)(log.foldRight(msgʹ)(_.swap.value.combine(_)).fold(_.mkString("", "\n", ""), identity) + "\n")
+
+  val simplify: unit ?=> Expr ~> Expr =
+    new (Expr ~> Expr):
+      val unit = summon[unit]
+      def apply[T](expr: Expr[T]): Expr[T] =
+        def applyʹ(xa: Expr[T]): TailRec[Expr[T]] =
+          xa match
+            case Add(xm, xn) =>
+              for
+                m <- tailcall { applyʹ(xm) }
+                n <- tailcall { applyʹ(xn) }
+              yield
+                if n eq Zero then m
+                else if m eq Zero then n
+                else Add(m, n)
+            case Sub(xm, xn) =>
+              for
+                m <- tailcall { applyʹ(xm) }
+                n <- tailcall { applyʹ(xn) }
+              yield
+                if n eq Zero then m
+                else if (m eq Zero) && (unit eq Zero) then Inv(n)
+                else Sub(m, n)
+            case Mul(xm, xn) =>
+              for
+                m <- tailcall { applyʹ(xm) }
+                n <- tailcall { applyʹ(xn) }
+              yield
+                if n eq One then m
+                else if m eq One then n
+                else if (n eq Zero) || (m eq Zero) then Zero
+                else Mul(m, n)
+            case Div(xm, xn) =>
+              for
+                m <- tailcall { applyʹ(xm) }
+                n <- tailcall { applyʹ(xn) }
+              yield
+                if n eq One then m
+                else if (m eq One) && (unit eq One) then Inv(n)
+                else if m eq Zero then Zero
+                else Div(m, n)
+            case Inv(xn)     =>
+              for
+                n <- tailcall { applyʹ(xn) }
+              yield
+                Inv(n)
+            case it          => done(it)
+        applyʹ(expr).result
+
+  def expr(implicit unit: unit, indent: String): Parser[Exprʹ[Double]] =
     term ~ rep(("+"|"-") ~ term) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "+" ~ rhs) =>
@@ -46,17 +104,28 @@ object Expr extends JavaTokenParsers:
       }
     }
 
-  def term(implicit unit: unit, indent: String): Parser[Exprʹ[Int | Double]] =
+  def term(implicit unit: unit, indent: String): Parser[Exprʹ[Double]] =
     factor ~ rep(("*"|"/") ~ factor) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "*" ~ rhs) =>
           putʹ(Mul(lhs.value, rhs.value))(lhs, rhs)("multiplication")
+        case (lhs, "/" ~ rhs)
+          if (unit eq One) && {
+            rhs.value match
+              case null => false
+              case rhsʹ =>
+                simplify(rhsʹ) match
+                  case Zero | Val(0) | Val(0d) => true
+                  case _ => false
+          } =>
+          val msg = s"division by zero: ${lhs.value: Expr[Double]} ÷ ${rhs.value: Expr[Double]}"
+          putʹ(Div(lhs.value, rhs.value))(lhs, rhs)(msg, isValid = false)
         case (lhs, "/" ~ rhs) =>
           putʹ(Div(lhs.value, rhs.value))(lhs, rhs)("division")
       }
     }
 
-  def factor(implicit unit: unit, indent: String): Parser[Exprʹ[Int | Double]] =
+  def factor(implicit unit: unit, indent: String): Parser[Exprʹ[Double]] =
     ("+"|"-") ~ literal ^^ {
       case "-" ~ rhs if unit eq Zero =>
         putʹ(Inv(rhs.value))(rhs)("unary negation")
@@ -67,71 +136,22 @@ object Expr extends JavaTokenParsers:
     } |
     literal ^^ { identity }
 
-  def literal(implicit unit: unit, indent: String): Parser[Exprʹ[Int | Double]] =
+  def literal(implicit unit: unit, indent: String): Parser[Exprʹ[Double]] =
     floatingPointNumber ^^ { it =>
       it.toDouble match
-        case 0d => putʹ(Zero)("constant zero: Double")
-        case 1d => putʹ(One)("constant one: Double")
-        case n  => putʹ(Val(n))(s"value $n: Double")
-    } |
-    decimalNumber ^^ { it =>
-      it.toInt match
-        case 0 => putʹ(Zero)("constant zero: Int")
-        case 1 => putʹ(One)("constant one: Int")
-        case n => putʹ(Val(n))(s"value $n: Int")
+        case 0d => putʹ(Zero: Expr[Double])()("constant zero: Double")
+        case 1d => putʹ(One: Expr[Double])()("constant one: Double")
+        case n  => putʹ(Val(n))()(s"value $n: Double")
     } |
     "("~> expr(using unit, indent + "  ") <~")" ^^ { _.tell(s"${indent}parentheses\n") }
 
   implicit class ExprInterpolator(private val sc: StringContext) extends AnyVal:
-    def x(args: Any*)(implicit unit: unit): Exprʹ[Int | Double] =
+    def x(args: Any*)(implicit unit: unit): Exprʹ[Double] =
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
       parseAll(expr(using unit, ""), inp) match
         case Success(it, _) => it
-
-  def eval(expr: Expr[Double])(implicit unit: unit): Doubleʹ =
-    implicit val indent: String = ""
-    def evalʹ(xa: Expr[Double]): TailRec[Doubleʹ] =
-      xa match
-        case Zero              => done(putʹ(0d)("constant zero"))
-        case One               => done(putʹ(1d)("constant one"))
-        case Val(n)            => done(putʹ(n)(s"value $n"))
-        case Inv(xn) if Zero eq unit =>
-          for
-            n <- tailcall { evalʹ(xn) }
-          yield
-            putʹ(0d - n.value)(n)("invert")
-        case Inv(xn) if One eq unit =>
-          for
-            n <- tailcall { evalʹ(xn) }
-          yield
-            putʹ(1d / n.value)(n)("invert")
-        case Add(xm, xn)       =>
-          for
-            m <- tailcall { evalʹ(xm) }
-            n <- tailcall { evalʹ(xn) }
-          yield
-            putʹ(m.value + n.value)(m, n)("plus")
-        case Sub(xm, xn)       =>
-          for
-            m <- tailcall { evalʹ(xm) }
-            n <- tailcall { evalʹ(xn) }
-          yield
-            putʹ(m.value - n.value)(m, n)("minus")
-        case Mul(xm, xn)       =>
-          for
-            m <- tailcall { evalʹ(xm) }
-            n <- tailcall { evalʹ(xn) }
-          yield
-            putʹ(m.value * n.value)(m, n)("times")
-        case Div(xm, xn)       =>
-          for
-            m <- tailcall { evalʹ(xm) }
-            n <- tailcall { evalʹ(xn) }
-          yield
-            putʹ(m.value / n.value)(m, n)("divides")
-    evalʹ(expr).result
 
   val swap: unit ?=> Expr ~> Expr =
     new (Expr ~> Expr):
@@ -174,11 +194,11 @@ object Expr extends JavaTokenParsers:
             case it          => done(it)
         applyʹ(expr).result
 
-  final case class Builder[T](lhs: Exprʹ[T], private var save: List[Exprʹ[T]])(implicit indent: String):
+  final case class Builder[T: Monoid](lhs: Exprʹ[T], private var save: List[Exprʹ[T]])(using indent: String)(using unit):
     def indent(rhs: Exprʹ[T]): Exprʹ[T] =
       rhs.mapWritten(_.split("\n").map(indent + _).mkString("", "\n", "\n"))
     private def fill(n: Int) = List.fill(0 max n)(())
-    def swapping(implicit unit: unit) =
+    def swapping =
       Builder(putʹ(swap(lhs.value))(lhs)("swapping"), save)
     def add(rhs: Expr[T], n: Int = 1)(using m: Option[String] = None) =
       Builder (
@@ -249,11 +269,13 @@ object Expr extends JavaTokenParsers:
     def divide(rhs: Expr[T], n: Int = 1)(using m: Option[String] = None) =
       Builder (
         {
+          val isValid = simplify(rhs) ne Zero
           implicit val indentʹ = if m eq None then indent else ""
           fill(n)
             .foldLeft(lhs) {
               (lhs, _) =>
-                putʹ(Div(lhs.value, rhs))(lhs)(m.map(_ + indent + "dividing").getOrElse("dividing"))
+                val msg = s"""dividing${if isValid then "" else s" by zero: (${lhs.value: Expr[T]} ÷ ${rhs: Expr[T]})"}"""
+                putʹ(Div(lhs.value, rhs))(lhs)(msg, isValid)
             }
         }
         , save
@@ -280,19 +302,19 @@ object Expr extends JavaTokenParsers:
     inline def open = Builder.From("opening", lhs :: save)
     inline def openʹ = open
     def close(f: (Builder[T], Expr[T]) => Option[String] ?=> Builder[T], invert: Int = 0) =
-      implicit val indentʹ = indent.substring(2)
+      implicit val indent = this.indent.substring(2)
       val self = Builder(save.head, save.tail)
-      f(self, lhs.value)(using Some(putʹ(())(lhs)("closing").swap.value))
+      f(self, lhs.value)(using Some(putʹ(Zero)(lhs)("closing").swap.value))
         .invert(invert)
     def closeʹ(f: (Builder[T], Exprʹ[T]) => Option[String] ?=> Builder[T], invert: Int = 0) =
-      implicit val indentʹ = indent.substring(2)
+      implicit val indent = this.indent.substring(2)
       val self = Builder(save.head, save.tail)
-      f(self, lhs)(using Some("closing\n"))
+      f(self, lhs)(using Some("closing✓\n"))
         .invert(invert)
   object Builder:
-    def start[T] = From[T]("starting", Nil)(using "")
-    final case class From[T](msg: String, save: List[Exprʹ[T]])(implicit indent: String):
+    def start[T: Monoid](using unit)= From[T]("starting", Nil)(using "")
+    final case class From[T: Monoid](msg: String, save: List[Exprʹ[T]])(using indent: String)(using unit):
       def apply(lhs: Expr[T]): Builder[T] =
-        Builder(putʹ(lhs)(msg), save)(using indent + "  ")
+        Builder(putʹ(lhs)()(msg), save)(using indent + "  ")
       def apply(lhs: Exprʹ[T]): Builder[T] =
-        Builder(putʹ(lhs.value)(lhs)(msg), save)(using indent + "  ")
+        Builder(putʹ(lhs.value: Expr[T])(lhs)(msg), save)(using indent + "  ")
