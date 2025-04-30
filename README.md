@@ -57,7 +57,9 @@ Lessons of Scala Cats
 
   - [Exercise 08.3](https://github.com/sjbiaga/kittens/blob/main/mt-7-StateT/README.md#exercise-083)
 
-  - [Exercise 08.4](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md#exercise-084)
+  - [Exercise 08.4](https://github.com/sjbiaga/kittens/blob/main/mt-7-StateT/README.md#exercise-084)
+
+  - [Exercise 08.5](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md#exercise-085)
 
 Examples
 ========

@@ -17,8 +17,8 @@ def flatMap[EE >: E, B](f: A => Validated[EE, B]): Validated[EE, B] = // non-exi
   }
 ```
 
-there is no point to it: `Validated` are `combine`d - with `Monoid`(s) - to "accumulate" errors. However, `Validated` is a
-functor - and hence can be the effect of `WriterT`.
+there is no point to it: `Validated` are `combine`d - with `Monoid`(s) - to "accumulate" errors (and values). However,
+`Validated` has a `Functor` typeclass instance - and hence can be the effect of `WriterT`.
 
 Methods à la `map`
 ------------------
@@ -38,7 +38,7 @@ Other methods
 Methods from the companion object
 ---------------------------------
 
-Exercise 08.4
+Exercise 08.5
 =============
 
 The requirements are the same as in
@@ -47,7 +47,7 @@ The requirements are the same as in
 `simplify` the right hand side
 (see [Exercise 06.1](https://github.com/sjbiaga/kittens/blob/main/expr-simplify/README.md#exercise-061)). Put a check mark
 `✓` to the right of the valid log messages, and an `✗` to the left of the error messages, which must be each collected as a
-`Vector`. Once an expression becomes `Validate.Invalid`, the method `getOrElse` called on the `WriterT#value` of
+`Vector`. Once an expression becomes `Validated.Invalid`, the method `getOrElse` called on the `WriterT#value` of
 `Validated[Vector[String], Expr[T]]` type must return `null`.
 
 [Hint: use the following setup:

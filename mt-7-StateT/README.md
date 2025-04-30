@@ -24,6 +24,210 @@ whereas `IndexedState` is actually a type alias for `IndexedStateT` with `Eval` 
 type IndexedState[S1, S2, A] = IndexedStateT[Eval, S1, S2, A]
 ```
 
+A `State` _describes_ a computation, it is not itself the "state of the computation": a computation can be
+
+- a line by line invocation of some `run` method (for the `Eval` effect, intermediated by `Eval#value` invocations);
+
+- a fold or reduce operation, such as `foldLeft`.
+
+---
+
+Let us propound to compute the average of any sequence of `Double`s: the ratio between their sum (a `Double`) and their count
+(an `Int`eger). We model the state to be the tuple `(Int, Double)`, and as value - a `Double`. We design with two functions:
+`avg` used to maintain the `State`, and `add` used to prepend an (average) computation node to a `LazyList`:
+
+```scala
+scala> type Stateʹ = State[(Int, Double), Double]
+
+scala> def avg(d: Double): Stateʹ =
+     |   State {
+     |     case (count: Int, sum: Double) =>
+     |       ((count + 1, sum + d), (sum + d) / (count + 1))
+     |   }
+     |
+
+scala> def add(d: Double, t: LazyList[Stateʹ] = LazyList.empty): LazyList[Stateʹ] = avg(d) #:: t
+```
+
+Let us add the first four powers of ten:
+
+```scala
+scala> add(1, add(10, add(100, add(1000))))
+val res0: LazyList[Stateʹ] = LazyList(<not computed>)
+```
+
+In order to compute their average, all that is required is to `foldLeft` starting from the zero counter and sum, and with a
+`Double.NaN` as a dummy "average", and thread the states through the
+`IndexedStateT#run: (Int, Double) => Eval[((Int, Double), Double)]` method - as function (second) parameter to `foldLeft`:
+
+```scala
+scala> res0.foldLeft(0 -> 0.0 -> Double.NaN) { case ((state, _), node) => node.run(state).value }
+val res1: ((Int, Double), Double) = ((4,1111.0),277.75)
+```
+
+The average is in the second element of the pair.
+
+Now if we want to continue adding the same `LazyList`, all we have to do is pass `res1` as initial accumulator to `foldLeft`:
+
+```scala
+scala> res0.foldLeft(res1) { case ((state, _), node) => node.run(state).value }
+val res2: ((Int, Double), Double) = ((8,2222.0),277.75)
+```
+
+Because the new sum is the double of the previous, and the count is twice too, the number two in the fraction cancels out, so
+the average is the same. If we continue to average the first four multiples of five, the new average (continued with `res2`)
+will be `190.1(6)`:
+
+```scala
+scala> add(5, add(10, add(20, add(25))))
+val res3: LazyList[Stateʹ] = LazyList(<not computed>)
+
+scala> res3.foldLeft(res2) { case ((state, _), node) => node.run(state).value }
+val res4: ((Int, Double), Double) = ((12,2282.0),190.16666666666666)
+```
+
+Is there another way we could implement the average of a _random_ sequence of `Double`s?! We would like to use the following
+infinite list:
+
+```scala
+scala> import scala.util.Random.nextDouble
+
+scala> def inf: LazyList[Double] = nextDouble #:: inf
+def inf: LazyList[Double]
+```
+
+We can thus combine the use of a `LazyList` inside the average computation itself (from a parameter, `d` becomes a variable
+pattern - note that `avg` is merely a value, there is _no_ `LazyList` _parameter_, only pattern matching on one):
+
+```scala
+scala> type Stateʹʹ = State[(Int, Double, LazyList[Double]), Double]
+scala> val avg: Stateʹʹ =
+     |   State {
+     |     case (count, sum, d #:: t) =>
+     |       ((count + 1, sum + d, t), (sum + d) / (count + 1))
+     |     case (count, sum, nil) =>
+     |       ((count, sum, nil), sum / count)
+     |   }
+     |
+val avg: Stateʹʹ = cats.data.IndexedStateT@4d204b30
+```
+
+Now, there is just one value, all that is needed is to pass it the initial state, which contains an _infinite_ list. Note
+that `count` is now limited by how many times we invoke `IndexedStateT#run` on the `avg` value (had we used a finite `List`,
+the limit would have been its size):
+
+```scala
+scala> inf.take(10).foldLeft(avg.run((0, 0.0, inf))) { case (state, _) => avg.run(state.value._1) }
+val res5: cats.Eval[((Int, Double, LazyList[Double]), Double)] = cats.Eval$$anon$4@6b26fe0a
+
+scala> res5.value
+val res6: ((Int, Double, LazyList[Double]), Double) = ((11,4.591147974500079,LazyList(<not computed>)),0.41737708859091627)
+```
+
+We can similarly continue the computation from `res6` (there is no need to specify the `LazyList` anymore):
+
+```scala
+scala> inf.take(10).foldLeft(avg.run(res6._1)) { case (state, _) => avg.run(state.value._1) }
+val res7: cats.Eval[((Int, Double, LazyList[Double]), Double)] = cats.Eval$$anon$4@423ea10e
+
+scala> res7.value
+val res8: ((Int, Double, LazyList[Double]), Double) = ((22,10.78058960388977,LazyList(<not computed>)),0.4900268001768077)
+```
+
+Exercise 08.3
+=============
+
+Turn `avg` into a method with an `Int` parameter - the reset counter, thus computing the average only for each _window_, and
+not for the whole sequence. Add a callback parameter which is invoked for each window once. What happens when the length of
+the list is a multiple of the size of the window?
+
+Do the same for one more computation with `State`: either `min` or `max`.
+
+Solution - Part 1
+-----------------
+
+Whenever the counter equals the `size` of the window, the callback is invoked, and the computation will continue with the
+counter equal to one, the sum and average equal to the current element:
+
+```scala
+scala> def avgʹ(size: Int, cb: Double => Unit): Stateʹʹ =
+     |   State {
+     |     case (0, _, d #:: t) =>
+     |       ((1, d, t), d)
+     |     case (`size`, sum, d #:: t) =>
+     |       cb(sum / size)
+     |       ((1, d, t), d)
+     |     case (count, sum, d #:: t) =>
+     |       ((count + 1, sum + d, t), (sum + d) / (count + 1))
+     |     case (`size`, sum, nil) =>
+     |       cb(sum / size)
+     |       ((0, Double.NaN, nil), Double.NaN)
+     |     case (count, sum, nil) =>
+     |       ((count, sum, nil), sum / count)
+     |   }
+```
+
+Let `avg` be the computation of average for windows of size four; then we have:
+
+```scala
+scala> val avg = avgʹ(4, println)
+val avg: Stateʹʹ = cats.data.IndexedStateT@1431f9b5
+
+scala> inf.take(10).foldLeft(avg.run((0, Double.NaN, inf))) { case (state, _) => avg.run(state.value._1) }
+0.6491109214966045
+0.4667552365636114
+val res9: cats.Eval[((Int, Double, LazyList[Double]), Double)] = cats.Eval$$anon$4@53d1cd85
+
+scala> res9.value
+val res10: ((Int, Double, LazyList[Double]), Double) = ((3,2.2530923940316683,LazyList(<not computed>)),0.751030798010556)
+
+scala> inf.take(10).foldLeft(avg.run(res10._1)) { case (state, _) => avg.run(state.value._1) }
+0.7298302325394203
+0.5411544219642497
+0.34223248012134266
+val res11: cats.Eval[((Int, Double, LazyList[Double]), Double)] = cats.Eval$$anon$4@32dbc27f
+
+scala> res11.value
+val res12: ((Int, Double, LazyList[Double]), Double) = ((2,0.7412616724619366,LazyList(<not computed>)),0.3706308362309683)
+```
+
+When the length of the list is a multiple of the size of the window, the callback must be invoked, but the computation should
+stop with a zero counter, `Double.NaN` sum and average, and the empty list.
+
+```scala
+scala> inf.take(4).foldLeft(avg.run((0, Double.NaN, inf.take(4)))) { case (state, _) => avg.run(state.value._1) }
+val res13: cats.Eval[((Int, Double, LazyList[Double]), Double)] = cats.Eval$$anon$4@5079123
+
+scala> res13.value
+0.5662005202414435
+val res14: ((Int, Double, LazyList[Double]), Double) = ((0,NaN,LazyList()),NaN)
+```
+
+Solution - Part 2
+-----------------
+
+To compute `min` or `max` is much simpler, but still an aggregation which uses a counter to detect the windows:
+
+```scala
+scala> def minʹ(size: Int, cb: Double => Unit): Stateʹʹ =
+     |   State {
+     |     case (0, _, d #:: t) =>
+     |       ((1, d, t), d)
+     |     case (`size`, min, d #:: t) =>
+     |       cb(min)
+     |       ((1, d, t), d)
+     |     case (count, min, d #:: t) =>
+     |       ((count + 1, min min d, t), min min d)
+     |     case (`size`, min, nil) =>
+     |       cb(min)
+     |       ((0, Double.NaN, nil), 0.0)
+     |     case (count, min, nil) =>
+     |       ((count, min, nil), min)
+     |   }
+```
+
+---
+
 Methods à la `map` or `flatMap`
 -------------------------------
 
@@ -42,7 +246,7 @@ Other methods
 Methods from the companion object
 ---------------------------------
 
-Exercise 08.3
+Exercise 08.4
 =============
 
 Using `State.apply`:
@@ -70,7 +274,7 @@ Also, using `IndexedState.apply`:
 def apply[S1, S2, A](f: S1 => (S2, A)): IndexedState[S1, S2, A]
 ```
 
-implement a fluctuating `IndexedState`, where `Expr`essions and `Tree`s keep constantly switching one from another. Perform
+implement a fluctuating `IndexedState`, where `Expr`essions and `Tree`s keep constantly switching from one another. Perform
 this fluctuation with a `for` comprehension and with an infinite `LazyList`.
 
 [Hint: based on the natural transformations:
