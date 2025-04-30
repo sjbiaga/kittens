@@ -20,7 +20,7 @@ enum Tree[+T]:
                 right: Option[Tree[T]]) extends Tree[T]
 
 object Tree:
-  
+
   def treeify(implicit R: DivisionRing[?], unit: unit, `0`: `0`[?], `1`: `1`[?]): Expr ~> Tree =
     new (Expr ~> Tree):
       def apply[A](expr: Expr[A]): Tree[A] =

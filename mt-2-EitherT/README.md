@@ -120,7 +120,7 @@ Both return an `EitherT[F, C, D]`. The (slight) difference between the two is th
 The implementations too are very simple - given the type of the parameter function `f`. Both wrap the result from application
 of in a `EitherT`, and pass the same two parameters `value` and `f` to  either `F.map`, or, respectively, `F.flatMap`.
 
-###Methods based on `transform`
+### Methods based on `transform`
 
 1. A method `bimap`, with the same types of the two function parameters `f: A => C` and `g: B => D` as those of the last two
    parameters of `EitherUtil.foldE`, invokes it with an (anonymous) `Either[A, B]` argument, passed by `transform`:
@@ -161,7 +161,7 @@ receiver.
 3. [recover](#methods-related-to-errors) and [ensureOr](#methods-related-to-errors) are other two methods that pattern match
    an `Either` passed by `transform`.
 
-###Methods based on `flatTransform`
+### Methods based on `flatTransform`
 
 1. A most used method is `flatMapF`, demanding that there be an `Applicative[F]` (for `F.pure`) and a `FlatMap[F]` (because of
    the invocation of `flatTransform`), which are - in the least - both inherited by `Monad[F]`:

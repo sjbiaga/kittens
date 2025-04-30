@@ -9,11 +9,11 @@ Lesson 08: Monad Transformers (cont'd)
 Methods à la `map` or `flatMap`
 -------------------------------
 
-###Methods based on `transform`
+### Methods based on `transform`
 
 `map`, `bimap`, `leftMap`, `leftFlatMap`, `leftSemiflatMap`
 
-###Methods based on `flatTransform`
+### Methods based on `flatTransform`
 
 Unlike for [`EitherT`](https://github.com/sjbiaga/kittens/blob/main/mt-2-EitherT/README.md#methods-based-on-flattransform),
 there is no `biflatMap`, nor can one be defined, even if a definition could be reached:

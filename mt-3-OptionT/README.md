@@ -13,9 +13,9 @@ Unlike for [`EitherT`](https://github.com/sjbiaga/kittens/blob/main/mt-2-EitherT
 for [`IorT`](https://github.com/sjbiaga/kittens/blob/main/mt-4-IorT/README.md#methods-based-on-flattransform), there are no
 methods whose names are prefixed with `bi*` or contain `*left*`.
 
-###Methods based on `transform`
+### Methods based on `transform`
 
-###Methods based on `flatTransform`
+### Methods based on `flatTransform`
 
 `map`, `imap`, `contramap`, `semiflatMap`, `mapFilter`, `flatMap`, `flatMapF`, `subflatMap`
 
