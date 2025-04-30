@@ -3,14 +3,16 @@
 Lesson 03: A Rich Language of Expressions (cont'd)
 ==================================================
 
-Exercise 03.1 - Part 1
+Exercise 03.1
 ----------------------
 
 Knowing that `Val(2): Expr[Int]` can always be "inflated" to `Val(Val(2)): Expr[Expr[Int]]`, give a typeclass instance of
 the `CoflatMap` typeclass for `Expr`. [Hint: implement the `coflatten` method.]
 
-Solution
---------
+Give an implementation for evaluating expressions of type `Expr[Double => Double]` downto `Double => Double`.
+
+Solution - Part 1
+-----------------
 
 Because `CoflatMap` inherits `Functor`, we have to give implementations only for `map` and `coflatten`; then `coflatMap` can
 be defined in their terms.
@@ -80,13 +82,8 @@ To give a typeclass instance of the `FlatMap` typeclass for `Expr`, see
 [Exercise 06.6](https://github.com/sjbiaga/kittens/blob/main/eval-2-expr-tree/README.md#exercise-066) for an implementation
 of `flatten`.
 
-Exercise 03.1 - Part 2
-----------------------
-
-Give an implementation for evaluating expressions of type `Expr[Double => Double]` downto `Double => Double`.
-
-Solution
---------
+Solution - Part 2
+-----------------
 
 These are expressions of function base type, so `Zero` and `One` should map to constant functions: `Function.const(0)`,
 respectively, `Function.const(1)`. The return type should be a function, too. The binary operators should map to anonymous

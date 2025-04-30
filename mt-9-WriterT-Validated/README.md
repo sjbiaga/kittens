@@ -10,7 +10,7 @@ Lesson 08: Monad Transformers (cont'd)
 easily constructed:
 
 ```Scala
-def flatMap[EE >: E, B](f: A => Validated[EE, B]): Validated[EE, B] = // non-existing & non-necessary
+def flatMap[EE >: E, B](f: A => Validated[EE, B]): Validated[EE, B] = // non-existing and not necessary
   this match {
     case i @ Invalid(_) => i
     case Valid(a)       => f(a)
@@ -38,15 +38,17 @@ Other methods
 Methods from the companion object
 ---------------------------------
 
-Exercise 08.3
+Exercise 08.4
 =============
 
-The requirements are the same as in [Exercise 08.1](https://github.com/sjbiaga/kittens/blob/main/mt-6-WriterT/README.md), but
-this time use `Validated` as effect to catch divisions by `Zero`, both in the parser and builder: this asks to `simplify` the
-right hand side (see [Exercise 06.1](https://github.com/sjbiaga/kittens/blob/main/expr-simplify/README.md#exercise-061)). Put
-a check mark `✓` to  the right of the valid log messages, and an `✗` to the left of the error messages, which must be each
-collected as a `Vector`. Once an expression becomes `Validate.Invalid`, the method `getOrElse` called on the `WriterT#value`
-of `Validated[Vector[String], Expr[T]]` type must return `null`.
+The requirements are the same as in
+[Exercise 08.1](https://github.com/sjbiaga/kittens/blob/main/mt-6-WriterT/README.md#exercise-081), but this time use
+`Validated` as the effect functor, in order to to catch divisions by `Zero`, both in the parser and builder. This asks to
+`simplify` the right hand side
+(see [Exercise 06.1](https://github.com/sjbiaga/kittens/blob/main/expr-simplify/README.md#exercise-061)). Put a check mark
+`✓` to the right of the valid log messages, and an `✗` to the left of the error messages, which must be each collected as a
+`Vector`. Once an expression becomes `Validate.Invalid`, the method `getOrElse` called on the `WriterT#value` of
+`Validated[Vector[String], Expr[T]]` type must return `null`.
 
 [Hint: use the following setup:
 

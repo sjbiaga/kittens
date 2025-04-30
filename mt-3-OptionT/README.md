@@ -9,9 +9,23 @@ Lesson 08: Monad Transformers (cont'd)
 Methods à la `map` or `flatMap`
 -------------------------------
 
-`transform`, `flatTransform`
+Unlike for [`EitherT`](https://github.com/sjbiaga/kittens/blob/main/mt-2-EitherT/README.md#methods-based-on-flattransform) or
+for [`IorT`](https://github.com/sjbiaga/kittens/blob/main/mt-4-IorT/README.md#methods-based-on-flattransform), there are no
+methods whose names are prefixed with `bi*` or contain `*left*`.
+
+###Methods based on `transform`
+
+###Methods based on `flatTransform`
 
 `map`, `imap`, `contramap`, `semiflatMap`, `mapFilter`, `flatMap`, `flatMapF`, `subflatMap`
+
+`mapFilter` (generally) takes a function parameter `A => Option[B]`, which - in the case of `OptionT` alone - coincidentally
+matches exactly the signature of - and so it is an alias for - `subflatMap`:
+
+```Scala
+def subflatMap[B](f: A => Option[B])(implicit F: Functor[F]): OptionT[F, B] =
+  transform(_.flatMap(f))
+```
 
 "tap" methods
 `semiflatTap`, `flatTapNone`

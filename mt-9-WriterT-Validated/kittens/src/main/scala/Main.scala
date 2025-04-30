@@ -17,7 +17,7 @@ object Main:
         println(s"interpolated: ${expr} log:\n${log}")
       catch _ =>
         val Invalid(err) = x.listen.value
-        println(s"interpolated: null log: ${err.mkString("\n", "\n", "\n")}")
+        println(s"interpolated: null log:${err.mkString("\n", "\n", "\n")}")
     }
 
     {
@@ -44,7 +44,7 @@ object Main:
         println(s"built: ${expr} log:\n${log}")
       catch _ =>
         val Invalid(err) = xʹ.listen.value
-        println(s"built: null log: ${err.mkString("\n", "\n", "\n")}")
+        println(s"built: null log:${err.mkString("\n", "\n", "\n")}")
     }
 
     {
@@ -71,7 +71,7 @@ object Main:
         println(s"built: ${expr} log:\n${log}")
       catch _ =>
         val Invalid(err) = xʹ.listen.value
-        println(s"builtʹ: null log: ${err.mkString("\n", "\n", "\n")}")
+        println(s"builtʹ: null log:${err.mkString("\n", "\n", "\n")}")
     }
 
     {
@@ -91,5 +91,5 @@ object Main:
         println(s"built: ${expr} log:\n${log}")
       catch _ =>
         val Invalid(err) = xʹ.listen.value
-        println(s"builtʹ: null log: ${err.mkString("\n", "\n", "\n")}")
+        println(s"builtʹ: null log:${err.mkString("\n", "\n", "\n")}")
     }

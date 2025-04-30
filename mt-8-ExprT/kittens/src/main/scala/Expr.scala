@@ -465,25 +465,25 @@ object Expr extends JavaTokenParsers:
                 m <- tailcall { applyʹ(xm) }
                 n <- tailcall { applyʹ(xn) }
               yield
-                Add(m, n)
+                Mul(m, n)
             case Sub(xm, xn) =>
               for
                 m <- tailcall { applyʹ(xm) }
                 n <- tailcall { applyʹ(xn) }
               yield
-                Sub(m, n)
+                Div(m, n)
             case Mul(xm, xn) =>
               for
                 m <- tailcall { applyʹ(xm) }
                 n <- tailcall { applyʹ(xn) }
               yield
-                Mul(m, n)
+                Add(m, n)
             case Div(xm, xn) =>
               for
                 m <- tailcall { applyʹ(xm) }
                 n <- tailcall { applyʹ(xn) }
               yield
-                Div(m, n)
+                Sub(m, n)
             case Inv(Zero)
               if summon[unit] eq One => applyʹ(Div(One, Zero))
             case Inv(xn)     =>

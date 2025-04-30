@@ -1,15 +1,6 @@
 package Exercise_08_1
 package Part6
 
-import cats.{ ~>, Eval, Monad, Show }
-
-import cats.data.NonEmptyList
-
-import cats.instances.option._
-import cats.syntax.coflatMap._
-import cats.syntax.flatMap._
-import cats.syntax.partialOrder._
-
 import Expr._
 
 object Main:

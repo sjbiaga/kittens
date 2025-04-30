@@ -26,7 +26,7 @@ extension [F[_], A, B](self: EitherT[F, A, B])
     EitherT(F.flatMap(self.value)(_.fold(f, g)))
 ```
 
-or alternatively, using function composition with `andThen` (and some necessary hints to the type checker):
+or alternatively, using function composition with `andThen` (and some necessary type checker hints):
 
 ```Scala
 extension [F[_], A, B](self: EitherT[F, A, B])
@@ -113,14 +113,14 @@ def flatTransform[C, D](f: Either[A, B] => F[Either[C, D]])(implicit F: FlatMap[
 
 Both return an `EitherT[F, C, D]`. The (slight) difference between the two is that:
 
-- the latter's parameter is a function lifted to an `F[Either[C, D]]`, whereas the former's barely returns an `Either[C, D]`;
+- the latter's parameter is a function lifted to an `F[Either[C, D]]`, whereas the former's returns a bare `Either[C, D]`;
 
 - `F` must be a typeclass instance of either the `Functor`, or, respectively, the `FlatMap` typeclass, for `F[_]`.
 
 The implementations too are very simple - given the type of the parameter function `f`. Both wrap the result from application
 of in a `EitherT`, and pass the same two parameters `value` and `f` to  either `F.map`, or, respectively, `F.flatMap`.
 
-####Methods based on `transform`
+###Methods based on `transform`
 
 1. A method `bimap`, with the same types of the two function parameters `f: A => C` and `g: B => D` as those of the last two
    parameters of `EitherUtil.foldE`, invokes it with an (anonymous) `Either[A, B]` argument, passed by `transform`:
@@ -152,7 +152,7 @@ def subflatMap[D](f: B => Either[A, D])(implicit F: Functor[F]): EitherT[F, A, D
   transform(_.flatMap(f))
 ```
 
-has a function parameter of a type appropriate to invoke the (corresponding) method `flatMap` on an (anonymous) `Either`
+has a function parameter of a type appropriate to invoke the (corresponding) method `flatMap` on an (anonymous) `Either[A, B]`
 receiver.
 
 3. [swap](#methods-corresponding-to-either) is another method that invokes the corresponding method `swap` on an (anonymous)
@@ -161,7 +161,7 @@ receiver.
 3. [recover](#methods-related-to-errors) and [ensureOr](#methods-related-to-errors) are other two methods that pattern match
    an `Either` passed by `transform`.
 
-####Methods based on `flatTransform`
+###Methods based on `flatTransform`
 
 1. A most used method is `flatMapF`, demanding that there be an `Applicative[F]` (for `F.pure`) and a `FlatMap[F]` (because of
    the invocation of `flatTransform`), which are - in the least - both inherited by `Monad[F]`:
@@ -192,8 +192,8 @@ mapping a `b: B` to `F.map(g(b))(Right.apply)`.
 - In `flatMap` - the other of the two methods required to turn `EitherT` into a monad -, the result of type `F[Either[A, D]]`
 is obtained directly by accessing `value` on the `EitherT[F, A, D]` result of the function parameter `g`.
 
-2. A nicely symmetric method is `biflatMap`, which is akin to the right-biased `flatMap` method, but can map in either the
-   "left" or the "right" case:
+2. A nicely symmetric method is `biflatMap`, which is akin to the right-biased `flatMap` method, but can map in both the
+   "left" and the "right" case:
 
 ```Scala
 def biflatMap[C, D](f: A => EitherT[F, C, D], g: B => EitherT[F, C, D])(implicit F: FlatMap[F]): EitherT[F, C, D] =
@@ -423,7 +423,7 @@ def traverse[G[_], D](f: B => G[D])(implicit F: Traverse[F], G: Applicative[G]):
 
 but it consists in three easy steps.
 
-1. The composition of the typeclass instances of the `Traverse` typeclass - for `F[_]` with that for `Either[A, *]`:
+1. The composition of the typeclass instances of the `Traverse` typeclass - for `F[_]` -, with that for `Either[A, *]`:
 
 ```Scala
 package cats
@@ -456,11 +456,11 @@ The `mapAccumulate` method is similar in form with `traverse` and akin to `map`:
 
 and it consists in two steps:
 
-1. The formation of the _mapAccumulate-ing function_: if we let `g` be
+1. The formation of the _`mapAccumulate`-ing function_: if we let `g` be
    `Traverse[Either[A, *]].mapAccumulate[S, B, C](_, _)(f)`, then we can make the ascription
    `g: (S, Either[A, B]) => (S, Either[A, C])`.
 
-2. The _mapAccumulate-ing_ itself, invoked as `F.mapAccumulate[S, Either[A, B], Either[A, C]](init, value)(g)`.
+2. The _`mapAccumulate`-ing_ itself, invoked as `F.mapAccumulate[S, Either[A, B], Either[A, C]](init, value)(g)`.
 
 The two methods `foldLeft` and `foldRight` are similar: they make the composition `F.compose(using Foldable[Either[A, *]])`,
 on which receiver they invoke `foldLeft`, respectively, `foldRight`, with the same arguments as their parameters - besides
@@ -491,7 +491,7 @@ def bitraverse[G[_], C, D](f: A => G[C], g: B => G[D])(implicit F: Traverse[F], 
 -------------
 
 The `toOption` and `toIor` methods convert the `F`-lifted `Either` to an
-[`OptionT`](https://github.com/sjbiaga/kittens/blob/main/mt-3-optionT/README.md#optiont), respectively, an
+[`OptionT`](https://github.com/sjbiaga/kittens/blob/main/mt-3-OptionT/README.md#optiont), respectively, an
 [`IorT`](https://github.com/sjbiaga/kittens/blob/main/mt-4-IorT/README.md#iort):
 
 ```Scala
