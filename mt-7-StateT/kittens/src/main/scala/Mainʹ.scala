@@ -1,5 +1,6 @@
 import alleycats.{ Zero => `0`, One => `1` }
 
+import cats.Eval
 import cats.data.IndexedState
 
 import Expr._
@@ -27,7 +28,7 @@ object Mainʹ:
 
     val t = treeify.apply(x)
 
-    var expr = IndexedState { (xa: Expr[Double]) => treeify.apply(xa) -> eval(xa) }
+    var expr = IndexedState.apply { (xa: Expr[Double]) => treeify.apply(xa) -> eval(xa) }
     var tree = IndexedState { (ta: Tree[Double]) => expressify.apply(ta) -> ta.result }
 
     println {
@@ -36,7 +37,7 @@ object Mainʹ:
           _ <- tree
           x <- expr
         yield
-          x
+          x.toInt
       ).run(x).value
     }
 
@@ -50,12 +51,33 @@ object Mainʹ:
       ).run(t).value
     }
 
-    lazy val list: LazyList[Stateʹ[Expr, Tree]] = expr #:: list
-    lazy val listʹ: LazyList[Stateʹ[Tree, Expr]] = tree #:: listʹ
+    expr.flatMap[Int, Tree[Double]] { _ =>    // x0
+      tree.flatMap[Int, Tree[Double]] { _ =>  // t1
+        expr.map[Int] { x =>                  // x2
+          x.toInt
+        }
+      }
+    }
+
+    val x2: IndexedState[Expr[Double], Tree[Double], Int] = (expr: IndexedState[Expr[Double], Tree[Double], Double]).map[Int] { x =>
+      x.toInt
+    }
+
+    val t1: IndexedState[Tree[Double], Tree[Double], Int] = (tree: IndexedState[Tree[Double], Expr[Double], Double]).flatMap[Int, Tree[Double]] { _ =>
+      x2: IndexedState[Expr[Double], Tree[Double], Int]
+    //                 1st1st1st1st                                                           2nd2nd2nd2nd
+    }
+
+    val x0: IndexedState[Expr[Double], Tree[Double], Int] = (expr: IndexedState[Expr[Double], Tree[Double], Double]).flatMap[Int, Tree[Double]] { _ =>
+      t1: IndexedState[Tree[Double], Tree[Double], Int]
+    //                 1st1st1st1st                                                           2nd2nd2nd2nd
+    }
+
+    lazy val list: LazyList[Unit] = () #:: list
 
     println {
-      (list zip listʹ).take(3).foldLeft(Left(x): Expr[Double] Either Tree[Double]) {
-        case (Left(expr), (self, _))  => Right(self.run(expr).value._1)
-        case (Right(tree), (_, self)) => Left(self.run(tree).value._1)
+      list.take(3).foldLeft(Left(x): Expr[Double] Either Tree[Double]) {
+        case (Left(xa), _)  => Right(expr.run(xa).value._1)
+        case (Right(ta), _) => Left(tree.run(ta).value._1)
       }.right.get
     }

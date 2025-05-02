@@ -38,7 +38,7 @@ Other methods
 Methods from the companion object
 ---------------------------------
 
-Exercise 08.5
+Exercise 08.8
 =============
 
 The requirements are the same as in

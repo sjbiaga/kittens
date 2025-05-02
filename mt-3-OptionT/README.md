@@ -15,9 +15,12 @@ methods whose names are prefixed with `bi*` or contain `*left*`.
 
 ### Methods based on `transform`
 
+`map`,
+
 ### Methods based on `flatTransform`
 
-`map`, `imap`, `contramap`, `semiflatMap`, `mapFilter`, `flatMap`, `flatMapF`, `subflatMap`
+`imap`, `contramap`,
+`semiflatMap`, `mapFilter`, `flatMap`, `flatMapF`, `subflatMap`
 
 `mapFilter` (generally) takes a function parameter `A => Option[B]`, which - in the case of `OptionT` alone - coincidentally
 matches exactly the signature of - and so it is an alias for - `subflatMap`:

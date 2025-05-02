@@ -142,8 +142,8 @@ def leftMap[C](f: A => C)(implicit F: Functor[F]): EitherT[F, C, B] =
   bimap(f, identity: B => B)
 ```
 
-Both `map` and  `leftMap` invoke `bimap` with the same parameters, but in a different order (and of different types). The
-former is also one of the two methods required to turn `EitherT` into a monad.
+Both `map` and  `leftMap` invoke `bimap` with the same names of parameters, but in a different order (and of different types
+in the choice of the type parameters). The former is also one of the two methods required to turn `EitherT` into a monad.
 
 2. An interesting method `subflatMap`:
 

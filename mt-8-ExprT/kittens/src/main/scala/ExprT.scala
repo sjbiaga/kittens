@@ -1,7 +1,6 @@
 import alleycats.{ Zero => `0`, One => `1` }
 
-import cats.{ ~>, Applicative, Bimonad, CoflatMap, Contravariant, Eval, Functor, FlatMap, Monad, Foldable, Traverse, PartialOrder, Eq }
-
+import cats._
 import cats.data.Nested
 
 import cats.syntax.coflatMap._
@@ -9,6 +8,7 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 
 import Expr._
+
 
 final case class ExprT[F[_], A](value: F[Expr[A]]):
 
@@ -37,6 +37,9 @@ final case class ExprT[F[_], A](value: F[Expr[A]]):
 
   def contramap[B](f: B => A)(implicit F: Contravariant[F]): ExprT[F, B] =
     ExprT(F.contramap(value)(_.map(f)))
+
+  def imap[B](f: A => B)(g: B => A)(implicit F: Invariant[F]): ExprT[F, B] =
+    ExprT(F.imap(value)(_.map(f))(_.map(g)))
 
   def swap(using unit: unit)(implicit F: Functor[F]): ExprT[F, A] =
     transform(Expr.swap(using unit).apply)
