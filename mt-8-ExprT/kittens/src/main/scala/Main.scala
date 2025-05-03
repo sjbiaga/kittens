@@ -19,6 +19,8 @@ object Main:
       override def apply[A](fa: Option[A]): List[A] =
         fa.map(_ :: Nil).getOrElse(Nil)
 
+  case class Wrap[T](n: T)
+
   def main(args: Array[String]): Unit =
     given unit = Zero
 
@@ -56,6 +58,8 @@ object Main:
     println(eval(xoptT.value.get)->xoptT.mapK(opt2ls).value)
     println("\n")
     println(xshowT.contramap[Double](_.toInt).value.show(swap(x)))
+    println("\n")
+    println(xoptT.imap(Wrap.apply)(_.n))
     println("\n")
     println(xoptT.exists(_ == 5))
     println("\n")

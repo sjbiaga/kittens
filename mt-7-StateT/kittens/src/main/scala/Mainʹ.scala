@@ -8,8 +8,6 @@ import Tree._
 
 object Mainʹ:
 
-  type Stateʹ[F[_], G[_]] = IndexedState[F[Double], G[Double], Double]
-
   def main(args: Array[String]): Unit =
     given unit = Zero
 

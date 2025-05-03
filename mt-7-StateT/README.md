@@ -28,16 +28,163 @@ A `State` _describes_ a computation, it is not itself the "state of the computat
 
 - a line by line invocation of some `run` method (for the `Eval` effect, intermediated by `Eval#value` invocations);
 
-- a fold or reduce operation, such as `foldLeft`.
+- a fold or reduce operation, such as `foldLeft`, where the state is the accumulator.
 
 The state is kept "between the lines", respectively, probably in a "`while`" loop.
 
 An `IndexedStateT` is a `class` with an effect parameter `F[_]`, two types for the states, `SA` and `SB`, and one type for
-the output, `A`: it composes `F` with the function `SA => F[(SB, A)]`.
+the output, `A`: it lifts the function `SA => F[(SB, A)]` into `F`. Applying an "initial" state `SA` yields a "final" state
+`SB` and output "delayed" inside an effect, too:
 
 ```Scala
 final class IndexedStateT[F[_], SA, SB, A](val runF: F[SA => F[(SB, A)]])
 ```
+
+Lifting a function into an effect is not so much of a "delayed" computation, because a _functional_ expression is composition
+of functions, which does not normally have a side effect. We could though implement a snippet of `IndexedStateTʹ` without the
+outer `F`:
+
+```Scala
+final class IndexedStateTʹ[F[_], SA, SB, A](val runF: SA => F[(SB, A)]) extends Serializable {
+
+  def flatMap[SC, B](fas: A => IndexedStateTʹ[F, SB, SC, B])(implicit F: FlatMap[F]): IndexedStateTʹ[F, SA, SC, B] =
+    new IndexedStateTʹ(
+      runF match {
+        case sasba =>
+          { (sa: SA) => F.flatMap(sasba(sa)) { case (sb: SB, a: A) => fas(a).run(sb) } }
+      }
+    )
+
+  def map[B](f: A => B)(implicit F: Functor[F]): IndexedStateTʹ[F, SA, SB, B] =
+    new IndexedStateTʹ(
+      runF match {
+        case sasba =>
+          { (sa: SA) => F.map(sasba(sa)) { case (sb: SB, a: A) => (sb, f(a)) } }
+      }
+    )
+
+  def run(initial: SA): F[(SB, A)] =
+    runF(initial)
+
+}
+```
+
+and maybe it is more obvious how `flatMap` and `map` work, but the outer `F` is for something else, the idea behind monad
+transformers being to [build monad stacks](https://scalawithcats.com/dist/scala-with-cats.html#building-monad-stacks):
+
+```Scala
+type EitherTʹ[A] = EitherT[List, String, A]
+type OptionTʹ[A] = OptionT[EitherTʹ, A]
+type StateTʹ[S, A] = IndexedStateT[OptionTʹ, S, S, A]
+```
+
+We can build an edifying `IndexedStateT` from gradually exemplifying with "smaller" stacks:
+
+```scala
+scala> EitherT(List(Right(0))): EitherTʹ[Int]
+val res0: EitherTʹ[Int] = EitherT(List(Right(0)))
+
+scala> OptionT(EitherT(List(Right(Some(1))))): OptionTʹ[Int]
+val res1: OptionTʹ[Int] = OptionT(EitherT(List(Right(Some(1)))))
+
+scala> IndexedStateT(x => OptionT(EitherT(List(Right(Some(x -> x*x)))))): StateTʹ[Int, Int]
+val res2: StateTʹ[Int, Int] = cats.data.IndexedStateT@6ff51ee2
+
+scala> res2.runF
+val res3: OptionTʹ[Int => OptionTʹ[(Int, Int)]] = OptionT(EitherT(List(Right(Some(rs$line$59$$$Lambda$2534/0x00007f5a3473d410@1a09d3c6)))))
+
+scala> res2.run(2)
+val res4: OptionTʹ[(Int, Int)] = OptionT(EitherT(List(Right(Some((2,4))))))
+```
+
+---
+
+On the other hand, had we omitted the inner `F`, although we could define `map` using just a `Functor[F]` typeclass instance,
+the `run` method would demand for a `Comonad[F]` typeclass instance, and - indirectly - the `flatMap` method:
+
+```Scala
+final class IndexedStateTʹ[F[_], SA, SB, A](val runF: F[SA => (SB, A)]) extends Serializable {
+
+  def flatMap[SC, B](fas: A => IndexedStateTʹ[F, SB, SC, B])(implicit F: Comonad[F]): IndexedStateTʹ[F, SA, SC, B] =
+    new IndexedStateTʹ(
+      F.map(runF) { (sasba: SA => (SB, A)) =>
+        { (sa: SA) => sasba(sa) match { case (sb: SB, a: A) => fas(a).run(sb) } }
+      }
+    )
+
+  def map[B](f: A => B)(implicit F: Functor[F]): IndexedStateTʹ[F, SA, SB, B] =
+    new IndexedStateTʹ(
+      F.map(runF) { (sasba: SA => (SB, A)) =>
+        { (sa: SA) => sasba(sa) match { case (sb: SB, a: A) => (sb, f(a)) } }
+      }
+    )
+
+  def run(initial: SA)(implicit F: Comonad[F]): (SB, A) =
+    F.extract(runF)(initial)
+}
+```
+
+because otherwise, had we defined `run` to return an `F[(SB, A)]` by using just a `Functor[F]` typeclass instance, `flatMap`
+would fail to compile:
+
+```Scala
+final class IndexedStateTʹ[F[_], SA, SB, A](val runF: F[SA => (SB, A)]) extends Serializable {
+
+  def flatMap[SC, B](fas: A => IndexedStateTʹ[F, SB, SC, B])(implicit F: FlatMap[F]): IndexedStateTʹ[F, SA, SC, B] =
+    new IndexedStateTʹ(
+      F.flatMap(runF) { (sasba: SA => (SB, A)) =>
+        { (sa: SA) => sasba(sa) match { case (sb: SB, a: A) => fas(a).run(sb) } }  // does not compile
+      }
+    )
+
+  def map[B](f: A => B)(implicit F: Functor[F]): IndexedStateTʹ[F, SA, SB, B] =
+    new IndexedStateTʹ(
+      F.map(runF) { (sasba: SA => (SB, A)) =>
+        { (sa: SA) => sasba(sa) match { case (sb: SB, a: A) => (sb, f(a)) } }
+      }
+    )
+
+  def run(initial: SA)(implicit F: Functor[F]): F[(SB, A)] =
+    F.map(runF)(_(initial))
+
+}
+```
+
+precisely because the function in the "does not compile" line has the "established" type `SA => F[(SB, A)]`.
+
+Only when we lift into both inner and outer effect (`runF: F[SA => F[(SB, A)]]`), like an unbalanced equation, the snippet
+begins to fall into place:
+
+- choice of expressions versus invocation arguments,
+
+- use of typeclass methods versus return types:
+
+```Scala
+final class IndexedStateTʹ[F[_], SA, SB, A](val runF: F[SA => F[(SB, A)]]) extends Serializable {
+
+  def flatMap[SC, B](fas: A => IndexedStateTʹ[F, SB, SC, B])(implicit F: FlatMap[F]): IndexedStateTʹ[F, SA, SC, B] =
+    new IndexedStateTʹ(
+      F.map(runF) { (safsba: SA => F[(SB, A)]) =>
+        { (sa: SA) => F.flatMap(safsba(sa)) { case (sb: SB, a: A) => fas(a).run(sb) } }
+      }: F[SA => F[(SC, B)]]
+    )
+
+  def map[B](f: A => B)(implicit F: Functor[F]): IndexedStateTʹ[F, SA, SB, B] =
+    new IndexedStateTʹ(
+      F.map(runF) { (safsba: SA => F[(SB, A)]) =>
+        { (sa: SA) => F.map(safsba(sa)) { case (sb: SB, a: A) => (sb, f(a)) } }
+      }: F[SA => F[(SB, B)]]
+    )
+
+  def run(initial: SA)(implicit F: FlatMap[F]): F[(SB, A)] =
+    F.flatMap(runF)(_(initial))
+
+}
+```
+
+and only the typeclass instances `Functor[F]` and `FlatMap[F]` are needed.
+
+----
 
 `run*` methods
 --------------
@@ -454,7 +601,7 @@ makes `F.map(runF) { safsba => ... }` lift it to type `F[SA => F[(SC, B)]]`.
 As for the block with parameter `fsba`, it passes this to `F.flatMap(fsba)`, which passes a pair `(SB, A)` to `flatMap`'s
 innermost block in turn. The return expression is `fas(a: A).run(sb: SB)` - having had computed both the argument `a` and the
 "initial" state `sb` -, resulting in a pair `(SC, B)` ("final" state, output), that already got lifted into `F` effect as
-`F[(SC, B)]`, and that `F.flatMap(fsba) { ... }` knows to preserve.
+`F[(SC, B)]`, and that `F.flatMap(fsba) { ... }` knows how to preserve.
 
 Note that `flatMap` can also be defined shorter using an anonymous function and `F.liftFM`:
 
@@ -490,7 +637,7 @@ F.map(faf(a): F[B])((sb, _)): F[(SB, B)]
 F.liftFM { case (sb: SB, a: A) => F.map(faf(a))((sb, _)) }: F[(SB, A)] => F[(SB, B)]
 ```
 
-So, when composing with `andThen`, the "middle" type `F[(SB, A)]` - that allows the "composition" - vanishes.
+So, when composing with `andThen`, the "middle" type `F[(SB, A)]` - that allows the "composition" - is eliminated.
 
 Other methods
 -------------
@@ -718,11 +865,11 @@ scala> for
      |   x <- res0
      |   y <- res1
      | yield
-     |   x + y
+     |   (x, y)
      |
 val res2:
   cats.data.IndexedStateT[cats.Eval, (Int, Double, LazyList[Double]),
-    (Int, Double, LazyList[Double]), Double] = cats.data.IndexedStateT@37079700
+    (Int, Double, LazyList[Double]), (Double, Double)] = cats.data.IndexedStateT@37079700
 
 scala> inf().take(10).foldLeft(res2.run((0, Double.NaN, inf()))) { case (state, _) => res2.run(state.value._1) }
 2.0
@@ -731,7 +878,7 @@ scala> inf().take(10).foldLeft(res2.run((0, Double.NaN, inf()))) { case (state, 
 11.0
 14.0
 17.0
-val res3: cats.Eval[((Int, Double, LazyList[Double]), Double)] = cats.Eval$$anon$1@1a19727e
+val res3: cats.Eval[((Int, Double, LazyList[Double]), (Double, Double))] = cats.Eval$$anon$1@1a19727e
 ```
 
 ---
@@ -766,7 +913,7 @@ def applyF[F[_], SA, SB, A](runF: F[SA => F[(SB, A)]]): IndexedStateT[F, SA, SB,
 ```
 
 The `apply` method resorts to `applyF` using an `F: Applicative[F]` typeclass instance, to lift the function parameter
-`f: SA => F[(SB, A)]` into `F`; the latter is then a straight instantiating of `IndexedStateT`.
+`f: SA => F[(SB, A)]` into `F`; the latter is then straightly instantiating an `IndexedStateT`.
 
 `IndexedState` object has a method `apply`:
 
@@ -936,11 +1083,11 @@ def fromState[F[_], S, A](s: State[S, F[A]])(implicit F: Applicative[F]): StateT
   }
 ```
 
-with a `State` parameter `s: State[S, F[A]]`, where `F[_]: Applicative` is another effect, besides `Eval` (recall that
-`State[S, A]` is just a type alias for `IndexedStateT[Eval, S, S, A]`). So the output here is an effect `F[A]`. Invoking the
-`transformF` method on the receiver `s`, with argument the block with function parameter `lsfa`, the latter, when invoked,
-assigns the `Eval#value` of `lsfa: Eval[(S, F[A])]` to temporary values `sʹ: S` and `fa: F[A]`; then, `F.map` is invoked to
-lift not just `a: A` but the pair `(sʹ: S, a: A)` into `F`.
+with a `State` parameter `s: State[S, F[A]]`, where `F[_]: Applicative` is another effect, besides `Eval` (as `State[S, A]`
+is just a type alias for `IndexedStateT[Eval, S, S, A]`). So the output here is an effect `F[A]`. Invoking the `transformF`
+method on the receiver `s`, with argument the block with function parameter `lsfa`, the latter, when invoked, assigns the
+`Eval#value` of `lsfa: Eval[(S, F[A])]` to temporary values `sʹ: S` and `fa: F[A]`; then, `F.map` is invoked to lift not just
+`a: A` but the pair `(sʹ: S, a: A)` into `F`.
 
 Exercise 08.6
 =============
@@ -962,7 +1109,7 @@ val expr = State { (xa: Expr[Double]) => swap(xa) -> eval(xa) }
 lazy val list: LazyList[Stateʹ] = expr #:: list
 ```
 
-.]
+`list` is an infinite list with just `expr` elements.]
 
 Also, using `IndexedState.apply`:
 
@@ -1064,15 +1211,13 @@ def treeify(implicit R: DivisionRing[?], unit: unit, `0`: `0`[?], `1`: `1`[?]): 
 use the following type and values:
 
 ```Scala
-type Stateʹ[F[_], G[_]] = IndexedState[F[Double], G[Double], Double]
-
 var expr = IndexedState { (xa: Expr[Double]) => treeify.apply(xa) -> eval(xa) }
 var tree = IndexedState { (ta: Tree[Double]) => expressify.apply(ta) -> ta.result }
 
 lazy val list: LazyList[Unit] = () #:: list
 ```
 
-.]
+There is no need for a particular value in the infinite list, use `expr` or `tree` directly.]
 
 What difference is manifest when alternating by oscillation versus fluctuation?
 
@@ -1174,7 +1319,8 @@ lazy val list: LazyList[Stateʹ] = expr #:: list
 println { list.take(3).foldRight(x)(_.run(_).value._1) }
 ```
 
-We used `foldRight` in order to pass an anonymous function - for brevity. We invoke `IndexedStateT#run` method w
+We used `foldRight` in order to pass an anonymous function - for brevity. We invoke `IndexedStateT#run` method with the same
+receiver `expr` applying it `swap`ped expressions one after another.
 
 Solution - Part 2
 -----------------

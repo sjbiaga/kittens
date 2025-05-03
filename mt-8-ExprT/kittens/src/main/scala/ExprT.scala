@@ -9,7 +9,6 @@ import cats.syntax.functor._
 
 import Expr._
 
-
 final case class ExprT[F[_], A](value: F[Expr[A]]):
 
   def map[B](f: A => B)(implicit F: Functor[F]): ExprT[F, B] =
