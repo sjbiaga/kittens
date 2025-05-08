@@ -113,12 +113,12 @@ def flatTransform[C, D](f: Either[A, B] => F[Either[C, D]])(implicit F: FlatMap[
 
 Both return an `EitherT[F, C, D]`. The (slight) difference between the two is that:
 
-- the latter's parameter is a function lifted to an `F[Either[C, D]]`, whereas the former's returns a bare `Either[C, D]`;
+- the latter's parameter is a function resulting lifted to an `F[Either[C, D]]`, while the former returns a bare `Either[C, D]`;
 
 - `F` must be a typeclass instance of either the `Functor`, or, respectively, the `FlatMap` typeclass, for `F[_]`.
 
-The implementations too are very simple - given the type of the parameter function `f`. Both wrap the result from application
-of in a `EitherT`, and pass the same two parameters `value` and `f` to  either `F.map`, or, respectively, `F.flatMap`.
+The implementations too are very simple - given the type of the parameter function `f`. Both wrap the result in an `EitherT`
+from application of -, and pass the same two parameters `value` and `f` to - either `F.map`, or, respectively, `F.flatMap`.
 
 ### Methods based on `transform`
 
@@ -276,14 +276,13 @@ Methods corresponding to `Either`
 ---------------------------------
 
 The first group of methods is made of: `fold`, `foldF`, `isLeft`, `isRight`, `swap`, `getOrElse`, `getOrElseF`, `getOrRaise`,
-`orElse`, `valueOr`, `valueOrF`, and `merge`.
+`orElse`, `valueOr`, `valueOrF`, and `merge`. Except `orElse`, these methods' return types are lifted strictly into `F[_]`.
 
 The methods ending in `F` use a `FlatMap[F]` typeclass instance, the others use a `Functor[F]` typeclass instance;
 `getOrElseF` and `valueOrF` use a `Monad[F]` typeclass instance, while `getOrRaise` uses a `MonadError[F]` typeclass instance.
 
 The two methods `fold` and `foldF` are heavily used - often by composing function parameters - in many other methods so not to
-repeat the same sequence of - (1) unwrapping `value` (2) `Either#fold`ing (3) wrapping back in the `F[_]` context -, except
-where pattern matching (like in the `collectRight` method) is unavoidable:
+repeat the same sequence of - (1) unwrapping `value`, (2) `Either#fold`ing, (3) wrapping back in the `F[_]` context:
 
 ```Scala
 def fold[C](fa: A => C, fb: B => C)(implicit F: Functor[F]): F[C] =
@@ -360,6 +359,8 @@ otherwise there is a right-value:
 def getOrRaise[E](e: => E)(implicit F: MonadError[F, ? >: E]): F[B] =
   getOrElseF(F.raiseError(e))
 ```
+
+The `recover` and `recoverWith` methods are the equivalent of `map` and `flatMap`, but for errors.
 
 As [mentioned](#methods-based-on-transform), `recover` uses `transform`:
 

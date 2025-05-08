@@ -200,8 +200,8 @@ def run(initial: SA)(implicit F: FlatMap[F]): F[(SB, A)] =
 So, if `F` is a `FlatMap`, a _step_ of computation can be performed with `run`: but the result has the pair of the next state
 and the output, still lifted in `F`.
 
-There are two groups of three methods each, corresponding to `run` and `runEmpty`; the latter uses a `S: Monoid[SA]` typeclass
-instance in order to invoke `run` with `S.empty`:
+There are two groups of three methods each, corresponding to `run` and `runEmpty`; the latter uses an `S: Monoid[SA]`
+typeclass instance in order to invoke `run` with `S.empty`:
 
 ```Scala
 def runEmpty(implicit S: Monoid[SA], F: FlatMap[F]): F[(SB, A)] = run(S.empty)
@@ -532,7 +532,7 @@ def inspect[B](f: SB => B)(implicit F: Functor[F]): IndexedStateT[F, SA, SB, B] 
 Because the state is preserved, invoking `inspect` several times with identical function parameter, maintains a "constant"
 `IndexedStateT` object (although _instantiated_ multiple times).
 
-5. Not to apply a function for the output, `get` is an alias for `inspect` with `identity` as function argument:
+5. Transfering the state into the output, `get` is an alias for `inspect` with `identity` as function argument:
 
 ```Scala
 def get(implicit F: Functor[F]): IndexedStateT[F, SA, SB, SB] =
@@ -573,7 +573,7 @@ With this occasion, we can also observe how the type parameters used in the tran
 1. the source type of the resulting `IndexedStateT[F, SA, SC, B]` remains the same `SA`
 
 1. the "adaptable" type parameters `SC` and `B` are there for flexibility when the `IndexedStateT` receiver is a generator in
-   a `for` comprehension.
+   a `for`-comprehension.
 
 When the result will be invoked method `run` upon, the implementation of `flatMap` knows how to apply functions and calculate
 expressions, such that an argument `a: A` is applied to `fas`, and method `run` is invoked upon the resulting receiver
@@ -596,7 +596,7 @@ def flatMap[SC, B](fas: A => IndexedStateT[F, SB, SC, B])(implicit F: FlatMap[F]
 So, `F.map(runF)` passes an argument function of type `SA => F[(SB, A)]` to the block with parameter `safsba`. Because this
 _value_ is a function (but still a value), we can have the block return a _functional_ expression: a "composition" - via
 `andThen` - of the object `AndThen(safsba)` with the block with parameter `fsba`, a result of type `SA => F[(SC, B)]`; which
-makes `F.map(runF) { safsba => ... }` lift it to type `F[SA => F[(SC, B)]]`.
+makes the expression `F.map(runF) { safsba => ... }` lift it to type `F[SA => F[(SC, B)]]`.
 
 As for the block with parameter `fsba`, it passes this to `F.flatMap(fsba)`, which passes a pair `(SB, A)` to `flatMap`'s
 innermost block in turn. The return expression is `fas(a: A).run(sb: SB)` - having had computed both the argument `a` and the
@@ -858,7 +858,7 @@ val res1:
 ```
 
 and observe that `res1`'s "initial" state type is `Avg`, same as `res0`'s "final" state type (or, the other way around).
-Hence, we [can](#solution---part-3) place them in a `for` comprehension, and then invoke `run` on `res2`:
+Hence, we [can](#solution---part-3) place them in a `for`-comprehension, and then invoke `run` on `res2`:
 
 ```scala
 scala> for
@@ -954,7 +954,7 @@ def modify[S](f: S => S): State[S, Unit] = State(f(_) -> ())
 def inspect[S, T](f: S => T): State[S, T] = State(s => (s, f(s)))
 ```
 
-Not to apply a function for the output, `get` is an alias for `inspect` with `identity` as function argument, whereas not to
+Transfering the state into the output, `get` is an alias for `inspect` with `identity` as function argument, whereas not to
 apply a function to a (thus constant) state, `set` is an alias for `modify` with a constant function argument:
 
 ```Scala
@@ -1099,7 +1099,7 @@ def apply[S, A](f: S => (S, A)): State[S, A] =
 ```
 
 implement an oscillating `State` where the expression keeps constantly swapping and evaluating. Perform this oscillation with
-a `for` comprehension and with an infinite `LazyList`.
+a `for`-comprehension and with an infinite `LazyList`.
 
 [Hint: based on the definitions of `swap` and `eval`, use the following type and values:
 
@@ -1118,7 +1118,7 @@ def apply[S1, S2, A](f: S1 => (S2, A)): IndexedState[S1, S2, A]
 ```
 
 implement a fluctuating `IndexedState`, where `Expr`essions and `Tree`s keep constantly switching from one another. Perform
-this fluctuation with a `for` comprehension and with an infinite `LazyList`.
+this fluctuation with a `for`-comprehension and with an infinite `LazyList`.
 
 [Hint: based on the natural transformations:
 
@@ -1285,7 +1285,7 @@ def eval[A](expr: Expr[A])(implicit R: DivisionRing[A], unit: unit, `0`: `0`[A],
   evalʹ(expr).result
 ```
 
-We can use either `for` comprehension or an infinte `LazyList` to oscillate:
+We can use either `for`-comprehension or an infinte `LazyList` to oscillate:
 
 ```Scala
 given unit = Zero
@@ -1382,7 +1382,7 @@ Solution - Part 3
 The difference is that when _fluctuating_, `expr` and `tree` must alternate, depending on which are the first state and last
 state.
 
-For, suppose we have the following translation of the above `for` comprehension:
+For, suppose we have the following translation of the above `for`-comprehension:
 
 ```Scala
 expr.flatMap[Tree[Double], Int] { _ =>
