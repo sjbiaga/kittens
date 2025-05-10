@@ -326,22 +326,6 @@ def toIor[B](ifNone: => B)(implicit F: Functor[F]): IorT[F, B, A] =
   IorT.fromOptionF(value, ifNone)
 ```
 
-The method `toValidated` is similar - again, using the parameter `ifNone` for the `Validated#Invalid` case -, but the return
-type is `F[Validated[E, A]]`:
-
-```Scala
-def toValidated[E](ifNone: => E)(implicit F: Functor[F]): F[Validated[E, A]] =
-  F.map(value)(Validated.fromOption(_, ifNone))
-```
-
-A separate method `withValidated`, applies an `f` to a `Validated` (whose "invalid" type `B` may be a collection) type, and
-then back to an `OptionT` again, thus allowing to "momentarily" accumulate errors:
-
-```Scala
-def withValidated[B, C, D](ifNone: => B)(f: Validated[B, A] => Validated[C, D])(implicit F: Functor[F]): OptionT[F, D] =
-  OptionT(F.map(toValidated(ifNone))(f andThen (_.toOption)))
-```
-
 The `toRight`/`toRightF` and `toLeft`/`toLeftF` methods convert the `OptionT` to an `EitherT`, resorting to, respectively,
 `cata` and `cataF` methods:
 
@@ -393,9 +377,9 @@ Methods from the companion object
 ---------------------------------
 
 `pure` - and its alias `some` - is not defined as a method in the usual sense, but through a technique called
-[partially applied type params](http://typelevel.org/cats/guidelines.html#partially-applied-type), which requires two steps
-(and two methods) in order to help with the type inference of the `OptionT` type parameters `F[_]` and `A`; when all type
-parameters and parameters are known, `pure` is equivalent with:
+[partially applied type parameters](http://typelevel.org/cats/guidelines.html#partially-applied-type), which requires two
+steps (and two methods) in order to help with the type inference of the `OptionT` type parameters `F[_]` and `A`; when all
+type parameters and parameters are known, `pure` is equivalent with:
 
 ```Scala
 OptionT(F.pure(Some(value: A)))
