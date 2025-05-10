@@ -409,22 +409,22 @@ def rethrowT(implicit F: MonadError[F, ? >: A]): F[B] =
   F.rethrow(value)
 ```
 
-Traversing or folding methods
------------------------------
+Traversing and folding methods
+------------------------------
 
-The definition might _seem_ a little complicated:
+The definition of `traverse` might _seem_ a little complicated:
 
 ```Scala
-def traverse[G[_], D](f: B => G[D])(implicit F: Traverse[F], G: Applicative[G]): G[EitherT[F, A, D]] =
-  G.map(F.compose(using Traverse[Either[A, *]]).traverse(value)(f))(EitherT.apply)
+def traverse[G[_], D](g: B => G[D])(implicit F: Traverse[F], G: Applicative[G]): G[EitherT[F, A, D]] =
+  G.map(F.compose(using Traverse[Either[A, *]]).traverse(value)(g))(EitherT.apply)
 //      111111111111111111111111111111111111111
 //                                             2222222222222222222
 //33333333333333333333333333333333333333333333333333333333333333333333333333333333
 ```
 
-but it consists in three easy steps.
+but it consists of three easy steps.
 
-1. The composition of the typeclass instances of the `Traverse` typeclass - for `F[_]` -, with that for `Either[A, *]`:
+1. The _composition_ of the typeclass instances of the `Traverse` typeclass - for `F[_]` -, with that for `Either[A, *]`:
 
 ```Scala
 package cats
@@ -440,32 +440,53 @@ object either extends ... {
 ```
 
 The typeclass instance `Traverse[Either[A, *]]` is right-biased, and consists in just the application of the function
-parameter `f` on the right-value; be it a left-value or a right-value, the result is an `Either[A, C]` lifted in `G`.
+parameter `f` to the right-value; be it a left-value or a right-value, the result is an `Either[A, C]` lifted in `G`.
 
-2. The _traversal_ itself, invoked as `F.traverse[G, B, D](value)(g): G[F[Either[A, D]]]`.
+2. The _traversal_ itself, invoked as `H.traverse[G, B, D](value)(g): G[F[Either[A, D]]]`, where `H: [α] =>> F[Either[A, α]]`
+   is the composition `F.compose(using Traverse[Either[A, *]])` from (1).
 
-2. The `F[Either[A, D]]` unwraps from `G`, wraps in `EitherT`, and then wraps back in `G`, _yielding_ a `G[EitherT[F, A, D]]`.
+2. The `F[Either[A, D]]` unlifts from `G`, wraps in `EitherT`, and then lifts back in `G`, _yielding_ a `G[EitherT[F, A, D]]`.
 
 The `mapAccumulate` method is similar in form with `traverse` and akin to `map`:
 
 ```Scala
-  def mapAccumulate[S, C](init: S)(f: (S, B) => (S, C))(implicit F: Traverse[F]): (S, EitherT[F, A, C]) = {
-    val (snext, vnext) = F.mapAccumulate(init, value)(Traverse[Either[A, *]].mapAccumulate[S, B, C](_, _)(f))
-    (snext, EitherT(vnext))
-  }
+def mapAccumulate[S, C](init: S)(f: (S, B) => (S, C))(implicit F: Traverse[F]): (S, EitherT[F, A, C]) = {
+  val (snext, vnext) = F.compose(using Traverse[Either[A, *]]).mapAccumulate(init, value)(f)
+//                     111111111111111111111111111111111111111 22222222222222222222222222222
+  (snext, EitherT(vnext))
+//        33333333333333
+}
 ```
 
-and it consists in two steps:
+but it keeps state, and it consists in three easy steps:
 
-1. The formation of the _`mapAccumulate`-ing function_: if we let `g` be
-   `Traverse[Either[A, *]].mapAccumulate[S, B, C](_, _)(f)`, then we can make the ascription
-   `g: (S, Either[A, B]) => (S, Either[A, C])`.
+1. The _composition_ of the typeclass instances of the `Traverse` typeclass - for `F[_]` -, with that for `Either[A, *]`.
 
-2. The _`mapAccumulate`-ing_ itself, invoked as `F.mapAccumulate[S, Either[A, B], Either[A, C]](init, value)(g)`.
+1. The _`mapAccumulate`-ing_ itself, invoked as `H.mapAccumulate(init, value)(f): (S, F[Either[A, C]])`, where
+   `H: [α] =>> F[Either[A, α]]` is the composition `F.compose(using Traverse[Either[A, *]])` from (1).
 
-The two methods `foldLeft` and `foldRight` are similar: they make the composition `F.compose(using Foldable[Either[A, *]])`,
-on which receiver they invoke `foldLeft`, respectively, `foldRight`, with the same arguments as their parameters - besides
-`value`:
+1. The wrapping of `F[Either[A, C]]` from (2) in `EitherT`.
+
+The two methods `foldLeft` and `foldRight` are similar: they make the composition `F.compose(using Foldable[Either[A, *]])`
+(where the following snippet:
+
+```Scala
+package cats
+package instances
+
+object either extends ... {
+  implicit def catsStdInstancesForEither[A]: Traverse[Either[A, *]] & ... =
+    new Traverse[Either[A, *]] with ... {
+      def foldLeft[B, C](fa: Either[A, B], c: C)(f: (C, B) => C): C =
+        fa.fold(_ => c, f(c, _))
+      def foldRight[B, C](fa: Either[A, B], lc: Eval[C])(f: (B, Eval[C]) => Eval[C]): Eval[C] =
+        fa.fold(_ => lc, f(_, lc))
+    }
+}
+```
+
+defines the `Foldable[Either[A, *]]` typeclass instance), on which receiver they invoke `foldLeft`, respectively, `foldRight`,
+passing the same arguments as their parameters - besides `value`:
 
 ```Scala
 def foldLeft[C](c: C)(f: (C, B) => C)(implicit F: Foldable[F]): C =
@@ -504,8 +525,8 @@ The method `toValidated` is similar, but the return type is `F[Validated[A, B]]`
 list) and `toValidatedNec` (non-empty chain) are alike - allowing to collect the "invalid results" to, respectively, a
 `NonEmptyList` and a `NonEmptyChain`.
 
-A separate method `withValidated`, applies an `f` to a `Validated` (whose "invalid" types `A`/`C` may be collections), and
-then back to an `EitherT` again, thus allowing to "momentarily" accumulate errors.
+A separate method `withValidated`, applies an `f` to a `Validated` (whose "invalid" type `A` may be aa collection) type, and
+then back to an `EitherT` again, thus allowing to "momentarily" accumulate errors:
 
 ```Scala
 def withValidated[C, D](f: Validated[A, B] => Validated[C, D])(implicit F: Functor[F]): EitherT[F, C, D] =

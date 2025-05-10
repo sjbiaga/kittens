@@ -128,7 +128,7 @@ def semiflatMap[B](f: A => F[B])(implicit F: Monad[F]): OptionT[F, B] =
 
 and its implementation resorts to `flatMap`, by first composing `f` with the `OptionT.liftF` method value.
 
-4. Among the "tap" methods, `semiflatTap` delegates to `semiflatMap`: 
+4. Among the "tap" methods, `semiflatTap` delegates to `semiflatMap`:
 
 ```Scala
 def semiflatTap[B](f: A => F[B])(implicit F: Monad[F]): OptionT[F, A] =
@@ -151,7 +151,7 @@ F.flatTap(value: F[Option[A]])((_: Option[A]).fold(F.void(ifNone): F[Unit])((_: 
 
 the first parameter to `F.flatTap` has type `F[Option[A]]`, while the second anonymous function parameter has type
 `Option[A] => Option[F[Unit]]`, resulting in the (same) type `F[Option[A]`. Note that `F.void(ifNone)` maps the type `F[B]`
-(of `ifNone`) `as` the type `F[Unit]`.
+(of `ifNone: F[B]`) `as` the type `F[Unit]`.
 
 Methods corresponding to `Option`
 ---------------------------------
@@ -227,15 +227,139 @@ def getOrRaise[E](e: => E)(implicit F: MonadError[F, E]): F[A] =
   getOrElseF(F.raiseError(e))
 ```
 
-Traversing or folding methods
------------------------------
+Traversing and folding methods
+------------------------------
 
-`traverse`, `mapAccumulate`, `foldLeft`, `foldRight`
+The definition of `traverse` might _seem_ a little complicated:
+
+```Scala
+def traverse[G[_], B](g: A => G[B])(implicit F: Traverse[F], G: Applicative[G]): G[OptionT[F, B]] =
+  G.map(F.compose(using Traverse[Option]).traverse(value)(g))(OptionT.apply)
+//      111111111111111111111111111111111
+//                                       2222222222222222222
+//33333333333333333333333333333333333333333333333333333333333333333333333333
+```
+
+but it consists of three easy steps.
+
+1. The _composition_ of the typeclass instances of the `Traverse` typeclass - for `F[_]` -, with that for `Option[_]`:
+
+```Scala
+package cats
+package instances
+
+object option extends ... {
+  implicit val catsStdInstancesForOption: Traverse[Option] & ... =
+    new Traverse[Option] with ... {
+      def traverse[G[_]: Applicative, A, B](fa: Option[A])(f: A => G[B]): G[Option[B]] =
+        fa match {
+          case None    => Applicative[G].pure(None)
+          case Some(a) => Applicative[G].map(f(a))(Some(_))
+        }
+    }
+}
+```
+
+The result of `traverse`ing an `fa: Option[A]` with the typeclass instance `Traverse[Option]` - given a traversal function
+(second parameter) `f: A => G[B]` - is an `Option[B]` lifted in `G`.
+
+2. The _traversal_ itself, invoked as `H.traverse[G, B](value)(g): G[F[Option[B]]]`, where `H: [α] =>> F[Option[α]]` is the
+   composition `F.compose(using Traverse[Option])` from (1).
+
+2. The `F[Option[B]]` unlifts from `G`, wraps in `OptionT`, and then lifts back in `G`, _yielding_ a `G[OptionT[F, B]]`.
+
+The `mapAccumulate` method is similar in form with `traverse` and akin to `map`:
+
+```Scala
+def mapAccumulate[S, B](init: S)(f: (S, A) => (S, B))(implicit F: Traverse[F]): (S, OptionT[F, B]) = {
+  val (snext, vnext) = F.compose(using Traverse[Option]).mapAccumulate(init, value)(f)
+//                     111111111111111111111111111111111 22222222222222222222222222222
+  (snext, OptionT(vnext))
+//        33333333333333
+}
+```
+
+but it keeps state, and it consists of three easy steps:
+
+1. The _composition_ of the typeclass instances of the `Traverse` typeclass - for `F[_]` -, with that for `Option[_]`.
+
+1. The _`mapAccumulate`-ing_ itself, invoked as `H.mapAccumulate(init, value)(f): (S, F[Option[B]])`, where
+   `H: [α] =>> F[Option[α]]` is the composition `F.compose(using Traverse[Option])` from (1).
+
+1. The wrapping of `F[Option[B]]` from (2) in `OptionT`.
+
+The two methods `foldLeft` and `foldRight` are similar: they make the composition `F.compose(using Foldable[Option])`, (where
+the following snippet:
+
+```Scala
+package cats
+package instances
+
+object option extends ... {
+  implicit val catsStdInstancesForOption: Traverse[Option] & ... =
+    new Traverse[Option] with ... {
+      def foldLeft[A, B](fa: Option[A], b: B)(f: (B, A) => B): B =
+        fa.fold(b)(f(b, _))
+      def foldRight[A, B](fa: Option[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
+        fa.fold(lb)(f(_, lb))
+}
+```
+
+defines the `Foldable[Option]` typeclass instance), on which receiver they invoke `foldLeft`, respectively, `foldRight`,
+passing the same arguments as their parameters - besides `value`:
+
+```Scala
+def foldLeft[B](b: B)(f: (B, A) => B)(implicit F: Foldable[F]): B =
+  F.compose(using Foldable[Option]).foldLeft(value, b)(f)
+def foldRight[B](lb: Eval[B])(f: (A, Eval[B]) => Eval[B])(implicit F: Foldable[F]): Eval[B] =
+  F.compose(using Foldable[Option]).foldRight(value, lb)(f)
+```
 
 `to*` methods
 -------------
 
-`toRight`, `toRightF`, `toLeft`, `toLeftF`, `toNested`
+The `toIor` method converts the `F`-lifted `Option` - unless `None`, when `Ior.left` is applied to parameter `ifNone` - to an
+[`IorT`](https://github.com/sjbiaga/kittens/blob/main/mt-4-IorT/README.md#iort):
+
+```Scala
+def toIor[B](ifNone: => B)(implicit F: Functor[F]): IorT[F, B, A] =
+  IorT.fromOptionF(value, ifNone)
+```
+
+The method `toValidated` is similar - again, using the parameter `ifNone` for the `Validated#Invalid` case -, but the return
+type is `F[Validated[E, A]]`:
+
+```Scala
+def toValidated[E](ifNone: => E)(implicit F: Functor[F]): F[Validated[E, A]] =
+  F.map(value)(Validated.fromOption(_, ifNone))
+```
+
+A separate method `withValidated`, applies an `f` to a `Validated` (whose "invalid" type `B` may be a collection) type, and
+then back to an `OptionT` again, thus allowing to "momentarily" accumulate errors:
+
+```Scala
+def withValidated[B, C, D](ifNone: => B)(f: Validated[B, A] => Validated[C, D])(implicit F: Functor[F]): OptionT[F, D] =
+  OptionT(F.map(toValidated(ifNone))(f andThen (_.toOption)))
+```
+
+The `toRight`/`toRightF` and `toLeft`/`toLeftF` methods convert the `OptionT` to an `EitherT`, resorting to, respectively,
+`cata` and `cataF` methods:
+
+```Scala
+def toRight[L](left: => L)(implicit F: Functor[F]): EitherT[F, L, A] =
+  EitherT(cata(Left(left), Right.apply))
+def toRightF[L](left: => F[L])(implicit F: Monad[F]): EitherT[F, L, A] =
+  EitherT(cataF(F.map(left)(Left.apply[L, A]), Right.apply[L, A] andThen F.pure))
+def toLeft[R](right: => R)(implicit F: Functor[F]): EitherT[F, A, R] =
+  EitherT(cata(Right(right), Left.apply))
+def toLeftF[R](right: => F[R])(implicit F: Monad[F]): EitherT[F, A, R] =
+  EitherT(cataF(F.map(right)(Right.apply[A, R]), Left.apply[A, R] andThen F.pure))
+```
+
+The `toRight*` methods use a default `left`, while a `Right` arises if the `OptionT` wraps a `Some`, whereas the `toLeft*`
+methods use a default `right`, while a `Left` arises if the `OptionT` wraps a `Some`.
+
+`toNested`
 
 Other methods
 -------------
@@ -269,9 +393,9 @@ Methods from the companion object
 ---------------------------------
 
 `pure` - and its alias `some` - is not defined as a method in the usual sense, but through a technique called
-[partially applied type params](http://typelevel.org/cats/guidelines.html#partially-applied-type-params), which requires two
-steps (and two methods) in order to help with the type inference of the `OptionT` type parameters `F[_]` and `A`; when all
-type parameters and parameters are known, `pure` is equivalent with:
+[partially applied type params](http://typelevel.org/cats/guidelines.html#partially-applied-type), which requires two steps
+(and two methods) in order to help with the type inference of the `OptionT` type parameters `F[_]` and `A`; when all type
+parameters and parameters are known, `pure` is equivalent with:
 
 ```Scala
 OptionT(F.pure(Some(value: A)))
