@@ -9,9 +9,19 @@ Lesson 08: Monad Transformers (cont'd)
 Methods à la `map` or `flatMap`
 -------------------------------
 
+The majority of these methods resort to other two, `transform` and `flatTransform` methods:
+
+```Scala
+def transform[C, D](f: Ior[A, B] => Ior[C, D])(implicit F: Functor[F]): IorT[F, C, D] =
+  IorT(F.map(value)(f))
+
+def flatTransform[C, D](f: Ior[A, B] => F[Ior[C, D]])(implicit F: FlatMap[F]): IorT[F, C, D] =
+  IorT(F.flatMap(value)(f))
+```
+
 ### Methods based on `transform`
 
-`map`, `bimap`, `leftMap`, `leftFlatMap`, `leftSemiflatMap`
+`map`, `bimap`, `leftMap`, `subflatMap`, `swap`
 
 ### Methods based on `flatTransform`
 
@@ -36,12 +46,14 @@ def biflatMap[C, D](fa: A => IorT[F, C, D], fb: B => IorT[F, C, D])(implicit F: 
 because `Ior#fold` takes _three_ function parameters, the _third_ binary function being impossible to implement in terms of
 `fa` and `fb`, due to the missing cases - `C` and `D` cannot be combined -, so it cannot be completed.
 
-`flatMap`, `subflatMap`, `semiflatMap`
+`flatMap`, `flatMapF`, `semiflatMap`, `leftFlatMap`, `leftSemiflatMap`
+
+`semiflatTap`
 
 Methods corresponding to `Ior`
 ---------------------------------
 
-`fold`, `foldF`, `isLeft`, `isRight`, `isBoth`, `getOrElse`, `getOrElseF`, `getOrRaise`, `valueOr`
+`fold`, `foldF`, `isLeft`, `isRight`, `isBoth`, `getOrElse`, `getOrElseF`, `getOrRaise`, `merge`, `valueOr`
 
 ```Scala
 def fold[C](fa: A => C, fb: B => C, fab: (A, B) => C)(implicit F: Functor[F]): F[C] =
@@ -50,13 +62,15 @@ def foldF[C](fa: A => F[C], fb: B => F[C], fab: (A, B) => F[C])(implicit F: Flat
   F.flatMap(value)(_.fold(fa, fb, fab))
 ```
 
-`forall`, `exists`, `merge`
+`forall`, `exists`
 
 Methods related to errors
 -------------------------
 
-Traversing or folding methods
------------------------------
+`getOrRaise`
+
+Traversing and folding methods
+------------------------------
 
 `traverse`, `foldLeft`, `foldRight`
 
@@ -68,9 +82,12 @@ Traversing or folding methods
 Other methods
 -------------
 
-`applyAlt`, `mapk`
+`applyAlt`, `mapK`, `===`, `compare`, `combine`
 
 Methods from the companion object
 ---------------------------------
+
+Typeclass instances
+-------------------
 
 [First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-3-OptionT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-5-ReaderT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)

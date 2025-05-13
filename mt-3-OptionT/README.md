@@ -326,6 +326,10 @@ def toIor[B](ifNone: => B)(implicit F: Functor[F]): IorT[F, B, A] =
   IorT.fromOptionF(value, ifNone)
 ```
 
+Unlike for [`EitherT`](https://github.com/sjbiaga/kittens/blob/main/mt-2-EitherT/README.md#to-methods), although possible,
+there are no `toValidated`/`withValidated` methods, since the invalid value, rather than possibly existing in the `Either`
+(as left value), has to be passed as an "`ifNone`"-like parameter. If needed, emulate with `toRight(ifNone).toValidated`.
+
 The `toRight`/`toRightF` and `toLeft`/`toLeftF` methods convert the `OptionT` to an `EitherT`, resorting to, respectively,
 `cata` and `cataF` methods:
 
@@ -343,7 +347,11 @@ def toLeftF[R](right: => F[R])(implicit F: Monad[F]): EitherT[F, A, R] =
 The `toRight*` methods use a default `left`, while a `Right` arises if the `OptionT` wraps a `Some`, whereas the `toLeft*`
 methods use a default `right`, while a `Left` arises if the `OptionT` wraps a `Some`.
 
-`toNested`
+The `toNested` method is direct, as `OptionT` nests an `Option[A]`:
+
+```Scala
+def toNested: Nested[F, Option, A] = Nested(value)
+```
 
 Other methods
 -------------
@@ -371,7 +379,10 @@ F.imap(value: F[Option[A]]): (Option[A] => Option[B]) => (Option[B] => Option[A]
 F.contramap(value: F[Option[A]]): (Option[B] => Option[A]) => F[Option[B]]
 ```
 
-`compare`, `partialCompare`, `===`, `mapK`
+The comparison methods `compare`, `partialCompare`, and `===`, require an implicit typeclass instance, respectively, for
+`Order[F[Option[A]]]`, for `PartialOrder[F[Option[A]]]`, and for `Eq[F[Option[A]]]`; thus the lifting into `F` cannot be dropped, because these methods return, respectively, an `Int`, a `Double`, and a `Boolean`.
+
+`mapK`
 
 Methods from the companion object
 ---------------------------------
@@ -447,5 +458,55 @@ trait FlatMap[F[_]] ... {
 because the condition `cond: F[Boolean]` is lifted into the `F[_]` context.
 
 `liftK`, `whenK`, `unlessK`
+
+Typeclass instances
+-------------------
+
+From the methods `===`, `partialCompare`, and `compare`, there are three typeclass instances: respectively, for
+`Eq[OptionT[F, A]]`, `PartialOrder[OptionT[F, A]]`, and `Order[OptionT[F, A]]`, given typeclass instances for, respectively,
+`Eq[F[Either[L, A]]]`, `PartialOrder[F[Either[L, A]]]`, and `Order[F[Either[L, A]]]`.
+
+Given a `Monoid[F[Option[A]]]` typeclass instance, there is a `Monoid[OptionT[F, A]]` typeclass instance.
+
+There is a `Traverse[OptionT[F, *]]` typeclass instance, given a `Traverse[F]` typeclass instance, from the
+[traversing and folding methods](#traversing-and-folding-methods).
+
+There is a `Monad[OptionT[F, *]]` typeclass instance, given a `Monad[F]` typeclass instance, based on the `map` and `flatMap`
+methods. The `tailRecM` method is more laborious than `pure`:
+
+```Scala
+implicit def F: Monad[F]
+
+def pure[A](a: A): OptionT[F, A] = OptionT.pure(a)
+
+def tailRecM[A, B](a: A)(f: A => OptionT[F, Either[A, B]]): OptionT[F, B] =
+  OptionT(
+    F.tailRecM(a) {
+      (
+        ((f(_).value): A => F[Option[Either[A, B]]]) andThen
+        F.lift {
+          _.fold[Either[A, Option[B]]](Right(None))(_.map(Option.apply))
+        }
+      ): A => F[Either[A, Option[B]]]
+    }
+  )
+```
+
+but it can be seen that it resorts to the homonym method invoked directly on the typeclass instance `F: Monad[F]`; the
+function parameter `f` is transformed into a function argument of type `A => F[Either[A, Option[B]]]`. The type of
+`F.lift` is `F[Option[Either[A, B]]] => F[Either[A, Option[B]]]`, which means that its function argument has type
+`Option[Either[A, B]] => Either[A, Option[B]]`; in this light, the `(_: Option[Either[A, B]]).fold` of this function is
+clearer:
+
+- the recursion continues only in case of `Some(Left(a))`
+
+- the recursion ends with an `Option[B]` value, which is lifted in `F`, and then this is wrapped in an `OptionT`.
+
+There are two typeclass instances of the `MonadError` typeclass, both defining only `handleErrorWith` and `raiseError`:
+
+1. `MonadError[OptionT[F, *], Unit]`, meaning there is only one possible error, the `Unit`, given a typeclass instance of
+   just the `Monad` typeclass.
+
+1. `MonadError[OptionT[F, *], E]`, where `E` is a type parameter, but given a typeclass instance `F: MonadError[F, E]`.
 
 [First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-2-EitherT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-4-IorT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)
