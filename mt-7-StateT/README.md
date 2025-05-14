@@ -3,8 +3,8 @@
 Lesson 08: Monad Transformers (cont'd)
 ======================================
 
-`StateT`
---------
+[`StateT`](https://typelevel.org/cats/datatypes/statet.html)
+------------------------------------------------------------
 
 `StateT` is actually a type alias for `IndexedStateT`:
 

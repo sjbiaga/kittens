@@ -3,8 +3,8 @@
 Lesson 03: A Rich Language of Expressions (cont'd)
 ==================================================
 
-`Expr` as `Functor`
--------------------
+`Expr` as [`Functor`](https://typelevel.org/cats/typeclasses/functor.html)
+--------------------------------------------------------------------------
 
 `Cats` is a library centered around `Functor`s. A functor is a type of higher-kind `* -> *`, or, with a hole. In the Category
 Theory branch of `Mathematics` (hence the name "Cats"), functors have a source and a target category,

@@ -3,8 +3,8 @@
 Lesson 08: Monad Transformers (cont'd)
 ======================================
 
-`OptionT`
----------
+[`OptionT`](https://typelevel.org/cats/nomenclature.html#optiont)
+-----------------------------------------------------------------
 
 Unlike for [`EitherT`](https://github.com/sjbiaga/kittens/blob/main/mt-2-EitherT/README.md#methods-based-on-flattransform) or
 for [`IorT`](https://github.com/sjbiaga/kittens/blob/main/mt-4-IorT/README.md#methods-based-on-flattransform), there are no
@@ -463,16 +463,25 @@ Typeclass instances
 -------------------
 
 From the methods `===`, `partialCompare`, and `compare`, there are three typeclass instances: respectively, for
-`Eq[OptionT[F, A]]`, `PartialOrder[OptionT[F, A]]`, and `Order[OptionT[F, A]]`, given typeclass instances for, respectively,
-`Eq[F[Either[L, A]]]`, `PartialOrder[F[Either[L, A]]]`, and `Order[F[Either[L, A]]]`.
+`Eq[OptionT[F, A]]`, `PartialOrder[OptionT[F, A]]`, and `Order[OptionT[F, A]]`, given `implicit` typeclass instances for,
+respectively, `Eq[F[Either[L, A]]]`, `PartialOrder[F[Either[L, A]]]`, and `Order[F[Either[L, A]]]`.
 
-Given a `Monoid[F[Option[A]]]` typeclass instance, there is a `Monoid[OptionT[F, A]]` typeclass instance.
+Given an `implicit` `Monoid[F[Option[A]]]` typeclass instance, there is a `Monoid[OptionT[F, A]]` typeclass instance.
 
-There is a `Traverse[OptionT[F, *]]` typeclass instance, given a `Traverse[F]` typeclass instance, from the
+There is a `Traverse[OptionT[F, *]]` typeclass instance, given an `implicit` `Traverse[F]` typeclass instance, from the
 [traversing and folding methods](#traversing-and-folding-methods).
 
-There is a `Monad[OptionT[F, *]]` typeclass instance, given a `Monad[F]` typeclass instance, based on the `map` and `flatMap`
-methods. The `tailRecM` method is more laborious than `pure`:
+There are both an `Invariant[OptionT[F, *]]` and a `Contravariant[OptionT[F, *]]` typeclass instances, given, respectively,
+an `implicit` `Invariant[F]` and `Contravariant[F]`, from the methods, respectively, `imap` and `contramap`.
+
+Given an `implicit` `Functor[F]`, there is `FunctorFilter[OptionT[F, *]]` typeclass instance from the method `mapFilter`, but
+also `filter`, `filterNot` and `subflatMap`; the `functor` field is set to the following typeclass instance.
+
+There is a `Functor[OptionT[F, *]]` typeclass instance, given an `implicit` `Functor[F]` typeclass instance, from the only
+method `map`.
+
+Extending the latter, there is a `Monad[OptionT[F, *]]` typeclass instance, given an `implicit` `Monad[F]` typeclass instance,
+based on the `map` and `flatMap` methods. The `tailRecM` method is more laborious than `pure`:
 
 ```Scala
 implicit def F: Monad[F]
@@ -483,10 +492,10 @@ def tailRecM[A, B](a: A)(f: A => OptionT[F, Either[A, B]]): OptionT[F, B] =
   OptionT(
     F.tailRecM(a) {
       (
-        ((f(_).value): A => F[Option[Either[A, B]]]) andThen
-        F.lift {
+        { (f(_).value): A => F[Option[Either[A, B]]] } andThen
+        F.lift (
           _.fold[Either[A, Option[B]]](Right(None))(_.map(Option.apply))
-        }
+        )
       ): A => F[Either[A, Option[B]]]
     }
   )
@@ -504,9 +513,10 @@ clearer:
 
 There are two typeclass instances of the `MonadError` typeclass, both defining only `handleErrorWith` and `raiseError`:
 
-1. `MonadError[OptionT[F, *], Unit]`, meaning there is only one possible error, the `Unit`, given a typeclass instance of
-   just the `Monad` typeclass.
+1. `MonadError[OptionT[F, *], Unit]`, meaning there is only one possible error, the `Unit`, given an `implicit` typeclass
+   instance of just the `Monad` typeclass.
 
-1. `MonadError[OptionT[F, *], E]`, where `E` is a type parameter, but given a typeclass instance `F: MonadError[F, E]`.
+1. `MonadError[OptionT[F, *], E]`, where `E` is a type parameter, but given an `implicit` typeclass instance
+   `F: MonadError[F, E]`.
 
 [First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-2-EitherT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-4-IorT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)

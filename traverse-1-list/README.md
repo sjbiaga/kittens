@@ -1,7 +1,7 @@
 [Previous](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/traverse-2-chain/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/traverse-7-poke/README.md)
 
-Lesson 07: Traversable
-======================
+Lesson 07: [Traversable](https://typelevel.org/cats/nomenclature.html#traverse)
+===============================================================================
 
 The `map` method inherited from the `Functor` trait is implemented with a `traverse`al using the `cats.Id` monad (thus also
 with an instance of `Applicative[Id]`).

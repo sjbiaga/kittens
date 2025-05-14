@@ -3,8 +3,8 @@
 Lesson 08: Monad Transformers (cont'd)
 ======================================
 
-`WriterT`
----------
+[`WriterT`](https://typelevel.org/cats/datatypes/writert.html)
+--------------------------------------------------------------
 
 Methods à la `map` or `flatMap`
 -------------------------------

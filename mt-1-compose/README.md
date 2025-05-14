@@ -1,7 +1,7 @@
 [Previous](https://github.com/sjbiaga/kittens/blob/main/traverse-7-poke/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-2-EitherT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)
 
-Lesson 08: Monad Transformers
-=============================
+Lesson 08: Monad [Transformers](https://typelevel.org/cats/nomenclature.html#transformers)
+==========================================================================================
 
 In the previous lessons, we have proceeded mainly by giving typeclass instances - for `Option`, `List`, `Expr` - of various
 typeclasses: we could thus use `Cats` _syntax_ for `Functor`, `CoflatMap`, `FlatMap`, `Monad`, or `Traverse`.

@@ -3,8 +3,8 @@
 Lesson 08: Monad Transformers (cont'd)
 ======================================
 
-`IorT`
----------
+[`IorT`](https://typelevel.org/cats/datatypes/iort.html)
+--------------------------------------------------------
 
 Methods à la `map` or `flatMap`
 -------------------------------

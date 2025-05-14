@@ -147,8 +147,8 @@ scala> res5.produce
 val res6: Int = 8
 ```
 
-`Cats` `Profunctor` Typeclass
------------------------------
+[`Profunctor`](https://typelevel.org/cats/nomenclature.html#profunctor)
+-----------------------------------------------------------------------
 
 `Factory` is known as a _profunctor_: "a `Contravariant` functor on its first type parameter and a `Functor` on its second
 type parameter" (unlike a _bifunctor_ which is _covariant in both_ its type parameters). At a closer look, we can factor out

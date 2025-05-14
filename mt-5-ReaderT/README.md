@@ -3,8 +3,8 @@
 Lesson 08: Monad Transformers (cont'd)
 ======================================
 
-`ReaderT`
----------
+[`ReaderT`](https://typelevel.org/cats/nomenclature.html#kleisli-or-readert)
+----------------------------------------------------------------------------
 
 `ReaderT` is actually a type alias for `Kleisli`:
 

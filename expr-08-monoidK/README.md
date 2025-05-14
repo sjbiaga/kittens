@@ -3,8 +3,8 @@
 Lesson 05: Monoids (cont'd)
 ===========================
 
-Higher-Kinded `Monoid`s
------------------------
+[Higher-Kinded `Monoid`s](https://typelevel.org/cats/nomenclature.html#monoidk)
+-------------------------------------------------------------------------------
 
 Because `Expr` has (higher) kind `* -> *`, it cannot have a typeclass instance of the `Monoid` typeclass. However,
 independent of the base type,

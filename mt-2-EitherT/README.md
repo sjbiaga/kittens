@@ -3,8 +3,8 @@
 Lesson 08: Monad Transformers (cont'd)
 ======================================
 
-`EitherT`
----------
+[`EitherT`](https://typelevel.org/cats/nomenclature.html#eithert)
+-----------------------------------------------------------------
 
 To return to our ([failed](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md#composing-failure)) example of
 `flatten`, this time implemented for `EitherT`, flattening an `EitherT[F, A, EitherT[F, A, D]]` is straight using `flatMap`:
@@ -586,20 +586,20 @@ Typeclass instances
 -------------------
 
 From the methods `===`, `partialCompare`, and `compare`, there are three typeclass instances: respectively, for
-`Eq[EitherT[F, L, A]]`, `PartialOrder[EitherT[F, L, A]]`, and `Order[EitherT[F, L, A]]`, given typeclass instances for,
-respectively, `Eq[F[Either[L, A]]]`, `PartialOrder[F[Either[L, A]]]`, and `Order[F[Either[L, A]]]`.
+`Eq[EitherT[F, L, A]]`, `PartialOrder[EitherT[F, L, A]]`, and `Order[EitherT[F, L, A]]`, given `implicit` typeclass instances
+for, respectively, `Eq[F[Either[L, A]]]`, `PartialOrder[F[Either[L, A]]]`, and `Order[F[Either[L, A]]]`.
 
-Given a `Monoid[F[Either[L, A]]]` typeclass instance, there is a `Monoid[EitherT[F, L, A]]` typeclass instance.
+Given an `implicit` `Monoid[F[Either[L, A]]]` typeclass instance, there is a `Monoid[EitherT[F, L, A]]` typeclass instance.
 
-There are `Traverse[EitherT[F, L, *]]` and `Bitraverse[EitherT[F, *, *]]` typeclass instances, in both cases, given a
-`Traverse[F]` typeclass instance, from the [traversing and folding methods](#traversing-and-folding-methods).
+There are `Traverse[EitherT[F, L, *]]` and `Bitraverse[EitherT[F, *, *]]` typeclass instances, in both cases, given an
+`implicit` `Traverse[F]` typeclass instance, from the [traversing and folding methods](#traversing-and-folding-methods).
 
-There is a `Bifunctor[EitherT[F, *, *]]` typeclass instance given a `Functor[F]` typeclass instance, based on the `bimap`
-method. And of course a `Functor[EitherT[F, L, *]]` typeclass instance given a `Functor[F]` typeclass instance, based on the
-`map` method.
+There is a `Bifunctor[EitherT[F, *, *]]` typeclass instance given an `implicit` `Functor[F]` typeclass instance, based on the
+`bimap` method. And of course a `Functor[EitherT[F, L, *]]` typeclass instance, given an `implicit` `Functor[F]` typeclass
+instance, based on the `map` method.
 
-Extending the latter, there is a `Monad[EitherT[F, L, *]]` typeclass instance, given a `Monad[F]` typeclass instance, based
-on the `flatMap` method. The `tailRecM` method is more laborious than `pure`:
+Extending the latter, there is a `Monad[EitherT[F, L, *]]` typeclass instance, given an `implicit` `Monad[F]` typeclass
+instance, based on the `flatMap` method. The `tailRecM` method is more laborious than `pure`:
 
 ```Scala
 implicit val F: Monad[F]
@@ -610,7 +610,7 @@ def tailRecM[A, B](a: A)(f: A => EitherT[F, L, Either[A, B]]): EitherT[F, L, B] 
   EitherT {
     F.tailRecM(a) {
       (
-      ((f(_).value): A => F[Either[L, Either[A, B]]]) andThen
+      { (f(_).value): A => F[Either[L, Either[A, B]]] } andThen
         F.lift {
           case Left(l)         => Right(Left(l))
           case Right(Left(a))  => Left(a)
@@ -688,6 +688,6 @@ def parallel: Sequentialʹ ~> Parallelʹ =
 
 Note that `Nested[M, Validated[E, *], *]` is a pseudo "monad transformer" for `Validated` (which is not a monad, it does not
 have `flatMap`). Also note that the context bound `M[_]: Monad` is required because `M[_]` must be a `Functor` as well as an
-`Applicative` - i.e., an applicative functor, which is another term for "monad".
+`Applicative` - an "applicative functor", which is another term for "monad".
 
 [First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-3-OptionT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)
