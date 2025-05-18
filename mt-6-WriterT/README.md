@@ -24,6 +24,23 @@ Other methods
 Methods from the companion object
 ---------------------------------
 
+Typeclass Instances
+-------------------
+
+A typeclass instance of the [`Defer`](https://github.com/sjbiaga/kittens/blob/main/recursion-4-Defer/README.md) typeclass
+asks for an `implicit` `F; Defer[F]` typeclass instance in scope. Given the `fa: => WriterT[F, L, A]` parameter, the method
+`defer` is invoked with receiver `F` and argument `fa.run`. This argument uses `fa` which is a call-by-name parameter, but
+the `defer` method is also passed a call-by-name argument, so `fa.run` will not be evaluated: the call-by-name flavor of the
+`fa` parameter continues in the argument `fa.run`:
+
+```Scala
+implicit def ... (implicit F: Defer[F]): ... =
+  new Defer[WriterT[F, L, *]] {
+	def defer[A](fa: => WriterT[F, L, A]): WriterT[F, L, A] =
+	  WriterT(F.defer(fa.run))
+  }
+```
+
 Exercise 08.1
 =============
 

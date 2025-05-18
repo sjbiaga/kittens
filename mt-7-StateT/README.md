@@ -1417,4 +1417,21 @@ val x0: IndexedState[Expr[Double], Tree[Double], Int] = (expr: IndexedState[Expr
 The point (5) in the discussion of `flatMap` mandates that the types marked with `1st` and `2nd` must coincide (otherwise,
 `flatMap` is impossible to be implemented).
 
+Typeclass Instances
+-------------------
+
+A typeclass instance of the [`Defer`](https://github.com/sjbiaga/kittens/blob/main/recursion-4-Defer/README.md) typeclass
+asks for an `implicit` `F; Defer[F]` typeclass instance in scope. Given the `fa: => IndexedStateT[F, SA, SB, A]` parameter,
+the method `defer` is invoked with receiver `F` and argument `fa.runF`. This argument uses `fa` which is a call-by-name
+parameter, but the `defer` method is also passed a call-by-name argument, so `fa.runF` will not be evaluated: the
+call-by-name flavor of the `fa` parameter continues in the argument `fa.runF`:
+
+```Scala
+implicit def ... (implicit F: Defer[F]): ... =
+  new Defer[IndexedStateT[F, SA, SB, *]] {
+	def defer[A](fa: => IndexedStateT[F, SA, SB, A]): IndexedStateT[F, SA, SB, A] =
+	  IndexedStateT.applyF(F.defer(fa.runF))
+  }
+```
+
 [First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-6-WriterT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)

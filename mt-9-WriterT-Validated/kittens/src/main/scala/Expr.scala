@@ -29,7 +29,7 @@ object Expr extends JavaTokenParsers:
   type Exprʹ[T] = Writerʹ[Expr[T]]
 
   type Doubleʹ = WriterT[Validatedʹ, String, Double]
- 
+
   given [T]: Conversion[Validatedʹ[T], T] = _.getOrElse(null.asInstanceOf[T])
 
   implicit def kittensExprMonoidKʹ(implicit unit: unit): MonoidK[Expr] =

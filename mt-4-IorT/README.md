@@ -90,4 +90,18 @@ Methods from the companion object
 Typeclass instances
 -------------------
 
+A typeclass instance of the [`Defer`](https://github.com/sjbiaga/kittens/blob/main/recursion-4-Defer/README.md) typeclass
+asks for an `implicit` `F; Defer[F]` typeclass instance in scope. Given the `fa: => IorT[F, E, A]` parameter, the method
+`defer` is invoked with receiver `F` and argument `fa.value`. This argument uses `fa` which is a call-by-name parameter, but
+the `defer` method is also passed a call-by-name argument, so `fa.value` will not be evaluated: the call-by-name flavor of
+the `fa` parameter continues in the argument `fa.value`:
+
+```Scala
+implicit def ... (implicit F: Defer[F]): ... =
+  new Defer[IorT[F, E, *]] {
+	def defer[A](fa: => IorT[F, E, A]): IorT[F, E, A] =
+	  IorT(F.defer(fa.value))
+  }
+```
+
 [First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-3-OptionT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-5-ReaderT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)

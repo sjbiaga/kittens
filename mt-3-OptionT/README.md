@@ -101,7 +101,7 @@ which tells us that its type is `Option[A] => F[Option[B]]`.
 
 ```Scala
 def filterF(p: A => F[Boolean])(implicit F: Monad[F]): OptionT[F, A] =
-  flatTransform(_.fold(F.none)(a => F.map(p(a))(if (_) Some(a) else None)))
+  flatTransform(_.fold(F.none[A])(a => F.map(p(a))(if (_) Some(a) else None)))
 ```
 
 For an instance of `Some(a: A)`, the `Option#filter` method returns `None` if the `Boolean` predicate is `false` of `a`. We
@@ -123,7 +123,7 @@ def filterF(p: A => F[Boolean])(implicit F: Monad[F]): OptionT[F, A] =
 
 ```Scala
 def semiflatMap[B](f: A => F[B])(implicit F: Monad[F]): OptionT[F, B] =
-  flatMap(f andThen OptionT.liftF)
+  flatMap(f andThen OptionT.liftF[F, B])
 ```
 
 and its implementation resorts to `flatMap`, by first composing `f` with the `OptionT.liftF` method value.
@@ -492,7 +492,7 @@ def tailRecM[A, B](a: A)(f: A => OptionT[F, Either[A, B]]): OptionT[F, B] =
   OptionT(
     F.tailRecM(a) {
       (
-        { (f(_).value): A => F[Option[Either[A, B]]] } andThen
+        { (f(_: A).value): A => F[Option[Either[A, B]]] } andThen
         F.lift (
           _.fold[Either[A, Option[B]]](Right(None))(_.map(Option.apply))
         )
@@ -518,5 +518,19 @@ There are two typeclass instances of the `MonadError` typeclass, both defining o
 
 1. `MonadError[OptionT[F, *], E]`, where `E` is a type parameter, but given an `implicit` typeclass instance
    `F: MonadError[F, E]`.
+
+A typeclass instance of the [`Defer`](https://github.com/sjbiaga/kittens/blob/main/recursion-4-Defer/README.md) typeclass
+asks for an `implicit` `F; Defer[F]` typeclass instance in scope. Given the `fa: => OptionT[F, A]` parameter, the method
+`defer` is invoked with receiver `F` and argument `fa.value`. This argument uses `fa` which is a call-by-name parameter, but
+the `defer` method is also passed a call-by-name argument, so `fa.value` will not be evaluated: the call-by-name flavor of
+the `fa` parameter continues in the argument `fa.value`:
+
+```Scala
+implicit def ... (implicit F: Defer[F]): ... =
+  new Defer[OptionT[F, *]] {
+	def defer[A](fa: => OptionT[F, A]): OptionT[F, A] =
+	  OptionT(F.defer(fa.value))
+  }
+```
 
 [First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-2-EitherT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-4-IorT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)

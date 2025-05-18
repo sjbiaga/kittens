@@ -610,7 +610,7 @@ def tailRecM[A, B](a: A)(f: A => EitherT[F, L, Either[A, B]]): EitherT[F, L, B] 
   EitherT {
     F.tailRecM(a) {
       (
-      { (f(_).value): A => F[Either[L, Either[A, B]]] } andThen
+      { (f(_: A).value): A => F[Either[L, Either[A, B]]] } andThen
         F.lift {
           case Left(l)         => Right(Left(l))
           case Right(Left(a))  => Left(a)
@@ -689,5 +689,19 @@ def parallel: Sequentialʹ ~> Parallelʹ =
 Note that `Nested[M, Validated[E, *], *]` is a pseudo "monad transformer" for `Validated` (which is not a monad, it does not
 have `flatMap`). Also note that the context bound `M[_]: Monad` is required because `M[_]` must be a `Functor` as well as an
 `Applicative` - an "applicative functor", which is another term for "monad".
+
+A typeclass instance of the [`Defer`](https://github.com/sjbiaga/kittens/blob/main/recursion-4-Defer/README.md) typeclass
+asks for an `implicit` `F; Defer[F]` typeclass instance in scope. Given the `fa: => EitherT[F, L, A]` parameter, the method
+`defer` is invoked with receiver `F` and argument `fa.value`. This argument uses `fa` which is a call-by-name parameter, but
+the `defer` method is also passed a call-by-name argument, so `fa.value` will not be evaluated: the call-by-name flavor of
+the `fa` parameter continues in the argument `fa.value`:
+
+```Scala
+implicit def ... (implicit F: Defer[F]): ... =
+  new Defer[EitherT[F, L, *]] {
+    def defer[A](fa: => EitherT[F, L, A]): EitherT[F, L, A] =
+      EitherT(F.defer(fa.value))
+  }
+```
 
 [First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-3-OptionT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)
