@@ -1,4 +1,4 @@
-[Next](https://github.com/sjbiaga/kittens/blob/main/recursion-2-schemes/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/recursion-4-Defer/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/recursion-2-schemes/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/recursion-4-Defer/README.md)
 
 Lesson 09 - Recursion
 =====================
@@ -205,4 +205,4 @@ Let us observe that only the occurrences of the `f` variable will be replaced wi
 _potential_ for recursion, because, unless a base case intervenes, it will replicate itself to `fib (Y fib)` again, in each
 of those occurrences which get evaluated.
 
-[Next](https://github.com/sjbiaga/kittens/blob/main/recursion-2-schemes/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/recursion-4-Defer/README.md)
+[Previous](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/recursion-2-schemes/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/recursion-4-Defer/README.md)

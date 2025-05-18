@@ -1,4 +1,4 @@
-[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/recursion-1-lambda-calculus/README.md)
 
 Lesson 08: Monad Transformers (cont'd)
 ======================================
@@ -348,4 +348,4 @@ The `swap` method remains the same.
         Builder(putʹ(lhs.value: Expr[T])(lhs)(msg), save)(using indent + "  ")
 ```
 
-[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md)
+[First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/recursion-1-lambda-calculus/README.md)

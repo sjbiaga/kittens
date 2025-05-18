@@ -70,7 +70,7 @@ case class ValF[T](n: T) extends ExprF[Nothing]
 case class FacF[+R, T](n: R, k: T) extends ExprF[R]
 ```
 
-with a slight alteration: type parameter `R` stands for "_R_ecursion". We let type parameter `T` be the non-recursive type
+with a slight alteration: type parameter `R` stands for "_R_-ecursion". We let type parameter `T` be the non-recursive type
 (for `ValF` and `FacF` only).
 
 To use recursion schemes, `ExprF` must be a `Functor`:

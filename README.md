@@ -69,7 +69,7 @@ Lessons in Scala [`Cats`](https://typelevel.org/cats/typeclasses.html#type-class
 
 [Lesson 09: Recursion](https://github.com/sjbiaga/kittens/blob/main/recursion-1-lambda-calculus/README.md)
 
-  - [Exercise 09.1](https://github.com/sjbiaga/kittens/blob/main/recursion-1-schemes/README.md#exercise-091)
+  - [Exercise 09.1](https://github.com/sjbiaga/kittens/blob/main/recursion-2-schemes/README.md#exercise-091)
 
 Examples
 ========

@@ -65,7 +65,7 @@ object Cofree {
 `ana` prompts for a typeclass instance `Functor[F]`, while `cata` asks for a typeclass instance `Traverse[F]` - where `F` in
 our case will be `ExprF`.
 
-In order to use the above recursion schemes for the same recursive algorithms - and coalgebras - `factorial` and `fibonacci`
+In order to use the above recursion schemes for the same corecursive algorithms - and coalgebras - `factorial` and `fibonacci`
 already [given](https://github.com/sjbiaga/kittens/blob/main/recursion-2-schemes/README.md#recursion-schemes-in-scala), we
 need to provide with typeclass instances `Functor[ExprF]` and `Traverse[ExprF]`:
 
