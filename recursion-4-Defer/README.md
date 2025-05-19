@@ -113,7 +113,7 @@ method instantiates a nested class `Deferred` from `cachedFa`, with a parameter 
 
 Now, this nested class extends `(S => T)`, so its instance can be used as result of `defer`. However, only in line #c, the
 `lazy` `val`ue `self` is evaluated, and in order to evaluate it, the right hand side in line #a says that the `defer(self)`
-in line #b must be passed as argument to `fn`. Yet, `self` has _not_ been evaluated, but it may serve for the _call-by-name_
+in line #b must be passed as argument to `fn`. Yet, `self` has _not_ been evaluated, but it may serve as the _call-by-name_
 parameter in line #15.
 
 The result from line #17 is but evaluated: an instance of the nested class `Deferred` and thus a `Function1[Int, Int]`.
@@ -122,7 +122,8 @@ has been captured.
 
 After all this, and after line #c, the value of the `lazy` `val`ue `self` is initialized. This is either `res0` or `res2`.
 Nevertheless, in both these cases, the captured `m` lurks still unapplied, though its delayed application will result in the
-very function in which it "occurs it`self` recursively": then, `self` and `m` will be the same "object-function" value.
+very function in which it "occurs it`self` recursively": then, `self` and `m` will reference _the same_ "object-function"
+value.
 
 Both `res0` and `res2` only have the potential of being applied, and it is during application, that the delayed application
 takes place. So, in the case of `res0`, applying `res0(7)` - which happens in llne #13 just after `resolved` returns - will
@@ -176,8 +177,8 @@ the `Eval.Defer[Int => Int]` will yield `self` from line #c.
 As before, `res4.value(7)` will overflow the stack, whereas `res6.value(7)` will return `-1`.
 
 The purpose of `defer` is manifest: keep a `Function0` unapplied until after `self` will have been initialized, and apply it
-to be the same object-function as `self`. The former is captured in it`self`, while the latter (`self`) is returned to the
-caller of `fix`. However, this method does not provide for stack safety.
+to reference the same object-function as `self`. The former is captured in it`self`, while the latter (`self`) is returned to
+the caller of `fix`. However, this method does not provide for stack safety.
 
 ---
 

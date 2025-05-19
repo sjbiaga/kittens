@@ -19,16 +19,19 @@ val fib: Long => Long = { n =>
 }
 ```
 
-We would like - as illustrated before - to define a `fibF: Long => Long` function that does _not_ invoke itself recursively;
-for this, we have to translate the `Y` combinator in `Scala`, as
-[pointed out](https://free.cofree.io/2017/08/28/fixpoint#factorial-via-fix):
+We would like - as illustrated
+[before](https://github.com/sjbiaga/kittens/blob/main/recursion-1-lambda-calculus/README.md#the-y-combinator) - to define a
+`fibF: Long => Long` function that does _not_ invoke itself recursively; for this, we have to translate the `Y` combinator in
+`Scala`, as [pointed out](https://free.cofree.io/2017/08/28/fixpoint#factorial-via-fix):
 
 ```Scala
 def fix[A](f: (=> A) => A): A = {
-  lazy val loop: A = f(loop)
-  loop
+  lazy val self: A = f(self)  // line #a
+  self                        // line #b
 }
 ```
+
+And let us take as a running example the fixed point definition of `fibF`:
 
 ```Scala
 val fibF = fix[Long => Long] { fib =>
@@ -41,6 +44,15 @@ val fibF = fix[Long => Long] { fib =>
   }
 }
 ```
+
+The parameter `A` will have stood for a function `S => T` (maybe `T => T`). Late in line #b, the `lazy` `val`ue `self` is
+evaluated, which means initializing it in line #a: this yields the computation in the right hand side. Yet, `self` has _not_
+been evaluated, but it may serve as the _call-by-name_ parameter to the higher-order function `f`: this completes the
+initialization, and if we look at `fibF`, the result is an "object-function" value where `fib` has been captured as a lazy
+computation.
+
+Upon the application of `fibF` - to an argument -, the captured `fib` - which lurks still unevaluated - will be computed
+simply by referencing _the same_ "object-function" value as `self`.
 
 [Recursion Schemes in Scala](https://free.cofree.io/2017/11/13/recursion)
 -------------------------------------------------------------------------
@@ -138,22 +150,68 @@ def fibonacci(n: Long): ExprF[Long] =
     AddF(n-1, n-2)
 ```
 
+Note that there are no recursive calls to `factorial`, respectively, to `fibonacci`, only the arguments corresponding to
+corecursive generation.
+
+We present two recursion schemes, anamorphisms and catamorphisms: both are recursive and _not_ stack safe.
+
 The dictionary entry for `Ana` is:
 
      A prefix in words from the Greek, denoting up, upward.
+
+and its definition:
 
 ```Scala
 def ana[F[_]: Functor, A](f: A => F[A]): A => Fix[F] =
   a => Fix(f(a) map ana(f))
 ```
 
+The generation via a corecursive algorithm can be visualized:
+
+```scala
+scala> ana(factorial)(5)
+val res0: Fix[ExprF] = Fix(FacF(Fix(FacF(Fix(FacF(Fix(FacF(Fix(FacF(Fix(OneF),1)),2)),3)),4)),5))
+```
+
+When we applied `5`, `factorial` is invoked - `f(a)` - and returns `FacF(4, 5)`. Wrapping in `Fix` awaits on the stack, while
+`Functor[F].map(f(a))(ana(f))` - or `f(a) map ana(f)` - applies the body of `ana` to `4` - which returns `FacF(3, 4)`. And,
+so on, until applying the body of `ana` to `OneF` does not invoke it anymore: the recursion stops. Then, the wrappings in
+`Fix` are applied in the reverse order - the stack order -, the innermost resulting in `Fix(OneF)`, while the outermost
+resulting in `Fix(FacF(..., 5))`.
+
 The dictionary entry for `Cata` is:
 
      The Latin and English form of a Greek preposition, used as a prefix to signify down, downward.
 
+and its definition:
+
 ```Scala
 def cata[F[_]: Functor, A](f: F[A] => A): Fix[F] => A =
   fix => f(fix.unfix map cata(f))
+```
+
+Now, if we try `res0.unfix`, we are not able to `eval`uate it, because its type is `ExprF[Fix[ExprF]]` rather than
+`Expr[Long]`:
+
+```scala
+scala> res0.unfix
+val res1: ExprF[Fix[ExprF]] = FacF(Fix(FacF(Fix(FacF(Fix(FacF(Fix(FacF(Fix(OneF),1)),2)),3)),4)),5)
+```
+
+All we can do is `map` a function of type `Fix[ExprF] => Long`, which is `cata(f)` invoked recursively:
+
+```scala
+scala> res1 map cata(eval)
+val res2: ExprF[Long] = FacF(24,5)
+```
+
+Now we can invoke `eval(res2)`, which comes from the outer `f` in `f(fix.unfix map cata(f))`.
+
+In order to compute "`fibonacci(5)`", we generate with `ana` and evaluate with `cata`:
+
+```scala
+scala> (ana(fibonacci) andThen cata(eval))(5)
+val res3: Long = 5
 ```
 
 Exercise 09.1
@@ -286,6 +344,39 @@ def fibonacci(n: Long): ExprF[Long] =
     ValF(1L min (0L max n))
   else
     AddF(n-1, n-2)
+```
+
+Exercise 09.2
+-------------
+
+As in [Exercise 07.4](https://github.com/sjbiaga/kittens/blob/main/traverse-5-set-expr/README.md#exercise-074), give an
+evaluation into `Set` for `ExprF` and, using the `fibonacci` corecursive algorithm, obtain the set of all Fibonacci numbers
+calculated.
+
+[Hint: consider _only_ the concrete case of Fibonacci, so that when adding two Fibonacci numbers, the result is a pair
+`(Long, Set[Long])`, where - for `AddF` - the first component is the sum and the second element is the set union.]
+
+Solution
+--------
+
+The `ExprF` `sealed trait` and the typeclass instance `Functor[ExprF]` are the same as in the solution to
+[Exercise 09.1](#exercise-091). The `eval`uation is partial, only for the cases used in Fibonacci:
+
+```Scala
+object ExprF:
+
+  def eval(xs: ExprF[(Long, Set[Long])]): (Long, Set[Long]) =
+    xs match
+      case ZeroF                    => 0L -> Set(0L)
+      case OneF                     => 1L -> Set(1L)
+      case ValF(n: Long)            => n -> Set(n)
+      case AddF((m, lhs), (n, rhs)) => (m + n, lhs ++ rhs + (m + n))
+```
+
+The user code is basically the same:
+
+```Scala
+(ana(fibonacci) andThen cata(eval)).apply(5)._2
 ```
 
 [First](https://github.com/sjbiaga/kittens/blob/main/recursion-1-lambda-calculus/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/recursion-1-lambda-calculus/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/recursion-3-Cofree/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/recursion-4-Defer/README.md)
