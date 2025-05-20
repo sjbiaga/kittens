@@ -59,9 +59,9 @@ object ExprF:
         xa match
           case ValF(n: A) => G.map(f(n))(ValF(_))
           case AddF(m, n) => G.map2(f(m), f(n))(AddF(_, _))
-          case SubF(m, n) => G.map2(f(m), f(n))(AddF(_, _))
-          case MulF(m, n) => G.map2(f(m), f(n))(AddF(_, _))
-          case DivF(m, n) => G.map2(f(m), f(n))(AddF(_, _))
+          case SubF(m, n) => G.map2(f(m), f(n))(SubF(_, _))
+          case MulF(m, n) => G.map2(f(m), f(n))(MulF(_, _))
+          case DivF(m, n) => G.map2(f(m), f(n))(DivF(_, _))
           case InvF(n)    => G.map(f(n))(InvF(_))
           case it @ (ZeroF | OneF) => G.pure(it)
           case FacF(n, k) => G.map(f(n))(FacF(_, k))

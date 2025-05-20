@@ -31,7 +31,8 @@ def fix[A](f: (=> A) => A): A = {
 }
 ```
 
-And let us take as a running example the fixed point definition of `fibF`:
+And let us take as a running example the fixed point definition of `fibF` (here, the inferred type of the function parameter
+is `(=> Long => Long) => Long`):
 
 ```Scala
 val fibF = fix[Long => Long] { fib =>
@@ -52,7 +53,8 @@ initialization, and if we look at `fibF`, the result is an "object-function" val
 computation.
 
 Upon the application of `fibF` - to an argument -, the captured `fib` - which lurks still unevaluated - will be computed
-simply by referencing _the same_ "object-function" value as `self`.
+simply by referencing _the same_ "object-function" value as `self`; the latter was the returned value to the user code, which
+is assigned to `fibF`.
 
 [Recursion Schemes in Scala](https://free.cofree.io/2017/11/13/recursion)
 -------------------------------------------------------------------------
@@ -212,6 +214,66 @@ In order to compute "`fibonacci(5)`", we generate with `ana` and evaluate with `
 ```scala
 scala> (ana(fibonacci) andThen cata(eval))(5)
 val res3: Long = 5
+```
+
+### Using `Eval` to achieve stack safety
+
+The corecursive algorithms - `factorial`, `fibonacci` - remain _the same_; we only change the carrier of the - new (method)
+`evalʹ` - algebra to `Eval[Long]`:
+
+```Scala
+import cats.{ Applicative, Eval, Functor }
+
+object ExprF:
+
+  def evalʹ(xa: ExprF[Eval[Long]])(implicit A: Applicative[Eval]): Eval[Long] =
+    xa match
+      case AddF(lhs, rhs)   => A.map2(lhs, rhs)(_ + _)
+      case SubF(lhs, rhs)   => A.map2(lhs, rhs)(_ - _)
+      case MulF(lhs, rhs)   => A.map2(lhs, rhs)(_ * _)
+      case DivF(lhs, rhs)   => A.map2(lhs, rhs)(_ / _)
+      case InvF(rhs)        => A.map(rhs)(0L - _)
+      case ValF(n: Long)    => A.pure(n)
+      case FacF(n, k: Long) => A.map(n)(_ * k)
+      case ZeroF            => A.pure(0L)
+      case OneF             => A.pure(1L)
+```
+
+We have to modify the `Fix` `case class` as well:
+
+```Scala
+final case class Fix[F[_]](unfix: F[Eval[Fix[F]]])
+```
+
+Accordingly, the anamorphism `ana` is re-implemented in terms of an `Eval`-aware `anaEval` method:
+
+```Scala
+def ana[F[_]: Functor, A](f: A => F[A]): A => Eval[Fix[F]] =
+  anaEval(f andThen Eval.later)
+def anaEval[F[_], A](f: A => Eval[F[A]])(implicit F: Functor[F]): A => Eval[Fix[F]] =
+  f(_).map(F.lift(anaEval(f)) andThen Fix.apply)
+```
+
+while the catamorphism `cata` is rewritten as:
+
+```Scala
+def cata[F[_], A](f: F[Eval[A]] => Eval[A])(implicit F: Functor[F]): Eval[Fix[F]] => Eval[A] =
+  _.flatMap(fix => f(F.map(fix.unfix)(cata(f))))
+```
+
+or even:
+
+```Scala
+def cata[F[_], A](f: F[Eval[A]] => Eval[A])(implicit F: Functor[F]): Eval[Fix[F]] => Eval[A] =
+  _.flatMap(((_: Fix[F]).unfix) andThen F.lift(cata(f)) andThen f)
+```
+
+The user code is then the same, but using `evalʹ` instead, and invoking `Eval#value` (note that triggering the computation is
+done by the application to `5`):
+
+```scala
+(ana(factorial) andThen cata(evalʹ))(5).value
+val res4: Long = 120
 ```
 
 Exercise 09.1

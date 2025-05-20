@@ -1,4 +1,4 @@
-import cats.Functor
+import cats.{ Applicative, Eval, Functor }
 
 sealed trait ExprF[+R]
 case class AddF[+R](lhs: R, rhs: R) extends ExprF[R]
@@ -35,3 +35,15 @@ object ExprF:
       case FacF(n, k: Long) => n * k
       case ZeroF            => 0
       case OneF             => 1
+
+  def evalʹ(xa: ExprF[Eval[Long]])(implicit A: Applicative[Eval]): Eval[Long] =
+    xa match
+      case AddF(lhs, rhs)   => A.map2(lhs, rhs)(_ + _)
+      case SubF(lhs, rhs)   => A.map2(lhs, rhs)(_ - _)
+      case MulF(lhs, rhs)   => A.map2(lhs, rhs)(_ * _)
+      case DivF(lhs, rhs)   => A.map2(lhs, rhs)(_ / _)
+      case InvF(rhs)        => A.map(rhs)(0L - _)
+      case ValF(n: Long)    => A.pure(n)
+      case FacF(n, k: Long) => A.map(n)(_ * k)
+      case ZeroF            => A.pure(0L)
+      case OneF             => A.pure(1L)
