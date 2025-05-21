@@ -47,6 +47,21 @@ object ExprF:
   def IfNeg(cond: Expr, `then`: Expr, `else`: Expr): Expr = Fix(IfNegF(cond, `then`, `else`))
   def Var(id: String): Expr = Fix(VarF(id))
 
+  def show(xa: Expr): String = cata(showʹ)(xa)
+
+  private val showʹ: ExprF[String] => String = {
+    case ZeroF           => "Zero"
+    case OneF            => "One"
+    case ValF(n)         => s"Val($n)"
+    case VarF(id)        => s"Var($id)"
+    case AddF(lhs, rhs)  => s"Add($lhs, $rhs)"
+    case SubF(lhs, rhs)  => s"Sub($lhs, $rhs)"
+    case MulF(lhs, rhs)  => s"Mul($lhs, $rhs)"
+    case DivF(lhs, rhs)  => s"Div($lhs, $rhs)"
+    case InvF(rhs)       => s"Inv($rhs)"
+    case IfNegF(c, t, e) => s"IfNeg ($c) then ($t) else ($e)"
+  }
+
   def vars(xa: Expr): Set[String] = cata(varsʹ)(xa)
 
   private val varsʹ: ExprF[Set[String]] => Set[String] = {
@@ -75,7 +90,7 @@ object ExprF:
     case MulF(lhs, rhs)   => (lhs zip rhs).map(_ * _)
     case DivF(lhs, rhs)   => (lhs zip rhs).map(_ / _)
     case InvF(rhs)        => rhs.map(0 - _)
-    case IfNegF(c, t, e)  => c.flatMap { if (_: Long) < 0 then t else e}
+    case IfNegF(c, t, e)  => c.flatMap { if (_: Long) < 0 then t else e }
     case ValF(n: Long)    => Some(n)
     case VarF(id)         => env.get(id)
     case ZeroF            => Some(0)

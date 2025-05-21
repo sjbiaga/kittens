@@ -448,8 +448,8 @@ The user code is basically the same:
 Exercise 09.3
 =============
 
-Inspired by the Haskell video [Recursion Schemes](https://www.youtube.com/watch?v=Zw9KeP3OzpU), interval 0:23:47 to 0:31:26,
-add variables (`VarF`) and conditionals (`IfNegF`) to `ExprF`:
+Inspired by the Haskell video [Recursion Schemes](https://www.youtube.com/watch?v=Zw9KeP3OzpU&t=23m47s), interval 0:23:47 to
+0:31:26, add variables (`VarF`) and conditionals (`IfNegF`) to `ExprF`:
 
 ```Scala
 case class IfNegF[+R](cond: R, `then`: R, `else`: R) extends ExprF[R]
@@ -541,6 +541,29 @@ object ExprF:
   def Var(id: String): Expr = Fix(VarF(id))
 ```
 
+In order to `show` an `Expr`ession - dropping `Fix`es - we define an algebra `showʹ: ExprF[String] => String` with carrier
+`String`, function which applied last on `ExprF`essions - with arguments already mapped the same function -, will `show` the
+arguments wrapped in the operators, unless `ZeroF` or `OneF` or `ValF` or `VarF`.
+
+```Scala
+object ExprF:
+
+  def show(xa: Expr): String = cata(showʹ)(xa)
+
+  private val showʹ: ExprF[String] => String = {
+    case ZeroF           => "Zero"
+    case OneF            => "One"
+    case ValF(n)         => s"Val($n)"
+    case VarF(id)        => s"Var($id)"
+    case AddF(lhs, rhs)  => s"Add($lhs, $rhs)"
+    case SubF(lhs, rhs)  => s"Sub($lhs, $rhs)"
+    case MulF(lhs, rhs)  => s"Mul($lhs, $rhs)"
+    case DivF(lhs, rhs)  => s"Div($lhs, $rhs)"
+    case InvF(rhs)       => s"Inv($rhs)"
+    case IfNegF(c, t, e) => s"IfNeg ($c) then ($t) else ($e)"
+  }
+```
+
 Solution - Part 1
 -----------------
 
@@ -551,7 +574,7 @@ We define an algebra `varsʹ: ExprF[Set[String]] => Set[String]` with carrier `S
 
 - a singleton - the case of `VarF`, or
 
-- a `Set` union of the arguments - the case of the rest (lest `InvF` with just on argument, returned directly).
+- a `Set` union of the arguments - the case of the rest (lest `InvF` with just one argument, returned directly).
 
 ```Scala
 object ExprF:
@@ -575,15 +598,15 @@ Solution - Part 2
 
 We define an algebra `substʹ: Map[String, Expr] ?=> ExprF[Expr] => Expr` with carrier `Expr`, function which applied last on
 `ExprF`essions - with arguments already mapped the same function -, will just wrap them in `Fix`, lest the case of `VarF(id)`
-when `id` is a key in the `substitution` map:
+when `id` is a key in the `env`ironment map:
 
 ```Scala
 object ExprF:
 
   def subst(xa: Expr)(using Map[String, Expr]): Expr = cata(substʹ)(xa)
 
-  private val substʹ: Map[String, Expr] ?=> ExprF[Expr] => Expr = substitution ?=> {
-    case it @ VarF(id) => substitution.getOrElse(id, Fix(it))
+  private val substʹ: Map[String, Expr] ?=> ExprF[Expr] => Expr = env ?=> {
+    case it @ VarF(id) => env.getOrElse(id, Fix(it))
     case it            => Fix(it)
   }
 ```
@@ -606,7 +629,7 @@ object ExprF:
     case MulF(lhs, rhs)   => (lhs zip rhs).map(_ * _)
     case DivF(lhs, rhs)   => (lhs zip rhs).map(_ / _)
     case InvF(rhs)        => rhs.map(0 - _)
-    case IfNegF(c, t, e)  => c.flatMap { if (_: Long) < 0 then t else e}
+    case IfNegF(c, t, e)  => c.flatMap { if (_: Long) < 0 then t else e }
     case ValF(n: Long)    => Some(n)
     case VarF(id)         => env.get(id)
     case ZeroF            => Some(0)
@@ -624,25 +647,21 @@ println {
   vars(e1)
 }
 
-{
-  given Map[String, Expr] = Map(
-    "b" -> Var("a")
-  )
+given Map[String, Expr] = Map(
+  "b" -> Var("a")
+)
 
-  println {
-    subst(e1)
-  }
+println {
+  show(subst(e1))
 }
 
-{
-  given Map[String, Long] = Map(
-    "a" -> 5,
-    "b" -> 7
-  )
+given Map[String, Long] = Map(
+  "a" -> 5,
+  "b" -> 7
+)
 
-  println {
-    eval(e1)
-  }
+println {
+  eval(e1)
 }
 ```
 
