@@ -11,14 +11,15 @@ Combine the specification of method `eval` in
 with the concept behind `swap` from
 [Natural Transformations: Swapping the Additive with the Multiplicative](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md#natural-transformations-swapping-the-additive-with-the-multiplicative)
 to design a _natural transformation_ from `Expr` to `Id` which evaluates an `Expr`ession in a `DivisionRing` typeclass.
-Hint: implement the following trait instead of `Cats`' `FunctionK`.
+
+[Hint: implement the following trait instead of `Cats`' `FunctionK`:
 
 ```Scala
 trait FunctionKʹ[R[_], F[_], G[_]]:
   def apply[A: R](fa: F[A]): G[A]
 ```
 
-Note that `R[_]` in `FunctionKʹ[R[_], F[_], G[_]]` is a context bound.
+Note that `R[_]` in `FunctionKʹ[R[_], F[_], G[_]]` is a context bound.]
 
 Solution
 --------

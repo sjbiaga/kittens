@@ -86,8 +86,10 @@ Comment about the difference between `ʹ.List` and `scala.collection.immutable.L
 
 Based on those operators, implement a typeclass instance `kittensʹListMonad` of the `Monad` typeclass for `ʹ.List`; and give
 an implementation of a natural transformation `list` from `ʹ.List` to `scala.collection.immutable.List`, accompanied by some
-examples. (Hint: the implementation of `tailRecM` should also be stack safe, using the `cats.Eval` monad, but _not_ via the
-`ʹ.List.foldRight` stack safe method.)
+examples.
+
+[Hint: the implementation of `tailRecM` should also be stack safe, using the `cats.Eval` monad, but _not_ via the
+`ʹ.List.foldRight` stack safe method.]
 
 Solution
 --------

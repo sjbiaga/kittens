@@ -75,6 +75,8 @@ Lessons in Scala [`Cats`](https://typelevel.org/cats/typeclasses.html#type-class
 
   - [Exercise 09.3](https://github.com/sjbiaga/kittens/blob/main/recursion-2-schemes/README.md#exercise-093)
 
+  - [Exercise 09.4](https://github.com/sjbiaga/kittens/blob/main/recursion-4-Defer/README.md#exercise-094)
+
 Examples
 ========
 

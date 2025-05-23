@@ -59,7 +59,7 @@ the computation.
 Third, implement `Algorithmsʹ` to directly return `Free[Tree, Expr[Int]]` and run using the `kittensTreeMonad`. Evaluate the
 result in a `DivisionRing[Int]`: should it be used directly or implicitly?
 
-Hint: use `cats.Eval` for the stack safe part.
+[Hint: use `cats.Eval` for the stack safe part.]
 
 Solution - Part 1
 -----------------
