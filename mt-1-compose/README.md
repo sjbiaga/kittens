@@ -113,8 +113,8 @@ private[cats] trait ComposedFunctor[F[_], G[_]] extends Functor[λ[α => F[G[α]
 }
 ```
 
-A `ComposedFunctor` overrides the `map` method using `F.map` and `G.lift`: the latter is defined in the `Functor` trait to
-map, or to _lift_, a function `f: A => B` to a function `G[A] => G[B]`.
+A `ComposedFunctor` overrides the `map` method using `F.map` and `G.lift`; the latter is defined in the `Functor` trait to
+map, or to _lift_, a function `f: A => B` to a function `G[A] => G[B]`:
 
 ```Scala
 trait Functor[F[_]] ... {

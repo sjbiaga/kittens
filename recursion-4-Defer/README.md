@@ -408,7 +408,7 @@ object ContT {
 }
 ```
 
-the `fn` parameter is a _higher-order function_, which takes as arguments _callback_s. At some call sites of `ContT.apply`,
+the `fn` parameter is a _higher-order function_, which takes as arguments _callbacks_. At some call sites of `ContT.apply`,
 this parameter is just an anonymous function, because when the value `B` is already known, "applying" a placeholder - standing
 for the callback - to a `B`, forms the (anonymous) function `(B => M[A]) => M[A]`.
 
@@ -456,7 +456,8 @@ we would expect these `AndThen` objects to concatenate - lines #04 and #14.
 
 Also about `for`-comprehensions - translated by Scala as nesting `flatMap`s -, or chaining `flatMap`s one after another, we
 know that each `flatMap` method has the same return type as any other. And that the evaluation is outer-to-inner (or
-top-to-bottom if nesting), left-to-right if chaining.
+top-to-bottom if nesting), left-to-right if chaining. A novel - inherent to `ContT`inuations - aspect is that the `flatMap`
+function parameters are applied when callbacks are, because the functions in which they compose are used as callbacks.
 
 ---
 
@@ -632,30 +633,29 @@ object Expr extends JavaTokenParsers:
       case "+" ~ rhs => Add(Zero, rhs)
       case "-" ~ rhs => Sub(Zero, rhs)
     } |
-    literal ^^ { identity }
+    literal
 
   def literal(implicit unit: unit): Parser[Expr[Int | Double]] =
-    floatingPointNumber ^^ { it =>
-      it.toDouble match
+    floatingPointNumber ^^ {
+      _.toDouble match
         case 0d => Zero
         case 1d => One
         case n => Val(n)
     } |
-    decimalNumber ^^ { it =>
-      it.toInt match
+    decimalNumber ^^ {
+      _.toInt match
         case 0 => Zero
         case 1 => One
         case n => Val(n)
     } |
-    "("~> expr <~")" ^^ { identity }
+    "("~> expr <~")"
 
   implicit class ExprInterpolator(private val sc: StringContext) extends AnyVal:
     def x(args: Any*)(implicit unit: unit): Expr[Int | Double] =
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
-      parseAll(expr, inp) match
-        case Success(it, _) => it
+      parseAll(expr, inp).get
 
   def eval(expr: Expr[Double])(implicit unit: unit, `0`: `0`[Double], `1`: `1`[Double]): Double =
     def evalʹ(xa: Expr[Double]): TailRec[Double] =

@@ -19,7 +19,7 @@ package data
 final case class Kleisli[F[_], -A, B](run: A => F[B]) ...
 ```
 
-which is why composition of `Kleisli` values with `andThen` can replace the composition function `::` of `f: A => F[B]` with
+which is why composition of `Kleisli` objects with `andThen` can replace the composition function `::` of `f: A => F[B]` with
 `g: B => F[C]`:
 
 ```Scala
@@ -29,7 +29,7 @@ object Trampoline:
       f(_).flatMap(g)
 ```
 
-Re-implement `Trampoline` with `Kleisli` values instead of arrows, via composition with method `andThen` of `Kleisli` type
+Re-implement `Trampoline` with `Kleisli` objects instead of arrows, via composition with method `andThen` of `Kleisli` type
 instead of the left-to-right composition of Kleisli arrows. Give a natural transformation from `Trampoline` to `cats.Eval`.
 
 Solution

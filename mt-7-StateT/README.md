@@ -612,12 +612,6 @@ def flatMap[SC, B](fas: A => IndexedStateT[F, SB, SC, B])(implicit F: FlatMap[F]
   })
 ```
 
-where `liftFM` is defined in the `FlatMap[F[_]]` trait:
-
-```Scala
-def liftFM[A, B](f: A => F[B]): F[A] => F[B] = flatMap(_)(f)
-```
-
 A variant of `flatMap` for the case where the function parameter is reduced in the return type to a `B` lifted in the effect
 `F`, is method `flatMapF`:
 

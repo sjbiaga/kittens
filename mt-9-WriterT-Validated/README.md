@@ -42,7 +42,7 @@ Exercise 08.8
 =============
 
 The requirements are the same as in
-[Exercise 08.1](https://github.com/sjbiaga/kittens/blob/main/mt-6-WriterT/README.md#exercise-081), but this time use
+[Exercise 08.2](https://github.com/sjbiaga/kittens/blob/main/mt-6-WriterT/README.md#exercise-082), but this time use
 `Validated` as the effect functor, in order to to catch divisions by `Zero`, both in the parser and builder. This asks to
 `simplify` the right hand side
 (see [Exercise 06.1](https://github.com/sjbiaga/kittens/blob/main/expr-simplify/README.md#exercise-061)). Put a check mark
@@ -196,11 +196,11 @@ Solution - Part 1 - Parser
       case "-" ~ rhs =>
         putʹ(Sub(Zero, rhs.value))(rhs)("subtraction from zero")
     } |
-    literal ^^ { identity }
+    literal
 
   def literal(implicit unit: unit, indent: String): Parser[Exprʹ[Double]] =
-    floatingPointNumber ^^ { it =>
-      it.toDouble match
+    floatingPointNumber ^^ {
+      _.toDouble match
         case 0d => putʹ(Zero: Expr[Double])()("constant zero: Double")
         case 1d => putʹ(One: Expr[Double])()("constant one: Double")
         case n  => putʹ(Val(n))()(s"value $n: Double")
@@ -212,8 +212,7 @@ Solution - Part 1 - Parser
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
-      parseAll(expr(using unit, ""), inp) match
-        case Success(it, _) => it
+      parseAll(expr(using unit, ""), inp).get
 ```
 
 Solution - Part 2 - Builder

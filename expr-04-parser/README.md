@@ -28,7 +28,7 @@ object Expr extends JavaTokenParsers:
       case "+" ~ rhs => Add(Zero, rhs)
       case "-" ~ rhs => Sub(Zero, rhs)
     } |
-    term ^^ { identity }
+    term
 ```
 
 Note that because we inherit `JavaTokenParsers`, the type `Parser` is a visible nested class. Also, `p ^^ f` is short for
@@ -43,7 +43,7 @@ The term parser is a method `term` of type `Parser[Expr[Int | Double]]`; we can 
       case lhs ~ "*" ~ rhs => Mul(lhs, rhs)
       case lhs ~ "/" ~ rhs => Div(lhs, rhs)
     } |
-    factor ^^ { identity }
+    factor
 ```
 
 The factor parser is a method `factor` of type `Parser[Expr[Int | Double]]`; it can be either a `decimalNumber` or a
@@ -53,19 +53,19 @@ in a `Val`.
 
 ```Scala
   def factor: Parser[Expr[Int | Double]] =
-    floatingPointNumber ^^ { it =>
-      it.toDouble match
+    floatingPointNumber ^^ {
+      _.toDouble match
         case 0d => Zero
         case 1d => One
         case n => Val(n)
     } |
-    decimalNumber ^^ { it =>
-      it.toInt match
+    decimalNumber ^^ {
+      _.toInt match
         case 0 => Zero
         case 1 => One
         case n => Val(n)
     } |
-    "("~> expr <~")" ^^ { identity }
+    "("~> expr <~")"
 ```
 
 The `~>` combinator keeps only the _right_ result, while the `<~` combinator keeps only the _left_ result.

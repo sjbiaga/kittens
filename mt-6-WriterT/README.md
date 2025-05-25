@@ -41,7 +41,7 @@ implicit def ... (implicit F: Defer[F]): ... =
   }
 ```
 
-Exercise 08.1
+Exercise 08.2
 =============
 
 Implement an `Expr`ession parser and builder that log the _operations_ used to create expressions. Also, implement an
@@ -178,17 +178,17 @@ binary) operator:
       case "-" ~ rhs =>
         putʹ(Sub(Zero, rhs.value))(rhs)("subtraction from zero")
     } |
-    literal ^^ { identity }
+    literal
 
   def literal(implicit unit: unit): Parser[Exprʹ[Int | Double]] =
-    floatingPointNumber ^^ { it =>
-      it.toDouble match
+    floatingPointNumber ^^ {
+      _.toDouble match
         case 0d => putʹ(Zero)("constant zero: Double")
         case 1d => putʹ(One)("constant one: Double")
         case n  => putʹ(Val(n))(s"value $n: Double")
     } |
-    decimalNumber ^^ { it =>
-      it.toInt match
+    decimalNumber ^^ {
+      _.toInt match
         case 0 => putʹ(Zero)("constant zero: Int")
         case 1 => putʹ(One)("constant one: Int")
         case n => putʹ(Val(n))(s"value $n: Int")
@@ -207,8 +207,7 @@ The only change to the interpolator is that of the return type, which is just ad
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
-      parseAll(expr, inp) match
-        case Success(it, _) => it
+      parseAll(expr, inp).get
 ```
 
 Solution - Part 2 - Builder
@@ -590,17 +589,17 @@ object Expr extends JavaTokenParsers:
       case "-" ~ rhs =>
         putʹ(Sub(Zero, rhs.value))(rhs)("subtraction from zero")
     } |
-    literal ^^ { identity }
+    literal
 
   def literal(implicit unit: unit, indent: String): Parser[Exprʹ[Int | Double]] =
-    floatingPointNumber ^^ { it =>
-      it.toDouble match
+    floatingPointNumber ^^ {
+      _.toDouble match
         case 0d => putʹ(Zero)("constant zero: Double")
         case 1d => putʹ(One)("constant one: Double")
         case n  => putʹ(Val(n))(s"value $n: Double")
     } |
-    decimalNumber ^^ { it =>
-      it.toInt match
+    decimalNumber ^^ {
+      _.toInt match
         case 0 => putʹ(Zero)("constant zero: Int")
         case 1 => putʹ(One)("constant one: Int")
         case n => putʹ(Val(n))(s"value $n: Int")
@@ -618,8 +617,7 @@ The log lines containing `"parentheses"` only _end with_ this `String`, instead 
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
-      parseAll(expr(using unit, ""), inp) match
-        case Success(it, _) => it
+      parseAll(expr(using unit, ""), inp).get
 ```
 
 4. There is a slight modification to the builder: because implicit `String`s are reserved to indentation, the right hand side

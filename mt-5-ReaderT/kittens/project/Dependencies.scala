@@ -7,4 +7,5 @@ object Dependencies {
   lazy val catsfree = "org.typelevel" %% "cats-free" % "2.13.0"
   lazy val algebra = "org.typelevel" %% "algebra" % "2.13.0"
   lazy val alleycats = "org.typelevel" %% "alleycats-core" % "2.13.0"
+  lazy val `cats-parse` = "org.typelevel" %% "cats-parse" % "1.1.0"
 }

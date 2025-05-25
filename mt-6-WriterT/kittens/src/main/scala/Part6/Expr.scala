@@ -64,17 +64,17 @@ object Expr extends JavaTokenParsers:
       case "-" ~ rhs =>
         putʹ(Sub(Zero, rhs.value))(rhs)("subtraction from zero")
     } |
-    literal ^^ { identity }
+    literal
 
   def literal(implicit unit: unit, indent: String): Parser[Exprʹ[Int | Double]] =
-    floatingPointNumber ^^ { it =>
-      it.toDouble match
+    floatingPointNumber ^^ {
+      _.toDouble match
         case 0d => putʹ(Zero)("constant zero: Double")
         case 1d => putʹ(One)("constant one: Double")
         case n  => putʹ(Val(n))(s"value $n: Double")
     } |
-    decimalNumber ^^ { it =>
-      it.toInt match
+    decimalNumber ^^ {
+      _.toInt match
         case 0 => putʹ(Zero)("constant zero: Int")
         case 1 => putʹ(One)("constant one: Int")
         case n => putʹ(Val(n))(s"value $n: Int")
@@ -86,8 +86,7 @@ object Expr extends JavaTokenParsers:
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
-      parseAll(expr(using unit, ""), inp) match
-        case Success(it, _) => it
+      parseAll(expr(using unit, ""), inp).get
 
   def eval(expr: Expr[Double])(implicit unit: unit): Doubleʹ =
     implicit val indent: String = ""

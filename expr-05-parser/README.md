@@ -54,7 +54,7 @@ def factor(implicit unit: unit): Parser[Expr[Int | Double]] =
     case "+" ~ rhs => Add(Zero, rhs)
     case "-" ~ rhs => Sub(Zero, rhs)
   } |
-  literal ^^ { identity }
+  literal
 ```
 
 We may see that the `implicit` `unit` parameter is used here to _prevent_ turning a negated expression via `Inv` into a
@@ -67,19 +67,19 @@ of type `Parser[Expr[Int | Double]]`; it can be either a `decimalNumber` or a `f
 
 ```Scala
 def literal(implicit unit: unit): Parser[Expr[Int | Double]] =
-  floatingPointNumber ^^ { it =>
-    it.toDouble match
+  floatingPointNumber ^^ {
+    _.toDouble match
       case 0d => Zero
       case 1d => One
       case n => Val(n)
   } |
-  decimalNumber ^^ { it =>
-    it.toInt match
+  decimalNumber ^^ {
+    _.toInt match
       case 0 => Zero
       case 1 => One
       case n => Val(n)
   } |
-  "("~> expr <~")" ^^ { identity }
+  "("~> expr <~")"
 ```
 
 [The `expr`ession in parentheses could have been part of `factor`, but because of the unary operators, we want to be able to
@@ -98,8 +98,7 @@ implicit class ExprInterpolator(private val sc: StringContext) extends AnyVal:
     val inp = (sc.parts zip (args :+ "")).foldLeft("") {
       case (r, (p, a)) => r + p + a
     }
-    parseAll(expr, inp) match
-      case Success(it, _) => it
+    parseAll(expr, inp).get
 ```
 
 The number of (constant) parts is always plus one the size of arguments: so, we fold the paired parts and arguments, with an

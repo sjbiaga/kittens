@@ -51,9 +51,9 @@ Lessons in Scala [`Cats`](https://typelevel.org/cats/typeclasses.html#type-class
 
 [Lesson 08: Monad Transformers](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md)
 
-  - [Exercise 08.1](https://github.com/sjbiaga/kittens/blob/main/mt-6-WriterT/README.md#exercise-081)
+  - [Exercise 08.1](https://github.com/sjbiaga/kittens/blob/main/mt-5-ReaderT/README.md#exercise-081)
 
-  - [Exercise 08.2](https://github.com/sjbiaga/kittens/blob/main/mt-8-ExprT/README.md#exercise-082)
+  - [Exercise 08.2](https://github.com/sjbiaga/kittens/blob/main/mt-6-WriterT/README.md#exercise-082)
 
   - [Exercise 08.3](https://github.com/sjbiaga/kittens/blob/main/mt-7-StateT/README.md#exercise-083)
 

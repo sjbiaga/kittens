@@ -20,5 +20,5 @@ lazy val root = (project in file("."))
     scalaVersion := "3.7.1-RC1",
     crossScalaVersions ++= Seq("2.13.16", "3.7.1-RC1"),
     scalacOptions ++= scala3Opts, // :+ "-Xprint:typer",
-    libraryDependencies ++= Seq(catseffect, catscore, catsfree, parsercombinators, algebra, alleycats, `cats-laws`, `discipline-munit`)
+    libraryDependencies ++= Seq(catseffect, catscore, catsfree, parsercombinators, algebra, alleycats)
   )

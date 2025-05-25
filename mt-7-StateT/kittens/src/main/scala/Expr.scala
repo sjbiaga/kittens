@@ -96,30 +96,29 @@ object Expr extends JavaTokenParsers:
       case "+" ~ rhs => Add(Zero, rhs)
       case "-" ~ rhs => Sub(Zero, rhs)
     } |
-    literal ^^ { identity }
+    literal
 
   def literal(implicit unit: unit): Parser[Expr[Int | Double]] =
-    floatingPointNumber ^^ { it =>
-      it.toDouble match
+    floatingPointNumber ^^ {
+      _.toDouble match
         case 0d => Zero
         case 1d => One
         case n => Val(n)
     } |
-    decimalNumber ^^ { it =>
-      it.toInt match
+    decimalNumber ^^ {
+      _.toInt match
         case 0 => Zero
         case 1 => One
         case n => Val(n)
     } |
-    "("~> expr <~")" ^^ { identity }
+    "("~> expr <~")"
 
   implicit class ExprInterpolator(private val sc: StringContext) extends AnyVal:
     def x(args: Any*)(implicit unit: unit): Expr[Int | Double] =
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
-      parseAll(expr, inp) match
-        case Success(it, _) => it
+      parseAll(expr, inp).get
 
   val swap: unit ?=> Expr ~> Expr =
     new (Expr ~> Expr):
