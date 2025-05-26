@@ -3,8 +3,8 @@
 Lesson 08: Monad Transformers (cont'd)
 ======================================
 
-`Validated`
------------
+[`Validated`](https://typelevel.org/cats/datatypes/validated.html)
+------------------------------------------------------------------
 
 `Validated` is _not_ a monad transformer, and not a monad either: it lacks a `flatMap` method. Although such a method can be
 easily constructed:

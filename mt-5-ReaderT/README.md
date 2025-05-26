@@ -94,6 +94,97 @@ where `liftFM` is defined in the `FlatMap[F[_]]` trait:
 def liftFM[A, B](f: A => F[B]): F[A] => F[B] = flatMap(_)(f)
 ```
 
+Let us rewrite `Kleisli#flatMapF` similar with `Kleisli#map` (using `F.lift`):
+
+```Scala
+def flatMapF[C](f: B => F[C])(implicit F: FlatMap[F]): Kleisli[F, A, C] =
+  Kleisli { run andThen F.lift(f) andThen F.flatten }
+```
+
+All the difference is that we have to end by invoking `F.flatten`, because the return type of `f` is lifted in `F`. So we
+just `map` the function `f` and we are half way there. In this light, we can implement `Kleisli#flatMap` without invoking
+`Kleisli#flatMapF`:
+
+```Scala
+def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Kleisli[F, AA, C] =
+  Kleisli { a =>
+    val g: B => F[C] = f(_).run(a)
+    val h: A => F[C] = run andThen F.lift(g) andThen F.flatten
+    h(a)
+  }
+```
+
+Now we can see that the order of functions that enter the composition via `andThen` is the same with `map`'s: first `run` and
+then `f(_).run(a)`; and, specifically, `F.flatten`. Let us make explicit the arguments by applying the composition to `a: A`:
+
+```Scala
+def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Kleisli[F, AA, C] =
+  Kleisli { (a: A) =>
+    val fb: F[B] = this.run(a)
+    val ffc: F[F[C]] = F.map(fb) { (b: B) =>
+      val fc: F[C] = f(b).run(a)
+      fc
+    }
+    val fc: F[C] = F.flatten(ffc)
+    fc
+  }
+```
+
+A lot of things seem to happen now. Yet, basically, there are two _pair of braces_, the _outer_ one and the _inner_ one. The
+outer one maps an `A`, whereas the inner one handles a `B`. However, both apply `a: A`: the difference is that the outer
+`run` is invoked with `this` as receiver, while the inner `run` is invoked with `f(b)` as receiver. For the latter invocation
+succeeding the former, we need a `b`, that is unwrapped by the typeclass instance `F` from `fb` - the result of the former.
+
+The inner block is handled by the `F[_]` context, which is why the result of `F.map` is _doubly_ inflated: _refactoring_, let
+us replace `map` with `flatMap`:
+
+```Scala
+def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Kleisli[F, AA, C] =
+  Kleisli { (a: A) =>
+    val fb: F[B] = this.run(a)
+    val fc: F[C] = F.flatMap(fb) { (b: B) =>
+      val fc: F[C] = f(b).run(a)
+      fc
+    }
+    fc
+  }
+```
+
+Obviously, the two `fc`'s are the same. Now, let us try to remove the _intermediary_ values:
+
+```Scala
+def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Kleisli[F, AA, C] =
+  Kleisli { a => F.flatMap(this.run(a))(f(_).run(a)) }
+```
+
+and further let us use `Cats`' `flatMap` _syntax_:
+
+```Scala
+import cats.syntax.flatMap.*
+
+def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Kleisli[F, AA, C] =
+  Kleisli { a => this.run(a).flatMap(f(_).run(a)) }
+```
+
+or, introducing `g` again:
+
+```Scala
+import cats.syntax.flatMap.*
+
+def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Kleisli[F, AA, C] =
+  Kleisli { a =>
+    val g: B => F[C] = f(_).run(a)
+    this.run(a).flatMap(g)
+  }
+```
+
+Now we can see that the actual invocation of `Kleisli#flatMap` - which is `this.flatMap(f)` - is _reflected_ at the
+implementation level to `this.run(a).flatMap(g)`, where both `run: A => F[B]` and `g: B => F[C]` are Kleisli arrows: hence,
+this implementation is identical in form with the composition of Kleisli arrows `run(_).flatMap(g)` applied to `a` - as
+mentioned in [Exercise 04.1](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md#exercise-041) for
+the `Trampoline` monad. As can be seen, once we have an `a: A`, we have both `run(a): F[B]` and `g: B => F[C]`, which - via
+`F.flatMap` - gives us an `F[C]`; and, both `F[B]` and `F[C]` result from applying `a: A`, in this order.
+
 ```Scala
 def tap[AA <: A](implicit F: Functor[F]): Kleisli[F, AA, AA] =
   tapWith((a, _) => a)
@@ -216,9 +307,9 @@ where each operation uses `Kleisli#map` to obtain the result from the current le
 side parameter (`Expr[T]`). Only upon invoking `Builder#build` should a `String` be passed to `Kleisli#run`. `Builder#close`
 must invoke `Builder#build`, so its signature must be prepended a first parameter list with just one `String` parameter too.
 Likewise, add methods ("`add`", "`subtract`", "`multiply`", "`divide`") that take a `String` parameter and `build` the left
-hand side operand from it, while the right hand side is an `implicit` `Exprʹ[T]` parameter.
+hand side operand from it, while the right hand side is an implicit `Exprʹ[T]` parameter where to inject the dependency.
 
-The initial `Exprʹ[T]` could involve
+The `Exprʹ[T]` implicits could involve
 [this parser](https://github.com/sjbiaga/kittens/blob/main/expr-05-parser/README.md#an-expression-parser-contd), but the
 choice of the parser must be free (only a `String` is the dependency of the builder):
 
@@ -231,11 +322,11 @@ type Exprʹ[T] = Reader[String, Expr[T]]
 
 given unit = Zero
 
-given [T]: Exprʹ[T] = Reader(???)
+given Exprʹ[Double] = Reader(???)
 
 Builder.start
   .add(One)
-  .subtract("2 - 2")
+  .inject("2 - 2")(_.subtract(_))
   .multiply(Val(5d), 4)
     .open
     .add(One, 2)
@@ -313,7 +404,7 @@ object Expr:
     evalʹ(expr).result
 ```
 
-The first [parser](https://github.com/scala/scala-parser-combinators) is:
+The [first parser](https://github.com/scala/scala-parser-combinators) is:
 
 ```Scala
 import scala.util.parsing.combinator.JavaTokenParsers
@@ -322,7 +413,7 @@ object Exprʹ extends JavaTokenParsers:
 
   import Expr._
 
-  def expr(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def expr(implicit unit: unit): Parser[Expr[Double]] =
     term ~ rep(("+"|"-") ~ term) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "+" ~ rhs) => Add(lhs, rhs)
@@ -330,7 +421,7 @@ object Exprʹ extends JavaTokenParsers:
       }
     }
 
-  def term(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def term(implicit unit: unit): Parser[Expr[Double]] =
     factor ~ rep(("*"|"/") ~ factor) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "*" ~ rhs) => Mul(lhs, rhs)
@@ -338,7 +429,7 @@ object Exprʹ extends JavaTokenParsers:
       }
     }
 
-  def factor(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def factor(implicit unit: unit): Parser[Expr[Double]] =
     ("+"|"-") ~ literal ^^ {
       case "-" ~ rhs if unit eq Zero => Inv(rhs)
       case "+" ~ rhs => Add(Zero, rhs)
@@ -346,30 +437,24 @@ object Exprʹ extends JavaTokenParsers:
     } |
     literal
 
-  def literal(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def literal(implicit unit: unit): Parser[Expr[Double]] =
     floatingPointNumber ^^ {
       _.toDouble match
         case 0d => Zero
         case 1d => One
         case n => Val(n)
     } |
-    decimalNumber ^^ {
-      _.toInt match
-        case 0 => Zero
-        case 1 => One
-        case n => Val(n)
-    } |
     "("~> expr <~")"
 
   implicit class ExprInterpolator(private val sc: StringContext) extends AnyVal:
-    def x(args: Any*)(implicit unit: unit): Expr[Int | Double] =
+    def x(args: Any*)(implicit unit: unit): Expr[Double] =
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
       parseAll(expr, inp).get
 ```
 
-The second [parser](https://typelevel.org/cats-parse) is:
+The [second parser](https://typelevel.org/cats-parse) is:
 
 ```Scala
 import cats.parse.Parser
@@ -461,6 +546,8 @@ final case class Builder[T](private val lhs: Exprʹ[T], private var save: List[E
     Builder(rhs.map(Div(build(x), _)), save)
   def invert(n: Int = 1): Builder[T] =
     Builder(fill(n).foldLeft(lhs) { (lhs, _) => lhs.map(Inv(_)) }, save)
+  def inject(x: String)(f: (Builder[T], String) => Exprʹ[T] ?=> Builder[T])(using Exprʹ[T]) =
+    f(this, x)
   def open(using lhs: Exprʹ[T]) = Builder(lhs, this.lhs :: save)
   def close(x: String)(f: (Builder[T], Expr[T]) => Builder[T], invert: Int = 0) =
     require(save.nonEmpty)
@@ -469,6 +556,9 @@ final case class Builder[T](private val lhs: Exprʹ[T], private var save: List[E
 object Builder:
   def start[T](using lhs: Exprʹ[T]) = Builder(lhs, Nil)
 ```
+
+There are also operation methods which inject a dependency `String`, then continue with an implicit `Reader`, commencing as
+right hand side. The `inject` method makes this obvious, by invoking the mentioned operations indirectly.
 
 To measure time, we implement a method `elapsed` time between two timestamps:
 
@@ -500,11 +590,11 @@ given `1`[Double] = `1`(1d)
 
   val start = System.currentTimeMillis
 
-  given [T]: Exprʹ[T] = Reader(parseAll(expr, _).map(_.asInstanceOf[Expr[T]]).get)
+  given Exprʹ[Double] = Reader(parseAll(expr, _).map(_.asInstanceOf[Expr[Double]]).get)
 
   val x = Builder.start
     .add(One)
-    .subtract("2 - 2")
+    .inject("2 - 2")(_.subtract(_))
     .multiply(Val(5d), 4)
       .open
       .add(One, 2)
@@ -521,11 +611,11 @@ given `1`[Double] = `1`(1d)
 
   val start = System.currentTimeMillis
 
-  given [T]: Exprʹ[T] = Reader(parserExpr.parseAll(_).map(_.asInstanceOf[Expr[T]]).right.get)
+  given Exprʹ[Double] = Reader(parserExpr.parseAll(_).right.get)
 
   val x = Builder.start
     .add(One)
-    .subtract("2 - 2")
+    .inject("2 - 2")(_.subtract(_))
     .multiply(Val(5d), 4)
       .open
       .add(One, 2)

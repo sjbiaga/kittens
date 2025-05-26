@@ -29,6 +29,8 @@ object Main:
       Builder(rhs.map(Div(build(x), _)), save)
     def invert(n: Int = 1): Builder[T] =
       Builder(fill(n).foldLeft(lhs) { (lhs, _) => lhs.map(Inv(_)) }, save)
+    def inject(x: String)(f: (Builder[T], String) => Exprʹ[T] ?=> Builder[T])(using Exprʹ[T]) =
+      f(this, x)
     def open(using lhs: Exprʹ[T]) = Builder(lhs, this.lhs :: save)
     def close(x: String)(f: (Builder[T], Expr[T]) => Builder[T], invert: Int = 0) =
       require(save.nonEmpty)
@@ -59,11 +61,11 @@ object Main:
 
       val start = System.currentTimeMillis
 
-      given [T]: Exprʹ[T] = Reader(parseAll(expr, _).map(_.asInstanceOf[Expr[T]]).get)
+      given Exprʹ[Double] = Reader(parseAll(expr, _).get)
 
       val x = Builder.start
         .add(One)
-        .subtract("2 - 2")
+        .inject("2 - 2")(_.subtract(_))
         .multiply(Val(5d), 4)
           .open
           .add(One, 2)
@@ -80,11 +82,11 @@ object Main:
 
       val start = System.currentTimeMillis
 
-      given [T]: Exprʹ[T] = Reader(parserExpr.parseAll(_).map(_.asInstanceOf[Expr[T]]).right.get)
+      given Exprʹ[Double] = Reader(parserExpr.parseAll(_).right.get)
 
       val x = Builder.start
         .add(One)
-        .subtract("2 - 2")
+        .inject("2 - 2")(_.subtract(_))
         .multiply(Val(5d), 4)
           .open
           .add(One, 2)

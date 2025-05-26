@@ -4,7 +4,7 @@ object Exprʹ extends JavaTokenParsers:
 
   import Expr._
 
-  def expr(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def expr(implicit unit: unit): Parser[Expr[Double]] =
     term ~ rep(("+"|"-") ~ term) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "+" ~ rhs) => Add(lhs, rhs)
@@ -12,7 +12,7 @@ object Exprʹ extends JavaTokenParsers:
       }
     }
 
-  def term(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def term(implicit unit: unit): Parser[Expr[Double]] =
     factor ~ rep(("*"|"/") ~ factor) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "*" ~ rhs) => Mul(lhs, rhs)
@@ -20,7 +20,7 @@ object Exprʹ extends JavaTokenParsers:
       }
     }
 
-  def factor(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def factor(implicit unit: unit): Parser[Expr[Double]] =
     ("+"|"-") ~ literal ^^ {
       case "-" ~ rhs if unit eq Zero => Inv(rhs)
       case "+" ~ rhs => Add(Zero, rhs)
@@ -28,23 +28,17 @@ object Exprʹ extends JavaTokenParsers:
     } |
     literal
 
-  def literal(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def literal(implicit unit: unit): Parser[Expr[Double]] =
     floatingPointNumber ^^ {
       _.toDouble match
         case 0d => Zero
         case 1d => One
         case n => Val(n)
     } |
-    decimalNumber ^^ {
-      _.toInt match
-        case 0 => Zero
-        case 1 => One
-        case n => Val(n)
-    } |
     "("~> expr <~")"
 
   implicit class ExprInterpolator(private val sc: StringContext) extends AnyVal:
-    def x(args: Any*)(implicit unit: unit): Expr[Int | Double] =
+    def x(args: Any*)(implicit unit: unit): Expr[Double] =
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
