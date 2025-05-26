@@ -8,7 +8,7 @@ object Main:
 
   type Exprʹ[T] = Reader[String, Expr[T]]
 
-  final case class Builder[T](private val lhs: Exprʹ[T], private var save: List[Exprʹ[T]]):
+  final case class Builder[T](lhs: Exprʹ[T], private var save: List[Exprʹ[T]]):
     def build(x: String): Expr[T] = lhs.run(x)
     def fill(n: Int) = List.fill(0 max n)(())
     def add(rhs: Expr[T], n: Int = 1) =
@@ -70,7 +70,7 @@ object Main:
           .open
           .add(One, 2)
           .close("7 / 5")(_.add(_))
-        .build("(1-0) * (1+0)")
+        .build("(1 - 0) * (1 + 0)")
 
       val end = System.currentTimeMillis
 
@@ -91,7 +91,50 @@ object Main:
           .open
           .add(One, 2)
           .close("7 / 5")(_.add(_))
-        .build("(1-0) * (1+0)")
+        .build("(1 - 0) * (1 + 0)")
+
+      val end = System.currentTimeMillis
+
+      println(s"${elapsed(start, end)} $x ${eval(x)}")
+    }
+
+    {
+      val start = System.currentTimeMillis
+
+      val r =
+        for
+          lhs <- {
+            import Exprʹ._
+
+            given Exprʹ[Double] = Reader(parseAll(expr, _).get)
+
+            Builder.start
+              .add(One)
+              .inject("2 - 2")(_.subtract(_))
+              .multiply(Val(5d), 4)
+                .open
+                .add(One, 2)
+                .close("7 / 5")(_.add(_))
+              .lhs
+          }
+          rhs <- {
+            import Exprʹʹ._
+
+            given Exprʹ[Double] = Reader(parserExpr.parseAll(_).right.get)
+
+            Builder.start
+              .add(One)
+              .inject("2 - 2")(_.subtract(_))
+              .multiply(Val(5d), 4)
+                .open
+                .add(One, 2)
+                .close("7 / 5")(_.add(_))
+              .lhs
+          }
+        yield
+          Div(lhs, rhs)
+
+      val x = r("(1 - 0) * (1 + 0)")
 
       val end = System.currentTimeMillis
 

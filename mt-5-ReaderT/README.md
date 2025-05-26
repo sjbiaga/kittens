@@ -150,8 +150,8 @@ def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Klei
   }
 ```
 
-Obviously, the two `fc`'s have the same type, but are not necessarily the same. Now, let us try to remove the _intermediary_
-values:
+Obviously, the two `fc`'s have the same type, but are not necessarily the same value. Now, let us try to remove the
+_intermediary_ values:
 
 ```Scala
 def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Kleisli[F, AA, C] =
@@ -180,7 +180,7 @@ def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Klei
 ```
 
 Now we can see that the actual invocation of `Kleisli#flatMap` - which is `this.flatMap(f)` - is _reflected_ at the
-implementation level to `this.run(a).flatMap(g)`, where both `run: A => F[B]` and `g: B => F[C]` are Kleisli arrows: hence,
+implementation level as `this.run(a).flatMap(g)`, where both `run: A => F[B]` and `g: B => F[C]` are Kleisli arrows: hence,
 this implementation is identical in form with the composition of Kleisli arrows `run(_).flatMap(g)` applied to `a` - as
 mentioned in [Exercise 04.1](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md#exercise-041) for
 the `Trampoline` monad. As can be seen, once we have an `a: A`, we have both `run(a): F[B]` and `g: B => F[C]`, which - via
@@ -338,10 +338,9 @@ Builder.start
 Also, implement another parser, for example using [`cats-parse`](https://typelevel.org/cats-parse), and show that the same
 builder can be used with different parsers. For identical built `Expr`essions, measure the time with one parser or another.
 
-Solution
---------
+Until now, only `Kleisli#map` was involved: try to find a use case for `Kleisli#flatMap` as well.
 
-We define `Expr`essions and their evaluator as follows:
+[Hint: define `Expr`essions and their evaluator as follows:
 
 ```Scala
 import scala.util.control.TailCalls._
@@ -405,6 +404,12 @@ object Expr:
     evalʹ(expr).result
 ```
 
+For the last part, use a `for`-comprehension with two identical readers (`lhs` and `rhs`) built by invoking `Builder#lhs`,
+yielding `Div(lhs, rhs)`, so that `eval`uating results is `1` - indifferent of which dependency is injected.]
+
+Solution - Part 1
+-----------------
+
 The [first parser](https://github.com/scala/scala-parser-combinators) is:
 
 ```Scala
@@ -454,6 +459,9 @@ object Exprʹ extends JavaTokenParsers:
       }
       parseAll(expr, inp).get
 ```
+
+Solution - Part 2
+-----------------
 
 The [second parser](https://typelevel.org/cats-parse) is:
 
@@ -515,6 +523,9 @@ object Exprʹʹ:
       parserExpr.parseAll(inp).right.get
 ```
 
+Solution - Part 3
+-----------------
+
 The `Builder` maintains the left hand side (`lhs`) as a `Reader` of type `Exprʹ[T]`, and with each operation (corresponding
 to `case class` `<Op>`, e.g., `Add`) with a right hand side parameter (`rhs`) of type `Expr[T]`, it returns a new `Builder`
 from the new left hand side that results as `lhs.map(<Op>(_, rhs))`:
@@ -526,7 +537,7 @@ import Expr._
 
 type Exprʹ[T] = Reader[String, Expr[T]]
 
-final case class Builder[T](private val lhs: Exprʹ[T], private var save: List[Exprʹ[T]]):
+final case class Builder[T](lhs: Exprʹ[T], private var save: List[Exprʹ[T]]):
   def build(x: String): Expr[T] = lhs.run(x)
   def fill(n: Int) = List.fill(0 max n)(())
   def add(rhs: Expr[T], n: Int = 1) =
@@ -561,6 +572,9 @@ object Builder:
 There are also operation methods which inject a dependency `String`, then continue with an implicit `Reader`, commencing as
 right hand side. The `inject` method makes this obvious, by invoking the mentioned operations indirectly.
 
+Solution - Part 4
+-----------------
+
 To measure time, we implement a method `elapsed` time between two timestamps:
 
 ```Scala
@@ -591,7 +605,7 @@ given `1`[Double] = `1`(1d)
 
   val start = System.currentTimeMillis
 
-  given Exprʹ[Double] = Reader(parseAll(expr, _).map(_.asInstanceOf[Expr[Double]]).get)
+  given Exprʹ[Double] = Reader(parseAll(expr, _).get)
 
   val x = Builder.start
     .add(One)
@@ -600,7 +614,7 @@ given `1`[Double] = `1`(1d)
       .open
       .add(One, 2)
       .close("7 / 5")(_.add(_))
-    .build("(1-0) * (1+0)")
+    .build("(1 - 0) * (1 + 0)")
 
   val end = System.currentTimeMillis
 
@@ -621,12 +635,66 @@ given `1`[Double] = `1`(1d)
       .open
       .add(One, 2)
       .close("7 / 5")(_.add(_))
-    .build("(1-0) * (1+0)")
+    .build("(1 - 0) * (1 + 0)")
 
   val end = System.currentTimeMillis
 
   println(s"${elapsed(start, end)} $x ${eval(x)}")
 }
 ```
+
+Solution - Part 5
+-----------------
+
+`Kleisli#flatMap` is involved when at least two generators are used in a `for`-comprehension. So, we can repeat those from
+Part 4, lest the invocation to `Buidler#build` - instead, we return `Builder#lhs`:
+
+```Scala
+{
+  val start = System.currentTimeMillis
+
+  val r =
+    for
+      lhs <- {
+        import Exprʹ._
+
+        given Exprʹ[Double] = Reader(parseAll(expr, _).get)
+
+        Builder.start
+          .add(One)
+          .inject("2 - 2")(_.subtract(_))
+          .multiply(Val(5d), 4)
+            .open
+            .add(One, 2)
+            .close("7 / 5")(_.add(_))
+          .lhs
+      }
+      rhs <- {
+        import Exprʹʹ._
+
+        given Exprʹ[Double] = Reader(parserExpr.parseAll(_).right.get)
+
+        Builder.start
+          .add(One)
+          .inject("2 - 2")(_.subtract(_))
+          .multiply(Val(5d), 4)
+            .open
+            .add(One, 2)
+            .close("7 / 5")(_.add(_))
+          .lhs
+      }
+    yield
+      Div(lhs, rhs)
+
+  val x = r("(1 - 0) * (1 + 0)")
+
+  val end = System.currentTimeMillis
+
+  println(s"${elapsed(start, end)} $x ${eval(x)}")
+}
+```
+
+Both the first and second generators correspond to `Kleisli`s which are injected the same dependency. Thus, being the same
+built readers, the top-level `Div` operator will return `1` when evaluating the `x` expression.
 
 [First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-4-IorT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-6-WriterT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)
