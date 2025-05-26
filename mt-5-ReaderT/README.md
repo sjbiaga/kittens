@@ -340,6 +340,48 @@ builder can be used with different parsers. For identical built `Expr`essions, m
 
 Until now, only `Kleisli#map` was involved: try to find a use case for `Kleisli#flatMap` as well.
 
+From the following type aliases:
+
+```Scala
+import cats.{ Id, FlatMap, Monad }
+import cats.data.ReaderT
+import cats.free.Yoneda
+
+import Expr._
+
+type Readerʹ[A, B] = ReaderT[[α] =>> Yoneda[Id, α], A, B]
+
+type Exprʹʹ[T] = Readerʹ[String, Expr[T]]
+```
+
+optimize the `Builder` by using the `Yoneda[Id, *]` context instead of `Id[*]`; give a `FlatMap[Yoneda[F, *]]` typeclass
+instance:
+
+```Scala
+implicit def kittensYonedaFlatMap[F[_]](implicit F: Monad[F]): FlatMap[[α] =>> Yoneda[F, α]] = ???
+```
+
+From the following type aliases:
+
+```Scala
+import cats.{ Id, FlatMap, Monad }
+import cats.data.ReaderT
+import cats.free.Coyoneda
+
+import Expr._
+
+type Readerʹʹ[A, B] = ReaderT[[α] =>> Coyoneda[Id, α], A, B]
+
+type Exprʹʹʹ[T] = Readerʹʹ[String, Expr[T]]
+```
+
+optimize the `Builder` by using the `Coyoneda[Id, *]` context instead of `Id[*]`; give a `FlatMap[Coyoneda[Id, *]]` typeclass
+instance:
+
+```Scala
+implicit def kittensCoyonedaFlatMap[F[_]](implicit F: Monad[F]): FlatMap[[α] =>> Coyoneda[F, α]] = ???
+```
+
 [Hint: define `Expr`essions and their evaluator as follows:
 
 ```Scala
@@ -696,5 +738,263 @@ Part 4, lest the invocation to `Buidler#build` - instead, we return `Builder#lhs
 
 Both the first and second generators correspond to `Kleisli`s which are injected the same dependency. Thus, being the same
 built readers, the top-level `Div` operator will return `1` when evaluating the `x` expression.
+
+Solution - Part 6
+-----------------
+
+Using the `Readerʹ` and `Exprʹʹ` type aliases, the `Builder` is quasi the same as in [Part 3](#solution---part-3):
+
+```Scala
+import cats.{ Id, FlatMap, Monad }
+import cats.data.ReaderT
+import cats.free.Yoneda
+
+import Expr._
+
+type Readerʹ[A, B] = ReaderT[[α] =>> Yoneda[Id, α], A, B]
+
+type Exprʹʹ[T] = Readerʹ[String, Expr[T]]
+
+final case class Builder[T](lhs: Exprʹʹ[T], private var save: List[Exprʹʹ[T]]):
+  def build(x: String): Expr[T] = lhs.run(x).run
+  def fill(n: Int) = List.fill(0 max n)(())
+  def add(rhs: Expr[T], n: Int = 1) =
+    Builder(fill(n).foldLeft(lhs) { (lhs, _) => lhs.map(Add(_, rhs)) }, save)
+  def add(x: String)(using rhs: Exprʹʹ[T]) =
+    Builder(rhs.map(Add(build(x), _)), save)
+  def subtract(rhs: Expr[T], n: Int = 1) =
+    Builder(fill(n).foldLeft(lhs) { (lhs, _) => lhs.map(Sub(_, rhs)) }, save)
+  def subtract(x: String)(using rhs: Exprʹʹ[T]) =
+    Builder(rhs.map(Sub(build(x), _)), save)
+  def multiply(rhs: Expr[T], n: Int = 1) =
+    Builder(fill(n).foldLeft(lhs) { (lhs, _) => lhs.map(Mul(_, rhs)) }, save)
+  def multiply(x: String)(using rhs: Exprʹʹ[T]) =
+    Builder(rhs.map(Mul(build(x), _)), save)
+  def divide(rhs: Expr[T], n: Int = 1) =
+    Builder(fill(n).foldLeft(lhs) { (lhs, _) => lhs.map(Div(_, rhs)) }, save)
+  def divide(x: String)(using rhs: Exprʹʹ[T]) =
+    Builder(rhs.map(Div(build(x), _)), save)
+  def invert(n: Int = 1): Builder[T] =
+    Builder(fill(n).foldLeft(lhs) { (lhs, _) => lhs.map(Inv(_)) }, save)
+  def inject(x: String)(f: (Builder[T], String) => Exprʹʹ[T] ?=> Builder[T])(using Exprʹʹ[T]) =
+    f(this, x)
+  def open(using lhs: Exprʹʹ[T]) = Builder(lhs, this.lhs :: save)
+  def close(x: String)(f: (Builder[T], Expr[T]) => Builder[T], invert: Int = 0) =
+    require(save.nonEmpty)
+    val self = Builder(save.head, save.tail)
+    f(self, build(x)).invert(invert)
+object Builder:
+  def start[T](using lhs: Exprʹʹ[T]) = Builder(lhs, Nil)
+```
+
+The typeclass instance of the `FlatMap` typeclass for the `Yoneda[F, *]` context requires an implicit `F: Monad[F]` to be in
+scope, because the `flatMap` method is implemented in terms of `map` and `flatten` methods: the former is direct from the
+`Yoneda#map` method, whereas the latter uses `F.flatMap` while it applies `Yoneda#run` twice in sequel:
+
+```Scala
+implicit def kittensYonedaFlatMap[F[_]](implicit F: Monad[F]): FlatMap[[α] =>> Yoneda[F, α]] =
+  new FlatMap[[α] =>> Yoneda[F, α]] {
+    override def flatMap[A, B](fa: Yoneda[F, A])(f: A => Yoneda[F, B]): Yoneda[F, B] =
+      flatten(map(fa)(f))
+
+    override def flatten[A](ffa: Yoneda[F, Yoneda[F, A]]): Yoneda[F, A] =
+      Yoneda(F.flatMap(ffa.run)(_.run))
+
+    override def tailRecM[A, B](a: A)(f: A => Yoneda[F, Either[A, B]]): Yoneda[F, B] =
+      def loop(a: A): F[B] =
+        F.tailRecM(a) { a =>
+          F.flatMap(f(a).run) {
+            case Left(a)      => F.map(loop(a))(Right.apply)
+            case r @ Right(_) => F.pure(r)
+          }
+        }
+      Yoneda(loop(a))
+
+    override def map[A, B](fa: Yoneda[F, A])(f: A => B): Yoneda[F, B] =
+      fa.map(f)
+  }
+```
+
+The user code is the same, with the exception of the implicit `ReaderT`s, which lifts the result from parsing to be of the
+`Yoneda[Id, Expr[Double]]` type:
+
+```Scala
+given unit = Zero
+
+given `0`[Double] = `0`(0d)
+given `1`[Double] = `1`(1d)
+
+{
+  val start = System.currentTimeMillis
+
+  val r =
+    for
+      lhs <- {
+        import Exprʹ._
+
+        given Exprʹʹ[Double] = ReaderT { x => Yoneda(parseAll(expr, x).get) }
+
+        Builder.start
+          .add(One)
+          .inject("2 - 2")(_.subtract(_))
+          .multiply(Val(5d), 4)
+            .open
+            .add(One, 2)
+            .close("7 / 5")(_.add(_))
+          .lhs
+      }
+      rhs <- {
+        import Exprʹʹ._
+
+        given Exprʹʹ[Double] = ReaderT { x => Yoneda(parserExpr.parseAll(x).right.get) }
+
+        Builder.start
+          .add(One)
+          .inject("2 - 2")(_.subtract(_))
+          .multiply(Val(5d), 4)
+            .open
+            .add(One, 2)
+            .close("7 / 5")(_.add(_))
+          .lhs
+      }
+    yield
+      Div(lhs, rhs)
+
+  val x = r("(1 - 0) * (1 + 0)").run
+
+  val end = System.currentTimeMillis
+
+  println(s"${elapsed(start, end)} $x ${eval(x)}")
+}
+```
+
+Solution - Part 7
+-----------------
+
+Using the `Readerʹʹ` and `Exprʹʹʹ` type aliases, the `Builder` is quasi the same as in [Part 3](#solution---part-3):
+
+```Scala
+import cats.{ Id, FlatMap, Monad }
+import cats.data.ReaderT
+import cats.free.Coyoneda
+
+import Expr._
+
+type Readerʹʹ[A, B] = ReaderT[[α] =>> Coyoneda[Id, α], A, B]
+
+type Exprʹʹʹ[T] = Readerʹʹ[String, Expr[T]]
+
+final case class Builder[T](lhs: Exprʹʹʹ[T], private var save: List[Exprʹʹʹ[T]]):
+  def build(x: String): Expr[T] = lhs.run(x).run
+  def fill(n: Int) = List.fill(0 max n)(())
+  def add(rhs: Expr[T], n: Int = 1) =
+    Builder(fill(n).foldLeft(lhs) { (lhs, _) => lhs.map(Add(_, rhs)) }, save)
+  def add(x: String)(using rhs: Exprʹʹʹ[T]) =
+    Builder(rhs.map(Add(build(x), _)), save)
+  def subtract(rhs: Expr[T], n: Int = 1) =
+    Builder(fill(n).foldLeft(lhs) { (lhs, _) => lhs.map(Sub(_, rhs)) }, save)
+  def subtract(x: String)(using rhs: Exprʹʹʹ[T]) =
+    Builder(rhs.map(Sub(build(x), _)), save)
+  def multiply(rhs: Expr[T], n: Int = 1) =
+    Builder(fill(n).foldLeft(lhs) { (lhs, _) => lhs.map(Mul(_, rhs)) }, save)
+  def multiply(x: String)(using rhs: Exprʹʹʹ[T]) =
+    Builder(rhs.map(Mul(build(x), _)), save)
+  def divide(rhs: Expr[T], n: Int = 1) =
+    Builder(fill(n).foldLeft(lhs) { (lhs, _) => lhs.map(Div(_, rhs)) }, save)
+  def divide(x: String)(using rhs: Exprʹʹʹ[T]) =
+    Builder(rhs.map(Div(build(x), _)), save)
+  def invert(n: Int = 1): Builder[T] =
+    Builder(fill(n).foldLeft(lhs) { (lhs, _) => lhs.map(Inv(_)) }, save)
+  def inject(x: String)(f: (Builder[T], String) => Exprʹʹʹ[T] ?=> Builder[T])(using Exprʹʹʹ[T]) =
+    f(this, x)
+  def open(using lhs: Exprʹʹʹ[T]) = Builder(lhs, this.lhs :: save)
+  def close(x: String)(f: (Builder[T], Expr[T]) => Builder[T], invert: Int = 0) =
+    require(save.nonEmpty)
+    val self = Builder(save.head, save.tail)
+    f(self, build(x)).invert(invert)
+object Builder:
+  def start[T](using lhs: Exprʹʹʹ[T]) = Builder(lhs, Nil)
+```
+
+The typeclass instance of the `FlatMap` typeclass for the `Coyoneda[F, *]` context requires an implicit `F: Monad[F]` to be
+in scope, because the `flatMap` method is implemented in terms of `map` and `flatten` methods: the former is direct from the
+`Coyoneda#map` method, whereas the latter uses `F.flatMap` while it applies `Coyoneda#run` twice in sequel:
+
+```Scala
+implicit def kittensCoyonedaFlatMap[F[_]](implicit F: Monad[F]): FlatMap[[α] =>> Coyoneda[F, α]] =
+  new FlatMap[[α] =>> Coyoneda[F, α]] {
+    override def flatMap[A, B](fa: Coyoneda[F, A])(f: A => Coyoneda[F, B]): Coyoneda[F, B] =
+      flatten(map(fa)(f))
+
+    override def flatten[A](ffa: Coyoneda[F, Coyoneda[F, A]]): Coyoneda[F, A] =
+      Coyoneda.lift(F.flatMap(ffa.run)(_.run))
+
+    override def tailRecM[A, B](a: A)(f: A => Coyoneda[F, Either[A, B]]): Coyoneda[F, B] =
+      def loop(a: A): F[B] =
+        F.tailRecM(a) { a =>
+          F.flatMap(f(a).run) {
+            case Left(a)      => F.map(loop(a))(Right.apply)
+            case r @ Right(_) => F.pure(r)
+          }
+        }
+      Coyoneda.lift(loop(a))
+
+    override def map[A, B](fa: Coyoneda[F, A])(f: A => B): Coyoneda[F, B] =
+      fa.map(f)
+  }
+```
+
+The user code is the same, with the exception of the implicit `ReaderT`s, which lifts the result from parsing to be of the
+`Coyoneda[Id, Expr[Double]]` type:
+
+```Scala
+given unit = Zero
+
+given `0`[Double] = `0`(0d)
+given `1`[Double] = `1`(1d)
+
+{
+  val start = System.currentTimeMillis
+
+  val r =
+    for
+      lhs <- {
+        import Exprʹ._
+
+        given Exprʹʹʹ[Double] = ReaderT { x => Coyoneda.lift(parseAll(expr, x).get) }
+
+        Builder.start
+          .add(One)
+          .inject("2 - 2")(_.subtract(_))
+          .multiply(Val(5d), 4)
+            .open
+            .add(One, 2)
+            .close("7 / 5")(_.add(_))
+          .lhs
+      }
+      rhs <- {
+        import Exprʹʹ._
+
+        given Exprʹʹʹ[Double] = ReaderT { x => Coyoneda.lift(parserExpr.parseAll(x).right.get) }
+
+        Builder.start
+          .add(One)
+          .inject("2 - 2")(_.subtract(_))
+          .multiply(Val(5d), 4)
+            .open
+            .add(One, 2)
+            .close("7 / 5")(_.add(_))
+          .lhs
+      }
+    yield
+      Div(lhs, rhs)
+
+  val x = r("(1 - 0) * (1 + 0)").run
+
+  val end = System.currentTimeMillis
+
+  println(s"${elapsed(start, end)} $x ${eval(x)}")
+}
+```
 
 [First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-4-IorT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-6-WriterT/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)
