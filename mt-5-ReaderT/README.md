@@ -150,7 +150,8 @@ def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Klei
   }
 ```
 
-Obviously, the two `fc`'s are the same. Now, let us try to remove the _intermediary_ values:
+Obviously, the two `fc`'s have the same type, but are not necessarily the same. Now, let us try to remove the _intermediary_
+values:
 
 ```Scala
 def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Kleisli[F, AA, C] =
@@ -183,7 +184,7 @@ implementation level to `this.run(a).flatMap(g)`, where both `run: A => F[B]` an
 this implementation is identical in form with the composition of Kleisli arrows `run(_).flatMap(g)` applied to `a` - as
 mentioned in [Exercise 04.1](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md#exercise-041) for
 the `Trampoline` monad. As can be seen, once we have an `a: A`, we have both `run(a): F[B]` and `g: B => F[C]`, which - via
-`F.flatMap` - gives us an `F[C]`; and, both `F[B]` and `F[C]` result from applying `a: A`, in this order.
+`F.flatMap` - gives us an `F[C]`; and, both outer `F[B]` and inner `F[C]` result from applying `a: A`, in this order.
 
 ```Scala
 def tap[AA <: A](implicit F: Functor[F]): Kleisli[F, AA, AA] =
