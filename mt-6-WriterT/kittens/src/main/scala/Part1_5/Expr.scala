@@ -67,17 +67,17 @@ object Expr extends JavaTokenParsers:
     literal
 
   def literal(implicit unit: unit): Parser[Exprʹ[Int | Double]] =
-    floatingPointNumber ^^ {
-      _.toDouble match
-        case 0d => putʹ(Zero)("constant zero: Double")
-        case 1d => putʹ(One)("constant one: Double")
-        case n  => putʹ(Val(n))(s"value $n: Double")
-    } |
-    decimalNumber ^^ {
-      _.toInt match
-        case 0 => putʹ(Zero)("constant zero: Int")
-        case 1 => putʹ(One)("constant one: Int")
-        case n => putʹ(Val(n))(s"value $n: Int")
+    floatingPointNumber ^^ { n =>
+      try
+        n.toInt match
+          case 0 => putʹ(Zero)("constant zero: Int")
+          case 1 => putʹ(One)("constant one: Int")
+          case n => putʹ(Val(n))(s"value $n: Int")
+      catch _ =>
+        n.toDouble match
+          case 0d => putʹ(Zero)("constant zero: Double")
+          case 1d => putʹ(One)("constant one: Double")
+          case n  => putʹ(Val(n))(s"value $n: Double")
     } |
     "("~> expr(using unit) <~")" ^^ { _.tell("parentheses\n") }
 

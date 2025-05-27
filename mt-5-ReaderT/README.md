@@ -358,7 +358,7 @@ optimize the `Builder` by using the `Yoneda[Id, *]` context instead of `Id[*]`; 
 instance:
 
 ```Scala
-implicit def kittensYonedaFlatMap[F[_]](implicit F: Monad[F]): FlatMap[[α] =>> Yoneda[F, α]] = ???
+implicit def kittensYonedaFlatMap[F[_]: Monad]: FlatMap[[α] =>> Yoneda[F, α]] = ???
 ```
 
 From the following type aliases:
@@ -379,7 +379,7 @@ optimize the `Builder` by using the `Coyoneda[Id, *]` context instead of `Id[*]`
 instance:
 
 ```Scala
-implicit def kittensCoyonedaFlatMap[F[_]](implicit F: Monad[F]): FlatMap[[α] =>> Coyoneda[F, α]] = ???
+implicit def kittensCoyonedaFlatMap[F[_]: Monad]: FlatMap[[α] =>> Coyoneda[F, α]] = ???
 ```
 
 [Hint: define `Expr`essions and their evaluator as follows:

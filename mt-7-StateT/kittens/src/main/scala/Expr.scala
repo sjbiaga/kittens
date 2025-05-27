@@ -99,17 +99,17 @@ object Expr extends JavaTokenParsers:
     literal
 
   def literal(implicit unit: unit): Parser[Expr[Int | Double]] =
-    floatingPointNumber ^^ {
-      _.toDouble match
-        case 0d => Zero
-        case 1d => One
-        case n => Val(n)
-    } |
-    decimalNumber ^^ {
-      _.toInt match
-        case 0 => Zero
-        case 1 => One
-        case n => Val(n)
+    floatingPointNumber ^^ { n =>
+      try
+        n.toInt match
+          case 0 => Zero
+          case 1 => One
+          case n => Val(n)
+      catch _ =>
+        n.toDouble match
+          case 0d => Zero
+          case 1d => One
+          case n => Val(n)
     } |
     "("~> expr <~")"
 

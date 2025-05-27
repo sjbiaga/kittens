@@ -8,7 +8,7 @@ object Main:
   def main(args: Array[String]): Unit =
     given unit = Zero
 
-    val x = x"(1.5+4-2)*3"
+    val x = x"(1.5+4.0-2.0)*3.0"
 
     {
       val (expr, log) = x.listen.value
