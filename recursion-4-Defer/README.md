@@ -510,20 +510,29 @@ val cb = fn.andThen(_.run(cbʹ))  // line #14ʹ
 without wrapping `fn` or `M.defer`ring. However, wrapping in `AndThen` optimizes, while the typeclass instance `Defer[M]`
 provides for stack safety.
 
-Let us look at an example, the `factorial` function, implemented with `for`-comprehensions of `ContT`inuation type:
+Given the following type alias:
+
+```Scala
+package cats
+package data
+
+type Cont[A, B] = ContT[Eval, A, B]
+```
+
+let us look at an example - the `factorial` function -, implemented with `for`-comprehensions of `Cont`inuation type:
 
 ```Scala
 def factorial(n: Long): Long =
-  def factorialʹ(n: Long, f: Long): ContT[Eval, Long, Long] =
+  def factorialʹ(n: Long, f: Long): Cont[Long, Long] =
     for
-      b <- ContT.defer(n == 0)
+      b <- Cont.defer(n == 0)
       r <- ( if b
              then
-               ContT.pure(f)
+               Cont.pure(f)
              else
                for
-                 m <- ContT.defer(n - 1)
-                 p <- ContT.defer(n * f)
+                 m <- Cont.defer(n - 1)
+                 p <- Cont.defer(n * f)
                  r <- factorialʹ(m, p)
                yield
                  r
@@ -534,7 +543,7 @@ def factorial(n: Long): Long =
 ```
 
 The nested `factorialʹ` method has a second parameter "`f`" which stores the partial result, and has as the return type
-`ContT[Eval, Long, Long]`. Because of that, the `ContT#eval` can be used to trigger the stack safe computation which results
+`Cont[Long, Long]`. Because of that, the `ContT#eval` method can be used to trigger the stack safe computation which results
 in an `Eval[Long]`. Although the "`else`" branch could have been written - more direct - as `factorialʹ(n - 1, n * f)`, each
 computation is wrapped in a `ContT.defer`. The "recursive" invocation of `factorialʹ` is stack safe because it is wrapped in
 an `Eval.defer`.
@@ -547,22 +556,24 @@ Using `Expr`essions
 [builder](https://github.com/sjbiaga/kittens/tree/main/expr-07-builder#an-expression-builder-contd),
 [simplifier](https://github.com/sjbiaga/kittens/blob/main/expr-simplify/README.md#solution), and
 [evaluator](https://github.com/sjbiaga/kittens/tree/main/expr-02-eval#evaluation-of-expressions) from previous lessons or
-exercises, define at least two continuation builders (`builderContT` and `builderContTʹ`), a continuation simplifier
-(`simplifyContT`), a continuation evaluator (`evalContT`), and a "division by zero" continuation checker (`divByZeroContT`),
+exercises, define at least two continuation builders (`builderCont` and `builderContʹ`), a continuation simplifier
+(`simplifyCont`), a continuation evaluator (`evalCont`), and a "division by zero" continuation checker (`divByZeroCont`),
 then intercalate them:
 
 ```Scala
-val c: ContT[Eval, Expr[Double], Double] =
+import cats.data.Cont
+
+val c: Cont[Expr[Double], Double] =
   for
-    x <- ContT.defer(Inv(x"(1.0-0.0) * (1.0+0.0)"))
+    x <- Cont.defer(Inv(x"(1.0-0.0) * (1.0+0.0)"))
     xʹ = x.asInstanceOf[Expr[Double]]
-    x <- builderContT(xʹ)
-    x <- simplifyContT(x)
-    x <- builderContTʹ(x)
-    x <- simplifyContT(x)
-    d <- evalContT(x)
-    s <- divByZeroContT(d)
-    _ <- ContT.defer(println(s))
+    x <- builderCont(xʹ)
+    x <- simplifyCont(x)
+    x <- builderContʹ(x)
+    x <- simplifyCont(x)
+    d <- evalCont(x)
+    s <- divByZeroCont(d)
+    _ <- Cont.defer(println(s))
   yield
     d
 ```
@@ -578,9 +589,9 @@ println {
 }
 ```
 
-and define each `ContT`inuation (involving `Expr`essions) as a function `Expr[Double] => ContT[Eval, Expr[Double], T]`, where
-the type `T` is `Double` for `evalContT`, and `Expr[Double]` for the rest. The type of the `divByZeroContT` `ContT`inuation
-would be `Double => ContT[Eval, Expr[Double], String]`.
+and define each `Cont`inuation (involving `Expr`essions) as a function `Expr[Double] => Cont[Expr[Double], T]`, where the
+type `T` is `Double` for `evalCont`, and `Expr[Double]` for the rest. The type of the `divByZeroCont` `Cont`inuation would be
+`Double => Cont[Expr[Double], String]`.
 
 Try to use `ContT.pure` or `ContT.defer` instead of `ContT.apply`.]
 
@@ -809,7 +820,7 @@ object Expr extends JavaTokenParsers:
 Solution - Part 2
 -----------------
 
-The `ContT`inuations are the results of the following smart function values (method):
+The `Cont`inuations are the results of the following smart function values (method):
 
 ```Scala
 given unit = Zero // One
@@ -817,8 +828,8 @@ given unit = Zero // One
 given `0`[Double] = `0`(0d)
 given `1`[Double] = `1`(1d)
 
-val builderContT: Expr[Double] => ContT[Eval, Expr[Double], Expr[Double]] =
-  xa => ContT.defer {
+val builderCont: Expr[Double] => Cont[Expr[Double], Expr[Double]] =
+  xa => Cont.defer {
     Builder.start(xa)
     .add(One)
     .multiply(Val(5d), 4)
@@ -829,8 +840,8 @@ val builderContT: Expr[Double] => ContT[Eval, Expr[Double], Expr[Double]] =
     .lhs
   }
 
-val builderContTʹ: Expr[Double] => ContT[Eval, Expr[Double], Expr[Double]] =
-  xa => ContT.defer {
+val builderContʹ: Expr[Double] => Cont[Expr[Double], Expr[Double]] =
+  xa => Cont.defer {
     Builder.start(xa)
     .add(One)
     .multiply(Val(5d), 4)
@@ -848,19 +859,19 @@ val builderContTʹ: Expr[Double] => ContT[Eval, Expr[Double], Expr[Double]] =
     .lhs
   }
 
-def simplifyContT[A]: Expr[A] => ContT[Eval, Expr[A], Expr[A]] =
-  simplify[A] andThen ContT.defer
+def simplifyCont[A]: Expr[A] => Cont[Expr[A], Expr[A]] =
+  simplify[A] andThen Cont.defer
 
-val evalContT: Expr[Double] => ContT[Eval, Expr[Double], Double] =
-  eval andThen ContT.defer
+val evalCont: Expr[Double] => Cont[Expr[Double], Double] =
+  eval andThen Cont.defer
 ```
 
-Defining the `divByZeroContT` `ContT`inuation to only map to an error message, we can use the following `for`-comprehension
-to intercalate the `ContT`inuations:
+Defining the `divByZeroCont` `Cont`inuation to only map to an error message, we can use the following `for`-comprehension
+to intercalate the `Cont`inuations:
 
 ```Scala
-val divByZeroContT: Double => ContT[Eval, Expr[Double], String] =
-  d => ContT.defer {
+val divByZeroCont: Double => Cont[Expr[Double], String] =
+  d => Cont.defer {
     if d == Double.PositiveInfinity || d == Double.NegativeInfinity
     then
       "Division by zero"
@@ -868,17 +879,17 @@ val divByZeroContT: Double => ContT[Eval, Expr[Double], String] =
       "No errors"
   }
 
-val c: ContT[Eval, Expr[Double], Double] =
+val c: Cont[Expr[Double], Double] =
   for
-    x <- ContT.defer(Inv(x"(1.0-0.0) * (1.0+0.0)"))
+    x <- Cont.defer(Inv(x"(1.0-0.0) * (1.0+0.0)"))
     xʹ = x.asInstanceOf[Expr[Double]]
-    x <- builderContT(xʹ)
-    x <- simplifyContT(x)
-    x <- builderContTʹ(x)
-    x <- simplifyContT(x)
-    d <- evalContT(x)
-    s <- divByZeroContT(d)
-    _ <- ContT.defer(println(s))
+    x <- builderCont(xʹ)
+    x <- simplifyCont(x)
+    x <- builderContʹ(x)
+    x <- simplifyCont(x)
+    d <- evalCont(x)
+    s <- divByZeroCont(d)
+    _ <- Cont.defer(println(s))
   yield
     d
 
@@ -890,11 +901,11 @@ println {
 Solution - Part 3
 -----------------
 
-Using a `divByZeroContTʹ` (prime) `ContT`inuation:
+Using a `divByZeroContʹ` (prime) `Cont`inuation:
 
 ```Scala
-val divByZeroContTʹ: Double => ContT[Eval, Expr[Double], Double] =
-  d => ContT.defer {
+val divByZeroContʹ: Double => Cont[Expr[Double], Double] =
+  d => Cont.defer {
     if d == Double.PositiveInfinity || d == Double.NegativeInfinity
     then
       println("Division by zero")
@@ -909,16 +920,16 @@ the translation of the `for`-comprehension:
 
 ```Scala
 println { // nesting
-  ContT
+  Cont
     .defer(Inv(x"(1.0-0.0) * (1.0+0.0)"))
     .flatMap { x =>
       val xʹ = x.asInstanceOf[Expr[Double]]
-      builderContT(xʹ).flatMap {
-        simplifyContT(_).flatMap {
-          builderContTʹ(_).flatMap {
-            simplifyContT(_).flatMap {
-              evalContT(_).flatMap {
-                divByZeroContTʹ(_).map(identity)
+      builderCont(xʹ).flatMap {
+        simplifyCont(_).flatMap {
+          builderContʹ(_).flatMap {
+            simplifyCont(_).flatMap {
+              evalCont(_).flatMap {
+                divByZeroContʹ(_).map(identity)
               }
             }
           }
@@ -934,13 +945,13 @@ as well as, neater, we illustrate the chaining of the (uncluttered) `flatMap` sy
 println { // chaining
   import cats.syntax.flatMap._
   {
-    ContT.defer(Inv(x"(1.0-0.0) * (1.0+0.0)").asInstanceOf[Expr[Double]])
-    >>= builderContT
-    >>= simplifyContT
-    >>= builderContTʹ
-    >>= simplifyContT
-    >>= evalContT
-    >>= divByZeroContTʹ
+    Cont.defer(Inv(x"(1.0-0.0) * (1.0+0.0)").asInstanceOf[Expr[Double]])
+    >>= builderCont
+    >>= simplifyCont
+    >>= builderContʹ
+    >>= simplifyCont
+    >>= evalCont
+    >>= divByZeroContʹ
   }.run(Val.apply[Double] andThen Eval.later).value
 }
 ```

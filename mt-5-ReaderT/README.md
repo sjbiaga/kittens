@@ -76,7 +76,7 @@ def dimap[C, D](f: C => A)(g: B => D)(implicit F: Functor[F]): Kleisli[F, C, D] 
   Kleisli(f andThen run andThen F.lift(g))
 ```
 
-The `flatMap` method resorts to `flatMapF`:
+The `flatMap` method resorts to `flatMapF` which resorts to `FlatMap#liftFM`:
 
 ```Scala
 def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Kleisli[F, AA, C] =
@@ -136,7 +136,7 @@ outer one maps an `A`, whereas the inner one handles a `B`. However, both apply 
 succeeding the former, we need a `b`, that is unwrapped by the typeclass instance `F` from `fb` - the result of the former.
 
 The inner block is handled by the `F[_]` context, which is why the result of `F.map` is _doubly_ inflated: _refactoring_, let
-us replace `map` with `flatMap`:
+us replace `F.map` with `F.flatMap`:
 
 ```Scala
 def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Kleisli[F, AA, C] =
@@ -354,7 +354,7 @@ type Readerʹ[A, B] = ReaderT[[α] =>> Yoneda[Id, α], A, B]
 type Exprʹʹ[T] = Readerʹ[String, Expr[T]]
 ```
 
-optimize the `Builder` by using the `Yoneda[Id, *]` context instead of `Id[*]`; give a `FlatMap[Yoneda[F, *]]` typeclass
+"optimize" the `Builder` by using the `Yoneda[Id, *]` context instead of `Id[*]`; give a `FlatMap[Yoneda[F, *]]` typeclass
 instance:
 
 ```Scala
@@ -375,7 +375,7 @@ type Readerʹʹ[A, B] = ReaderT[[α] =>> Coyoneda[Id, α], A, B]
 type Exprʹʹʹ[T] = Readerʹʹ[String, Expr[T]]
 ```
 
-optimize the `Builder` by using the `Coyoneda[Id, *]` context instead of `Id[*]`; give a `FlatMap[Coyoneda[Id, *]]` typeclass
+"optimize" the `Builder` by using the `Coyoneda[Id, *]` context instead of `Id[*]`; give a `FlatMap[Coyoneda[F, *]]` typeclass
 instance:
 
 ```Scala
@@ -446,8 +446,11 @@ object Expr:
     evalʹ(expr).result
 ```
 
-For the last part, use a `for`-comprehension with two identical readers (`lhs` and `rhs`) built by invoking `Builder#lhs`,
-yielding `Div(lhs, rhs)`, so that `eval`uating results is `1` - indifferent of which dependency is injected.]
+For the use case part, use a `for`-comprehension with two identical readers (`lhs` and `rhs`) built by invoking `Builder#lhs`,
+yielding `Div(lhs, rhs)`, so that `eval`uating results is `1` - indifferent of which dependency is injected.
+
+Since `Reader` already uses `Id[*]` as context, `Kleisli#map` cannot get simpler than this, so that involving `Yoneda[Id, *]`
+or `Coyoneda[Id, *]` is not really an optimization here.]
 
 Solution - Part 1
 -----------------
