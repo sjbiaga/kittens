@@ -223,7 +223,7 @@ _decreasing_ order, while the _even_ digits occur in _increasing_ order. The _po
 the output.
 
 What happens is that the defer corresponding to the leftmost number (`10`) is the last value assigned to `flist`: so, like
-the value `a` (bound to `10`) and the function `f`, `rhs100` is _captured_  as part of the _closure_ argument to `G.map2Eval`
+the value `a` (bound to `10`) and the function `f`, `rhs100` is _captured_ as part of the _closure_ argument to `G.map2Eval`
 (line #26). But this would mean that the "last" defer captures `rhs100`, which captures `rhs1000` (line #14), and so on,
 upwards... This is the _heap_ that is built, where the program resides.
 

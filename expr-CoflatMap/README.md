@@ -15,9 +15,9 @@ Solution - Part 1
 -----------------
 
 Because `CoflatMap` inherits `Functor`, we have to give implementations only for `map` and `coflatten`; then `coflatMap` can
-be defined in their terms.
+be defined in their terms:
 
-```
+```Scala
 def coflatMap[A, B](xa: Expr[A])(f: Expr[A] => B): Expr[B] =
   map(coflatten(xa))(f)
 ```
@@ -106,8 +106,8 @@ def evalʹ(expr: Expr[Double => Double]): unit ?=> (Double => Double) =
 
 Note that `.apply` can be ommitted. Also, the return type of `evalʹ` is a context function type, with `unit` as implicit
 parameter, on which `Inv` discriminates whether to negate (additive case) or reciprocate (multiplicative case). Besides
-constants `Zero` and `One`, all the other cases are identical in form, lest the operator; except the `Val` case, when the
-bound `f` is directly used as a return value.
+constants `Zero` and `One`, all the other cases are identical in form, lest the `Inv` operator; except the `Val` case, when
+the bound `f` is directly used as a return value.
 
 ```scala
 scala> given unit = One

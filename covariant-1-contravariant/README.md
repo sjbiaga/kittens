@@ -151,7 +151,7 @@ val b = new B[Pet]
 Method `b.m` is parameterless and returns objects whose types have `Pet` as lower bound: these are `Animal` and `Pet`. Out of
 the question to assign `b` to a value of type `B[Cat]` or `B[Dog]`.
 
-But because `Pet` is a subtype of `Animal`, by the "three lines  rule", we can assign `b` to a value of type `B[Animal]`:
+But because `Pet` is a subtype of `Animal`, by the "three lines rule", we can assign `b` to a value of type `B[Animal]`:
 
 ```Scala
 val a: B[Animal] = b

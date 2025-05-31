@@ -30,7 +30,11 @@ implicit val kittensʹListMonad: Monad[ʹ.List] =
               yield
                 bs
             case Right(b) :: tl =>
-              loop(tl, bs :+ b)
+              for
+                _  <- Eval.Unit
+                bs <- loop(tl, bs :+ b)
+              yield
+                bs
         loop(f(a), Nil)
       tailRecMʹ(a).value
 
@@ -46,6 +50,7 @@ def listʹ: List ~> ʹ.List =
       ls.foldRight(Nil: ʹ.List[T])(_ :: _)
 
 object Main:
+
   def main(args: Array[String]): Unit =
     println(listʹ(2 :: 4 :: 6 :: Nil))
     println(listʹ(List((1 to 10000)*)).size)

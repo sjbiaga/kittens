@@ -29,11 +29,11 @@ object Trampoline:
       f(_).flatMap(g)
 ```
 
-Re-implement `Trampoline` with `Kleisli` objects instead of arrows, via composition with method `andThen` of `Kleisli` type
-instead of the left-to-right composition of Kleisli arrows. Give a natural transformation from `Trampoline` to `cats.Eval`.
+Re-implement `Trampoline` with `Kleisli` objects instead of arrows, via composition with the `Kleisli#andThen` method instead
+of the left-to-right composition of Kleisli arrows. Give a natural transformation from `Trampoline` to `cats.Eval`.
 
-Solution
---------
+Solution - Part 1
+-----------------
 
 We introduce prior an alias for `Kleisli` `case` `class`es wrapping functions `A => Trampoline[B]`:
 
@@ -43,8 +43,8 @@ import cats.data.Kleisli
 type Kleisliʹ[A, B] = Kleisli[Trampoline, A, B]
 ```
 
-The composition with method `andThen` of `Kleisli` type requires an implicit typeclass instance of the `FlatMap` typeclass
-for `Trampoline`; for this, we anonymously instantiate the `StackSafeMonad` trait, implementing `pure` and `flatMap`:
+The composition with the `Kleisli#andThen` method requires an implicit typeclass instance of the `FlatMap` typeclass for
+`Trampoline`; for this, we anonymously instantiate the `StackSafeMonad` trait, implementing `pure` and `flatMap`:
 
 ```Scala
 import cats.StackSafeMonad
@@ -95,13 +95,16 @@ object Trampoline:
       def pure[A](a: A): Trampoline[A] =
         Trampoline.Done(a)
       def flatMap[A, B](fa: Trampoline[A])(f: A => Trampoline[B]): Trampoline[B] =
-        Trampoline.FlatMap(fa, Kleisli(f))
+        fa.flatmap(f)
 
   def pure[A](a: A): Trampoline[A] = new Done(a)
 
   object Call:
     def apply[A](thunk: => Trampoline[A]): Trampoline[A] = Call(Kleisli(_ => thunk))
 ```
+
+Solution - Part 2
+-----------------
 
 The only change is in the use of the substitute `g.run` - where `g` binds a `Kleisli` value - instead of the Kleisli arrow.
 

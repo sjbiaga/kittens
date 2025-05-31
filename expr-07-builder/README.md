@@ -7,7 +7,7 @@ An `Expr`ession Builder (cont'd)
 --------------------------------
 
 A more elaborated builder allows for a second `Int`eger parameter, that specifies how many operators with the same right hand
-side operand should be generated. For this, `List.fill(1 max n)(rhs)` yields a list of size `n` with only occurrences of
+side operand should be generated. For this, `List.fill(0 max n)(rhs)` yields a list of size `n` with only occurrences of
 `rhs`.
 
 ```Scala

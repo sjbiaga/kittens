@@ -38,12 +38,12 @@ The term parser is a method `term` of type `Parser[Expr[Int | Double]]`; we can 
 `term` is just a `factor`; operators map directly to `Mul` or `Div`:
 
 ```Scala
-  def term: Parser[Expr[Int | Double]] =
-    factor ~ ("*"|"/") ~ factor ^^ {
-      case lhs ~ "*" ~ rhs => Mul(lhs, rhs)
-      case lhs ~ "/" ~ rhs => Div(lhs, rhs)
-    } |
-    factor
+def term: Parser[Expr[Int | Double]] =
+  factor ~ ("*"|"/") ~ factor ^^ {
+    case lhs ~ "*" ~ rhs => Mul(lhs, rhs)
+    case lhs ~ "/" ~ rhs => Div(lhs, rhs)
+  } |
+  factor
 ```
 
 The factor parser is a method `factor` of type `Parser[Expr[Int | Double]]`; it can be either a `decimalNumber` or a
@@ -52,20 +52,20 @@ The factor parser is a method `factor` of type `Parser[Expr[Int | Double]]`; it 
 in a `Val`.
 
 ```Scala
-  def factor: Parser[Expr[Int | Double]] =
-    floatingPointNumber ^^ {
-      _.toDouble match
-        case 0d => Zero
-        case 1d => One
-        case n => Val(n)
-    } |
-    decimalNumber ^^ {
-      _.toInt match
+def factor: Parser[Expr[Int | Double]] =
+  floatingPointNumber ^^ { n =>
+    try
+      n.toInt match
         case 0 => Zero
         case 1 => One
         case n => Val(n)
-    } |
-    "("~> expr <~")"
+    catch _ =>
+      n.toDouble match
+        case 0d => Zero
+        case 1d => One
+        case n => Val(n)
+  } |
+  "("~> expr <~")"
 ```
 
 The `~>` combinator keeps only the _right_ result, while the `<~` combinator keeps only the _left_ result.

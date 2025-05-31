@@ -8,9 +8,8 @@ The [definition](https://scalawithcats.com/dist/scala-with-cats-1.html#what-is-a
 
 But in `Cats` is perhaps best to introduce the `Monad` trait as derived from `FlatMap` (with a `flatten` method) and
 `Applicative` (with a `pure` method) traits, given that both extend `Apply` (with an `ap` method) which extends `Functor`
-(with a `map` method): this turns any monad into an _applicative functor_. A monad inherits or implements all these five
-methods: `ap`, `flatten`, `flatMap`, `map`, `pure`, any one method - except `pure` - being definable in terms of other
-one/two/three.
+(with a `map` method). A monad inherits or implements all these five methods: `ap`, `flatten`, `flatMap`, `map`, `pure`, any
+one method - except `pure` - being definable in terms of other one/two/three.
 
 ```Scala
 // Cats’ Monad methods inter-definable in terms of each other
@@ -25,9 +24,9 @@ trait Monad[F[_]] extends FlatMap[F] with Applicative[F]:
   def map[A, B](fa: F[A])(fun: A => B): F[B] = ap(pure(fun))(fa)
 ```
 
-Type parameter `F[_]` here is a placeholder for the type (constructor) we want to implement a `Monad` typeclass instance of.
-Next is  given an instance of `Cats`’ `Monad` for `Trampoline`: it is enough to directly implement `flatMap` and `pure` by
-invoking the homologue methods in `Trampoline`, and the rest be inherited.
+The type parameter `F[_]` here is a placeholder for the type (constructor) we want to implement a typeclass instance of the
+`Monad` typeclass for. Next is given a typeclass instance of `Cats`’ `Monad` typeclass for `Trampoline`: it is enough to
+directly implement `flatMap` and `pure` by invoking the homologue methods in `Trampoline`, and the rest be inherited.
 
 ```Scala
 import cats.StackSafeMonad

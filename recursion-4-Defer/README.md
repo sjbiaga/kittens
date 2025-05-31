@@ -3,7 +3,10 @@
 Lesson 09 - Recursion (cont'd)
 ==============================
 
-The `Defer[F[_]]` trait revolves around the method:
+The `Defer[F[_]]` trait - we have seen it in use
+[here](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md),
+[here](https://github.com/sjbiaga/kittens/blob/main/nat-3-trampoline/README.md), or
+[here](https://github.com/sjbiaga/kittens/blob/main/queens-4-interpreter/README.md) - revolves around the method:
 
 ```Scala
 def defer[A](fa: => F[A]): F[A]
@@ -169,7 +172,7 @@ new Defer[Eval] {
 ```
 
 To evaluate `self` in line #c is to apply the parameter `fn` (argument `m`) at line #a to `defer(self)` from line #b: as
-before, an `Eval.Defer` instance will hold a computation not evaluated that results in `self`; after these steps, `self`
+before, an `Eval.Defer` instance will hold an unevaluated computation that results in `self`; after these steps, `self`
 becomes evaluated, but it also lurks as a `Function0` unapplied in the `Eval.Defer[Int => Int]`. When `fn` is applied to the
 latter, the function `m` will return an `Eval[Int => Int]` that captured the latter as `f`; and when `f.value` is invoked,
 the `Eval.Defer[Int => Int]` will yield `self` from line #c.

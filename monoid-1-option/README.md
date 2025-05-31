@@ -89,8 +89,11 @@ This means that combining two `Option`s happens by `get`ting the values, combini
 { ((opt1: Option[A]), (opt2: Option[A])) => wrap(unwrap(opt1) |+| unwrap(opt2)) }
 ```
 
-Of course, with this `Option` monoid we _cannot_ `get` a value from `None`. Aside being said, we can find out where does the
-automagically created monoid comes from:
+Of course, with this `Option` monoid we _cannot_ `get` a value from `None`.
+
+---
+
+Aside being said, we can find out where does the automagically created monoid comes from:
 
 ```scala
 scala> kittensMonoidForOption[Int]
@@ -115,6 +118,8 @@ We can see that the `catsInvariantMonoidalSemigroup` value is a typeclass instan
 `Invariant` functor (meaning `Semigroup` _is_ an `Invariant` - monoidal - functor), which we mentioned in
 [Lesson 03 - `Expr` as `Functor`](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md#expr-as-functor). The
 magic is thus in lines #5-#6, specifically `f(fa.combine(g(x), g(y)))`: `g` represents unwrapping, while `f` - the wrapping.
+
+---
 
 The runtime error is due to _unwrapping_: we must check for `None` and use `M.empty` rather than `None.get`:
 

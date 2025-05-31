@@ -445,7 +445,11 @@ implicit val kittensʹListMonad: Monad[ʹ.List] =
               yield
                 bs
             case Right(b) :: tl =>
-              loop(tl, bs :+ b)
+              for
+                _  <- Eval.Unit
+                bs <- loop(tl, bs :+ b)
+              yield
+                bs
         loop(f(a), Nil)
       tailRecMʹ(a).value
 ```
@@ -530,18 +534,24 @@ override def tailRecM[A, B](a: A)(f: A => List[Either[A, B]]): List[B] =
         case Left(a) :: tl =>
           tailRecMʹ(a) >>= { bsʹ => loop(tl, bs ::: bsʹ) }                // line #b
         case Right(b) :: tl =>
-          loop(tl, bs :+ b)
+          loop(tl, bs :+ b)                                               // line #c
     loop(f(a), Nil)
   tailRecMʹ(a).value
 ```
 
-6. Still, we have not eliminated the recursive call, which must be trampolined by changing line #b into:
+6. Still, we have not eliminated the recursive call(s), which must be trampolined by changing line #b into:
 
 ```Scala
-Eval.unit >> tailRecMʹ(a) >>= { bsʹ => loop(tl, bs ::: bsʹ) }
+Eval.Unit >> tailRecMʹ(a) >>= { bsʹ => loop(tl, bs ::: bsʹ) }
 ```
 
-Now we can rewrite the sequence of `flatMap`s as a `for`-comprehension.
+7. We do the same for line #c:
+
+```Scala
+Eval.Unit >> loop(tl, bs :+ b)
+```
+
+Now we can rewrite the two sequences of `flatMap`s as `for`-comprehensions.
 
 As to the natural transformations, in either direction, we can use `foldRight`, which is stack safe; but in the forward
 direction we already have the `toList` method:

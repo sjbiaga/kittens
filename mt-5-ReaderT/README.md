@@ -354,7 +354,7 @@ type Readerʹ[A, B] = ReaderT[[α] =>> Yoneda[Id, α], A, B]
 type Exprʹʹ[T] = Readerʹ[String, Expr[T]]
 ```
 
-"optimize" the `Builder` by using the `Yoneda[Id, *]` context instead of `Id[*]`; give a `FlatMap[Yoneda[F, *]]` typeclass
+"optimize" the `Builder` by using the `Yoneda[Id, *]` context instead (of `Id[*]`); give a `FlatMap[Yoneda[F, *]]` typeclass
 instance:
 
 ```Scala

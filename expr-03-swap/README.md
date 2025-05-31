@@ -60,8 +60,8 @@ Natural Transformations: Swapping the Additive with the Multiplicative
 
 Category Theory is quite abstract, and the more advanced notions are introduced, the more difficult they get. Natural
 transformations are known as morphisms of functors. In `Cats`, they are available in the package `cats.arrow`, as the
-higher-kinded `FunctionK` trait of kind `(* -> *, * -> *) -> *`, also written `~>`. Given two functors `F[_]` and `G[_]`, it
-defines a `SAM` method `apply[A](fa: F[A]): G[A]`.
+higher-kinded [`FunctionK`](https://typelevel.org/cats/datatypes/functionk.html) trait of kind `(* -> *, * -> *) -> *`, also
+written `~>`. Given two functors `F[_]` and `G[_]`, it defines a `SAM` method `apply[A](fa: F[A]): G[A]`.
 
 Nevertheless, a very straightforward "function" or natural transformation of signature `Expr ~> Expr` is that of swapping the
 additive and the multiplicative parts with one another: by pattern-matching on the parameter `expr: Expr[T]`, we can swap
@@ -84,7 +84,9 @@ val swap: Expr ~> Expr =
         case it            => it
 ```
 
-Note that applying `swap` _twice_ is the identity natural transformation.
+Note that applying `swap` _twice_ is the
+[identity](https://typelevel.org/cats/api/cats/arrow/FunctionK$.html#id[F[_]]:cats.arrow.FunctionK[F,F])
+natural transformation.
 
 Since swapping can be performed otherwise without the appearance of a natural transformation, it raises the question as to
 why use a natural transformation. Many `trait`s in `Cats` have a `mapK` method with a natural transformation as parameter.

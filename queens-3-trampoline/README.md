@@ -43,7 +43,7 @@ quite the opposite, we want to use the result when we want it (especially not fr
 so we intend to add a block as a second parameter to `Call`, thus _delaying_ and relaying the use to the function.
 
 ```Scala
-// A failed intent to reach stack safety
+// A failed attempt to reach stack safety
 
 case class Call[T](closure: () => Trampoline[T], block: T => Trampoline[T]) extends Trampoline[T]
 
@@ -91,6 +91,7 @@ parameterized with a “`block: A => Trampoline[B]`”,
 sealed abstract trait Trampoline[+A]:
   def flatMap[B](block: A => Trampoline[B]): Trampoline[B] = ???
 object Trampoline:
+  case class Done[A](a: A) extends Trampoline[A]
   case class Call[A](closure: () => Trampoline[A]) extends Trampoline[A]
 ```
 
@@ -108,7 +109,7 @@ def method(arg1, arg2, ...): Trampoline[T] = // translation
       }
       ...
     }
-}
+  }
 ```
 
 What `flatMap` does here is that it indroduces a _delay_ between the capture of the closure and its use: _compiling_, in
@@ -151,13 +152,32 @@ a method `map` defined in terms of `flatMap`:
 final def map[B](fun: A => B): Trampoline[B] = this.flatMap(fun andThen pure)
 ```
 
+To understand the signature of `flatMap`, note that - with `flatMap` and `map` -, `Scala` actually translates the above
+`for`-comprehension as:
+
+```Scala
+def method(arg1, arg2, ...): Trampoline[T] = // translation
+  Call { () => <closure1> }.flatMap { (res1: T) =>
+    ...
+    Call { () => <closureN_1> }.flatMap { (resN_1: T) =>  // line #a
+      Call { () => <closureN> }.map { (resN: T) =>        // line #b
+        combine(resK*): T                                 // line #c
+      }: Trampoline[T]                                    // line #d
+    }
+    ...
+  }
+```
+
+where it can be seen that `map` (lines #b-#c) applies to the function argument `{ (resN: T) => combine(resK*): T }`, returning
+a `Trampoline[T]`, whereas `flatMap` (lines #a-#d) applies to the function argument `{ (resN_1: T) => #b-#c: Trampoline[T] }`.
+
 `Trampoline` `Monad`
 --------------------
 
 So the final code for the `Trampoline` is given below. In the `apply` method, "`closure :: sequel`" and "`prequel :: sequel`"
 are compositions of two functions via `flatMap`. This extension method (`::`) is defined in the companion object. The line
 `prequel(_).flatMap(sequel)` is an anonymous function, standing for `{ a => prequel(a).flatMap(sequel) }`: if passed the
-argument `a`, it obtains a `Trampoline` and with it as the receiver it compiles into the state `FlatMap(prequel(a), sequel)`.
+argument `a`, it obtains a `Trampoline` and with it as the receiver it compiles into the state `FlatMap(prequel(a), sequel)`:
 
 ```Scala
 enum Trampoline[+A]:
@@ -205,19 +225,19 @@ case FlatMap(outer @ FlatMap(inner, prequel), sequel) => FlatMap(inner, prequel 
 
 We know that `FlatMap` states result straight from calls to `flatMap`; hence, reverse engineering the pattern-matching in
 line #e, this resulted from `outer.flatMap(sequel)`; but, given that `outer` is `FlatMap(inner, prequel)`, line #e further
-resulted from
+resulted from:
 
 ```Scala
 inner.flatMap(prequel).flatMap(sequel)
 ```
 
-Thus, going the other way around, the pattern-matching transforms into
+Yet, going the other way around, the pattern-matching transforms into:
 
 ```Scala
 FlatMap(inner, prequel :: sequel)
 ```
 
-which is another saying for
+which is another saying for:
 
 ```Scala
 inner.flatMap(prequel :: sequel)
@@ -232,6 +252,7 @@ the first place? Definitely _not_ from a translation of a `for`-comprehension! C
 for
   x <- outer
   y <- inner
+  ...
 yield
   ...
 ```
@@ -246,8 +267,13 @@ outer.flatMap { x =>
 }
 ```
 
-which results in `FlatMap(outer, { x => FlatMap(inner { y => ... }) })`. This definitely does not pattern-match in line #e!
-Yet, this does not stop somebody from writing:
+which results in:
+
+```Scala
+FlatMap(outer, { x => FlatMap(inner, { y => ... }) })
+```
+
+This definitely does not pattern-match in line #e! Although, it does not stop someone from writing:
 
 ```Scala
 Done(())
@@ -306,18 +332,20 @@ compiled one after the other:
 ```Scala
 Call { _ => tqueens(k, q.row x q.col + 1) }
 .flatMap { _ =>
-  Call { _ => if !board(q.row)(q.col) then tqueens(k-1, q.row x q.col + 1)(currentSolution :+ q)
+  Call { _ => if !board(q.row)(q.col)
+              then tqueens(k-1, q.row x q.col + 1)(currentSolution :+ q)
               else Done(()) }
   .map { _ => () }
 }
 ```
 
 There are no recursive invocations! So let us compile this program into a state of the `FSM` (note that the `if-then-else` in
-the block cannot be yet evaluated because it occurs in a function body not yet applied the argument to):
+the block cannot be yet evaluated because it occurs in a function body not yet applied to the argument):
 
 ```Scala
 FlatMap(Call { _ => tqueens(k, q.row x q.col + 1) }, { _ =>
-  Call { _ => if !board(q.row)(q.col) then tqueens(k-1, q.row x q.col + 1)(currentSolution :+ q)
+  Call { _ => if !board(q.row)(q.col)
+              then tqueens(k-1, q.row x q.col + 1)(currentSolution :+ q)
               else Done(())
        }.map { _ => () }
 })
@@ -328,7 +356,8 @@ again, we obtain:
 
 ```Scala
 FlatMap(Done(()), { _ =>
-  Call { _ => if !board(q.row)(q.col) then tqueens(k-1, q.row x q.col + 1)(currentSolution :+ q)
+  Call { _ => if !board(q.row)(q.col)
+              then tqueens(k-1, q.row x q.col + 1)(currentSolution :+ q)
               else Done(())
        }.map { _ => () }
 })
@@ -337,7 +366,8 @@ FlatMap(Done(()), { _ =>
 which in turn - by line #c - reduces to:
 
 ```Scala
-Call { _ => if !board(q.row)(q.col) then tqueens(k-1, q.row x q.col + 1)(currentSolution :+ q)
+Call { _ => if !board(q.row)(q.col)
+            then tqueens(k-1, q.row x q.col + 1)(currentSolution :+ q)
             else Done(())
      }.map { _ => () }
 ```
@@ -346,13 +376,14 @@ which further compiles to:
 
 ```Scala
 FlatMap(
-  Call { _ => if !board(q.row)(q.col) then tqueens(k-1, q.row x q.col + 1)(currentSolution :+ q)
+  Call { _ => if !board(q.row)(q.col)
+              then tqueens(k-1, q.row x q.col + 1)(currentSolution :+ q)
               else Done(()) }
 , { _ => () } andThen pure
 )
 ```
 
-which in turn - by line #d and by assuming `board(q.row)(q.col)` be true - reduces to:
+which in turn - by line #d and assuming `board(q.row)(q.col)` be true - reduces to:
 
 ```Scala
 Done(()).flatMap({ _ => () } andThen pure)

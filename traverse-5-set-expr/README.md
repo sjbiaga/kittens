@@ -754,7 +754,7 @@ When this `Eval.Defer` is `evaluate`d in the loop, it will invoke `foldRightʹ` 
 case Zero => fun(`0ʹ`.zero, lbʹ @ Eval.defer { foldRightʹ(One, Eval.defer { foldRightʹ(Val(2d), Eval.now(0d)) }) })
 ```
 
-When `fun` is applied  to `0d` and `lbʹ`, it will result in `lbʹ.map(0d + _)`, which is compiled to:
+When `fun` is applied to `0d` and `lbʹ`, it will result in `lbʹ.map(0d + _)`, which is compiled to:
 
 ```Scala
 FlatMap(Eval.Defer { () => foldRightʹ(One, Eval.defer { foldRightʹ(Val(2d), Eval.now(0d)) }) }

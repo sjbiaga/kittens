@@ -52,20 +52,25 @@ object Trampoline:
 
   object Call:
     def apply[A](thunk: => Trampoline[A]): Trampoline[A] = Call { _ => thunk }
+
+implicit val kittensTrampolineDeferInstance: Defer[Trampoline] =
+  new Defer[Trampoline]:
+    override def defer[A](fa: => Trampoline[A]): Trampoline[A] = Trampoline.Call(fa)
 ```
 
 and that of a `MonadInterpreter` which wraps the nested singleton object that implements `Trampoline.Visitor[M]`:
 
 ```Scala
-import cats.Monad
+import cats.{ Defer, Monad }
 import cats.syntax.all._
 
-class MonadInterpreter[M[_]: Monad]:
-  val M = implicitly[Monad[M]]
+class MonadInterpreter[M[_]: Monad: Defer]:
+  val M = Monad[M]
+  val D = Defer[M]
   object TrampolineInterpreter extends Trampoline.Visitor[M]:
     def done[A](value: A): M[A] = M.pure(value)
     def fMap[A, B](self: Trampoline[A], cont: A => Trampoline[B]): M[B] =
-      M.flatMap(apply(self))(cont andThen apply)
+      M.flatMap(D.defer(apply(self)))(cont andThen apply)
 ```
 
 We will require also the following imports:
@@ -115,7 +120,7 @@ def queens[M[_]: Monad](using M: Long, board: Board): M[Unit] =
       yield
         ()
   val I = MonadInterpreter[M].TrampolineInterpreter
-  I.apply(tqueens(board.N, 0 x 0)(Nil))
+  I.apply(kittensTrampolineDeferInstance.defer(tqueens(board.N, 0 x 0)(Nil)))
 ```
 
 with the exception that the outer `queens` method instantiates an interpreter:
@@ -124,10 +129,10 @@ with the exception that the outer `queens` method instantiates an interpreter:
 val I = MonadInterpreter[M].TrampolineInterpreter
 ```
 
-and applies it to the very first return - _compiled_ - value of `tqueens`:
+and applies it to the very first return - to be _compiled_, now just _deferred_ - value of `tqueens`:
 
 ```Scala
-I.apply(tqueens(board.N, 0 x 0)(Nil))
+I.apply(kittensTrampolineDeferInstance.defer(tqueens(board.N, 0 x 0)(Nil)))
 ```
 
 Thereafter, we can invoke `queens` with whatever monad instance we have in scope:
@@ -139,8 +144,8 @@ given Long = 2 // max number of solutions
 def qEval = try queens[Eval].value catch MaxSolutionsReached => ()
 def qTailRec = try queens[TailRec].result catch MaxSolutionsReached => ()
 def qIO = try queens[IO].unsafeRunSync() catch MaxSolutionsReached => ()
-def qCatsTrampoline = try queens[CatsTrampoline].runTailRec()() catch MaxSolutionsReached => ()
-def qId = try queens[Id] catch MaxSolutionsReached => ()
+def qCatsTrampoline = try { val f = queens[CatsTrampoline].runTailRec; f() } catch MaxSolutionsReached => ()
+//def qId = try queens[Id] catch MaxSolutionsReached => ()
 ```
 
 which will translate from `Trampoline` low-level language to monad's high-level tiny - `pure` and `flatMap` - language; as
@@ -176,9 +181,9 @@ qTailRec
 qIO
 qCatsTrampoline
 qTrampoline
-qId
+//qId
 ```
 
-The last - `qId` -, however, is _not stack safe_.
+The last - `qId` -, however, is _not stack safe_, and, hence, it does not have a `Defer[Id]` typeclass instance.
 
 [First](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/nat-3-trampoline/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-simplify/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/nat-4-list/README.md)

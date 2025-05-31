@@ -119,12 +119,12 @@ Let us analyze from where the initial invocation to `hqueens` occurs:
 Call { hqueens(board.N, 0 x 0)(Nil) }.call
 ```
 
-The expression inside the braces is the closure/thunk, and it is just a value, it does nothing besides becoming the parameter
-to the `Call` `case class`. At the moment the `call` method is invoked for a receiver of type `Call`, the closure is
-evaluated in line #14. This implies a call to `hqueens` which will likely pass through lines #b-#e. There are two closures
-that must be returned, so answering (2), these must be _sequenced_. Hence the need for the `More` `case class` in line #19:
-upon pattern-matching as the `heap` variable in line #06, the second invocation of the `call` method will have a receiver of
-type `More`.
+The expression inside the braces is the closure/thunk, and it is just an unevaluated value, it does nothing besides becoming
+the function parameter to the `Call` `case class`. At the moment the `call` method is invoked for a receiver of type `Call`,
+the closure is evaluated in line #14. This implies a call to `hqueens` which will likely pass through lines #b-#e. There are
+two closures that must be returned, so answering (2), these must be _sequenced_. Hence the need for the `More` `case class`
+in line #19: upon pattern-matching as the `heap` variable in line #06, the second invocation of the `call` method will have a
+receiver of type `More`.
 
 Now, because the head element in the sequence is likely to be a `Call` object, a second pass through lines #b-#e will return
 an object of type `More`. So answering (1), in line #24, the more recent calls (`it.calls`) are prepended to the earlier

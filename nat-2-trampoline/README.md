@@ -76,7 +76,7 @@ val kittensTrampolineToTailRec: Trampoline ~> TailRec =
       ta match
         case Done(a)       => done(a)
         case Call(g)       => tailcall(apply(g(())))
-        case FlatMap(s, g) => apply(s).flatMap(g andThen apply)
+        case FlatMap(s, g) => tailcall(apply(s)).flatMap(g andThen apply)
 
 kittensTrampolineToTailRec.apply(fibonacci(15)).result
 ```
@@ -101,7 +101,7 @@ val kittensTrampolineToCatsTrampoline: Trampoline ~> CatsTrampoline =
       ta match
         case Done(a)       => Free.pure(a)
         case Call(g)       => Free.defer(apply(g(())))
-        case FlatMap(s, g) => apply(s).flatMap(g andThen apply)
+        case FlatMap(s, g) => Free.defer(apply(s)).flatMap(g andThen apply)
 
 kittensTrampolineToCatsTrampoline.apply(fibonacci(15)).runTailRec()()
 ```
@@ -118,28 +118,45 @@ val kittensTrampolineToCatsEval: Trampoline ~> Eval =
       ta match
         case Done(a)       => Eval.now(a)
         case Call(g)       => Eval.defer(apply(g(())))
-        case FlatMap(s, g) => apply(s).flatMap(g andThen apply)
+        case FlatMap(s, g) => Eval.defer(apply(s)).flatMap(g andThen apply)
 
 kittensTrampolineToCatsEval.apply(fibonacci(15)).value
 ```
 
-Are these three evaluations of `fibonacci` stack safe? It is true that the implementations of the `apply` methods are
-recursive. If we proceed our analysis by cases,
+Are these three natural transformations stack safe? To answer this question positively, let us try a counterexample:
+
+```Scala
+def rec(n: Int): Trampoline[Int] = if n == 0 then Done(0) else rec(n-1).flatMap(rec)
+```
+
+that for `rec(10000)` generates a lot of `FlatMap` methods that _even_ the `toString` method raises the
+`java.lang.StackOverflowError` exception (for a higher order, `rec(100000)` raises this exception without returning). However,
+neither of the following:
+
+```Scala
+kittensTrampolineToTailRec.apply(rec(10000)).result
+kittensTrampolineToCatsTrampoline.apply(rec(10000)).runTailRec()()
+kittensTrampolineToCatsEval.apply(rec(10000))).value
+```
+
+raises this exception. The implementations of the `apply` methods are recursive. If we proceed our analysis by cases,
 
 1. `case Done(a)` involves no recursion.
 
 1. `case Call(g)` binds `g` to a closure `Unit => Trampoline[A]`; respectively, `tailcall`, `Free.defer`, and `Eval.defer`
    do all pass the thunk parameter - `apply(g(()))` - `by-name`, and in fact _compile_ it - we know this already - to a
-   state of a `FSM`. So not only `fibonacci` had introduced the `FSM` state `Call(g)`, but also, respectively, `tailcall`,
+   state of a `FSM`. So not only `rec` had introduced the `FSM` state `Call(g)`, but also, respectively, `tailcall`,
    `Free.defer`, and `Eval.defer` do. When it is the turn of the thunk, `g(())` will return a new state, after which the
    `apply` method will process it next.
 
-1. `case FlatMap(s, g)` transforms the source `s`, and then invokes the `flatMap` method upon, which in all three cases is
-   known to compile to a `FlatMap`-like state. `apply` occurs a third time as part of the composition `g andThen apply`, but
-   virtually (pattern-matching might not even reach it).
+1. `case FlatMap(s, g)` transforms the source `s`, but wrapped in, respectively, `tailcall`, `Free.defer`, and `Eval.defer`,
+   which all pass the thunk parameter - `apply(s)` - `by-name`, and in fact _compile_ it - idem - to a state of a `FSM`. But
+   then invokes the `flatMap` method upon, which in either, respective, case, is known to compile to a `FlatMap`-like state.
+   `apply` occurs a third time as part of the composition `g andThen apply`, but _delayed_ (pattern-matching might not even
+   reach it).
 
-the answer is _twice_ yes: the source `Trampoline` is stack safe anyway, and the target, respectively, `TailRec`,
-`CatsTrampoline`, and `Eval`, is anyway too.
+the answer is _thrice_ yes: (1) the source `Trampoline` is stack safe anyway, and (2) the target, respectively, `TailRec`,
+`CatsTrampoline`, and `Eval`, is anyway too, yet (3) the implementations of the transformations are careful to be so as well.
 
 Note that there are two `FSM`s involved: the source of the natural transformation, i.e., `Trampoline`, and, the target, i.e.,
 respectively, `TailRec`, `CatsTrampoline`, and `Eval`.
