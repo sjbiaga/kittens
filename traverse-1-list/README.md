@@ -43,14 +43,14 @@ trait Apply[G[_]] extends ... {
 }
 ```
 
-`Tuple2.apply[A, B].curried` is just the function `f: A => (B => (A, B)) = { (a: A) => ((b: B) => (a, b): (A, B)) }`, and - as
+`Tuple2.apply[A, B].curried` is just the function `e: A => (B => (A, B)) = { (a: A) => ((b: B) => (a, b): (A, B)) }`, and - as
 it is the second parameter to `map(ga)(#2)` -, line #a:
 
 ```Scala
 ap(map(ga)(Tuple2.apply[A, B].curried))(gb)
 //         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //         second parameter to map, a
-//         function f: A => (B => (A, B))
+//         function e: A => (B => (A, B))
 //                           ^^^^^^^^^^^
 //                           function h
 ```
@@ -233,12 +233,12 @@ package instances
 object option {
   implicit val catsStdInstancesForOption: Applicative[Option] & ... =
     new Applicative[Option] with ... =
-      override def map2Eval[A, B, Z](fa: Option[A], lfb: Eval[Option[B]])(f: (A, B) => Z): Eval[Option[Z]] =
+      override def map2Eval[A, B, Z](fa: Option[A], lfb: Eval[Option[B]])(f2: (A, B) => Z): Eval[Option[Z]] =
         fa match {
           case None => Eval.Now(None)        // line #n
           case Some(a) =>
             lfb.map {                        // further compilation in Eval
-              case Some(b) => Some(f(a, b))
+              case Some(b) => Some(f2(a, b))
               case None    => None
             }
         }
@@ -249,7 +249,7 @@ In line #n above, there is no mention of the `lfb` `Eval` - hence, the terminati
 
 Type `A` is `Int`, while `B` and `Z` in this case are both `List[Int]`.
 
-Function `f` is either the "cons" (`::`) operator on `List`s or the concatenation operator (`++`) on `Chain`s.
+Function `f2` is either the "cons" (`::`) operator on `List`s or the concatenation operator (`++`) on `Chain`s.
 
 However, the `Applicative` may also choose to collect _all_ failures, in a typeclass instance for the `Semigroup` typeclass,
 for instance `Semigroup[Vector[Int]]` - the case of `Validated`:

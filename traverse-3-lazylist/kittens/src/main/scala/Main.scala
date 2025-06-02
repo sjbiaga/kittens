@@ -20,18 +20,12 @@ implicit val kittensLazyListTraverse: Traverse[LazyList] =
       then
         lb
       else
-        val rhs = Eval
-          .defer {
-            Eval
-              .now(fa.tail)
-              .flatMap {
-                foldRight(_, lb)(f)
-              }
-          }
+        val rhs = Eval.defer { foldRight(fa.tail, lb)(f) }
         f(fa.head, rhs)
     override def foldLeft[A, B](fa: LazyList[A], b: B)(f: (B, A) => B): B = ???
 
 object Main:
+
   def main(args: Array[String]): Unit =
     try
 
@@ -40,6 +34,25 @@ object Main:
 
       println {
         fibonacci(0, 1).take(4).traverse[cats.Id, Long](identity).toList
+      }
+
+      println {
+        try
+          val T = kittensLazyListTraverse
+          lazy val rec: (Long, Eval[Long]) => Eval[Long] =
+            { (a, lb) => T.foldRight(LazyList(a), lb)(rec) }
+          T.foldRight(LazyList(0L), Eval.later(???))(rec).value
+        catch
+          case _: StackOverflowError =>
+            "not stack safe!"
+      }
+
+      println {
+        import cats.instances.lazyList._
+        val T = implicitly[Traverse[LazyList]]
+        lazy val rec: (Long, Eval[Long]) => Eval[Long] =
+          { (a, _) => T.foldRight(LazyList(a), Eval.now(a))(rec) }
+        T.foldRight(LazyList(0L), Eval.now(0L))(rec).value
       }
 
     catch

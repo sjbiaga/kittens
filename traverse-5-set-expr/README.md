@@ -842,9 +842,9 @@ FlatMap(Eval.now(0d)
 Too this `evaluate` can pattern match (and continue to loop):
 
 ```Scala
-(((2d + _) andThen Now(_))
+(((2d + _) andThen Now(_)).apply(0d))
    .flatMap(((1d + _) andThen Now(_))
-              .flatMap((0d + _) andThen Now(_)))).apply(0d)
+              .flatMap((0d + _) andThen Now(_)))
 ```
 
 The computation continues by applying `0d`:
@@ -866,8 +866,8 @@ FlatMap(Eval.Now(2d)
 Now this `evaluate` can pattern match (and continue to loop):
 
 ```Scala
-(((1d + _) andThen Now(_))
-   .flatMap((0d + _) andThen Now(_))).apply(2d)
+(((1d + _) andThen Now(_)).apply(2d))
+   .flatMap((0d + _) andThen Now(_))
 ```
 
 The computation continues by applying `2d`:

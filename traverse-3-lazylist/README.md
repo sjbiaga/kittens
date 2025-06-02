@@ -16,17 +16,17 @@ package object instances {
   object lazylist {
     implicit val catsStdInstancesForLazyList: Traverse[LazyList] & ... =
       new Traverse[LazyList] with ... {
-        def traverse[G[_], A, B](fa: LazyList[A])(f: A => G[B])(implicit G: Applicative[G]): G[LazyList[B]] =
+        def traverse[G[_], A, B](fa: LazyList[A])(g: A => G[B])(implicit G: Applicative[G]): G[LazyList[B]] =
           foldRight(fa, Eval.always(G.pure(LazyList.empty[B]))) { (a, lgsb) =>
-            G.map2Eval(f(a), lgsb)(_ #:: _)
+            G.map2Eval(g(a), lgsb)(_ #:: _)                      // line #a
           }.value
         def foldRight[A, B](fa: LazyList[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
-          Eval.now(fa).flatMap { s =>                            // line #a
-            if (s.isEmpty)                                       // line #b
-              lb
+          Eval.now(fa).flatMap { s =>                            // line #b
+            if (s.isEmpty)                                       // line #c
+              lb                                                 // line #d
             else {
-              val rhs = Eval.defer { foldRight(s.tail, lb)(f) }  // line #c
-              f(s.head, rhs)                                     // line #d
+              val rhs = Eval.defer { foldRight(s.tail, lb)(f) }  // line #e
+              f(s.head, rhs)                                     // line #f
             }
           }
       }
@@ -87,7 +87,7 @@ scala> fibonacci(0, 1).traverse[Id, Int](identity) // never halts, user presses 
 
 In the method `traverse`, a resulting `LazyList` is reconstructed in a `foldRight` traversal, from the applications of `f` to
 its items; the result is actually `G[LazyList[B]]`, because of a precondition (1), an invariant (2), a constant (3), and an
-optimisation (4):
+optimization (4):
 
 1. the empty list can be _lifted_ in the `G` context via `G.pure`;
 
@@ -99,91 +99,61 @@ optimisation (4):
 1. `G.map2Eval` is chosen over `G.map2`, to favour _laziness_, with its advantages: _fail fast_ semantics and trampolined
    _stack safety_.
 
-The use of `foldRight` is implied by (4) because `Eval`s are found in its very definition, but it requires three neat tricks
+The use of `foldRight` is implied by (4) because `Eval`s are found in its very definition, but it requires two neat tricks
 to _avoid_ eager access to the `tail`:
 
-5. it _delays_ its execution by sanitizing with a `FlatMap` (line #a);
+5. it evades _pattern matching_ with `#::` by checking termination with `isEmpty` (line #c);
 
-5. it evades _pattern matching_ with `#::` by checking termination with `isEmpty` (line #b);
+5. it _programs_ the "recursive" call for the `tail` (line #e).
 
-5. it _programs_ the "recursive" call for the `tail` (line #c) rather than relaying to (5).
-
-Of course, without _both_ (5) and (7), `foldRight` would be a recursive algorithm without any guard for accessing the `tail`,
-and so - without even the need of invoking `Eval#value` - it could blow up the stack.
-
-The delay in line #a is _eager_ - because the receiver to `flatMap` is an `Eval.now`. Therefore, case (7) - wrapping the
-"recursive" call to `foldRight` in an `Eval.defer` - cannot be avoided because otherwise it would violate case (6):
+Of course, without case (6), `foldRight` would be a recursive algorithm with no guard for accessing the `tail`. Therefore,
+case (6) - wrapping the "recursive" call to `foldRight` in an `Eval.defer` - cannot be avoided because otherwise it would 
+violate case (5):
 
 ```Scala
-import cats.{ Applicative, Eval, Traverse }
-
-implicit val kittensLazyListTraverse: Traverse[LazyList] =
-  new Traverse[LazyList]:
-    def traverse[G[_], A, B](fa: LazyList[A])(f: A => G[B])(implicit G: Applicative[G]): G[LazyList[B]] =
-      foldRight(s, Eval.always(G.pure(LazyList.empty[B]))) { (a, lgsb) =>
-        G.map2Eval(f(a), lgsb)(_ #:: _)
-      }.value
-    def foldRight[A, B](fa: LazyList[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
-      Eval.now(fa).flatMap {
-        case head #:: tail =>               // must be avoided,
-          val rhs = foldRight(tail, lb)(f)  // using Eval.defer
-          f(head, rhs)
-        case _             =>
-           lb
-      }
+def foldRight[A, B](fa: LazyList[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
+  Eval.now(fa).flatMap {
+    case head #:: tail =>               // must be avoided,
+      val rhs = foldRight(tail, lb)(f)  // using Eval.defer
+      f(head, rhs)
+    case _             =>
+      lb
+  }
 ```
 
-It remains to see the rationale behind case (5); we can re-implement equivalently `kittensLazyListTraverse` by surrounding the
-("recursive") calls to `foldRight` within `Eval.now(_).flatMap`:
+The `Eval#flatMap` in line #b is there because, whereas the recursive invocation in line #e is stack safe, that is, `rhs` is
+stack safe, the invocation of `f(s.head, rhs)` in line #f is not. For, consider the following infinite `rec`ursion involving
+`foldRight`:
 
 ```Scala
-import cats.{ Applicative, Eval, Traverse }
+import cats.instances.lazyList._
 
-implicit val kittensLazyListTraverse: Traverse[LazyList] =
-  new Traverse[LazyList]:
-    def traverse[G[_], A, B](fa: LazyList[A])(g: A => G[B])(implicit G: Applicative[G]): G[LazyList[B]] =
-      Eval.now(fa).flatMap { s =>
-        foldRight(s, Eval.always(G.pure(LazyList.empty[B]))) { (a, lgsb) =>
-          G.map2Eval(g(a), lgsb)(_ #:: _)  // line #08
-        }
-      }.value                              // line #10
-    def foldRight[A, B](fa: LazyList[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
-      if fa.isEmpty                        // line #12
-      then
-        lb
-      else
-        val rhs = Eval                     // line #16
-          .defer {                         // line #17
-            Eval                           //
-              .now(fa.tail)                // line #19
-              .flatMap {                   // line #20
-                foldRight(_, lb)(f)        // line #21
-              }
-          }
-        f(fa.head, rhs)                    // line #24
+val T = implicitly[Traverse[LazyList]]
+
+lazy val rec: (Long, Eval[Long]) => Eval[Long] =
+  { (a, _) => T.foldRight(LazyList(a), Eval.now(a))(rec) }
+
+T.foldRight(LazyList(0L), Eval.later(???))(rec).value
 ```
 
-Thus, `foldRight` has been sanitized at the call site: for the "recursive" case (lines #16-#24), an `Eval.FlatMap` is always
-"wrapped" inside an `Eval.defer` (line #17). The role of line #19 is to _force_ the `tail` "now", while that of lines #20-#21
-is to _delay_ the "recursive" call to `foldRight` (for "later"), hence trampolining it in line #21.
+Were it not for the use of `Eval#flatMap` in line #b, the recursive invocation to `rec` in line #f would blow up the stack.
 
-The second argument `rhs` to `f` (line #24) is assigned in line #16 to _program_ this compilation.
-
-There is a cooperation between line #08 and line #24: applying `f` in line #24 yields control to line #08; the latter further
+There is a cooperation between line #a and line #f: applying `f` in line #f yields control to line #a; the latter further
 compiles the second argument program (`rhs`) - instructing it to "cons"truct (`#::`) a `LazyList` -, and yields _it_ back to
-the former, which will be the return value of `foldRight`. It is time for `evaluate` to take control (back): the trampolined
-"recursive" call in line #21 will be invoked, at some point. (The first time `Eval#value` is invoked - line #10 -, `evaluate`
-is _given_ control.)
+the former, which will be the return value of `foldRight`. It is the turn of `evaluate` to take control (back): the deferred
+"recursive" call in line #e will be invoked, at some point. (The first time `Eval#value` is invoked, `evaluate` is _given_
+control.)
 
 For `LazyList`, there is _only one_ possible iteration mode: from _left to right_; however, we must build a `LazyList` by
 "cons"-ing from _right to left_, starting from the empty `LazyList`, without using the real stack.
 
-When `fa.isEmpty` (line #12), we are in the _last_ invocation to `foldRight`: `lb`, when `evaluate`d, it yields the empty
+When `s.isEmpty` (line #c), we are in the _last_ invocation to `foldRight`: `lb`, when `evaluate`d, it yields the empty
 `LazyList[B]`, lifted into `G`. The items - mapped through `g: A => G[B]` - are "cons"ed in the reverse order, resulting in
 the original order, while achieving _right to left_ folding.
 
 If the `LazyList` is finite, `foldRight` will yield a value of type `G[LazyList[B]]` when `value` is invoked upon the result.
-Otherwise, the heap will keep getting bigger, without ever _re"cons"tructing_ a `LazyList`.
+Otherwise, the heap will keep getting bigger, without ever _re"cons"tructing_ a `LazyList`, unless both `G` had a fail fast
+semantics and some `g(a)` in line #a short-circuited.
 
 Exercise 07.3
 -------------
@@ -257,301 +227,22 @@ implicit val kittensLazyListTraverseʹ: Traverseʹ[LazyList] =
     def traverseʹ[G[_], A, B](ga: LazyList[A])(g: A => G[B])(implicit G: Applicativeʹ[G]): G[LazyList[B]] =
       Trampoline.pure(ga).flatMap { s =>
         foldRightʹ(s, Trampoline.pure(G.pure(LazyList.empty[B]))) { (a, lgsb) =>
-          G.map2Trampoline(g(a), lgsb)(_ #:: _)  // line #08
+          G.map2Trampoline(g(a), lgsb)(_ #:: _)
         }
-      }()                                        // line #10
+      }()
     def foldRightʹ[A, B](fa: LazyList[A], lb: Trampoline[B])(f: (A, Trampoline[B]) => Trampoline[B]): Trampoline[B] =
-      if fa.isEmpty                              // line #12
-      then
-        lb
-      else
-        val rhs =                                // line #16
-          Call {                                 // line #17
-            Trampoline
-              .pure(fa.tail)                     // line #19
-              .flatMap {                         // line #20
-                foldRightʹ(_, lb)(f)             // line #21
-              }
-          }
-        f(fa.head, rhs)                          // line #24
+      Trampoline.pure(fa).flatMap { s =>
+        if s.isEmpty
+        then
+          lb
+        else
+          val rhs = Call(foldRightʹ(s.tail, lb)(f))
+          f(s.head, rhs)
+      }
 
     override def traverse[G[_]: Applicative, A, B](fa: LazyList[A])(f: A => G[B]): G[LazyList[B]] = ???
     override def foldLeft[A, B](fa: LazyList[A], b: B)(f: (B, A) => B): B = ???
     override def foldRight[A, B](fa: LazyList[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] = ???
-```
-
-With `foldRightʹ` sanitized at the call site, for the "recursive" case (lines #16-#24), a `FlatMap` is always "wrapped"
-inside a `Call` (line #17). The role of line #19 is to _force_ the `tail` "now", while that of lines #20-#21 is to _delay_
-the "recursive" call to `foldRightʹ` (for "later"), hence trampolining it in line #21.
-
-The second argument `rhs` to `f` (line #24) is assigned in line #16 to _program_ this compilation.
-
-There is a cooperation between line #08 and line #24: applying `f` in line #24 yields control to line #08; the latter further
-compiles the second argument program (`rhs`) - instructing it to "cons"truct (`#::`) a `LazyList` -, and yields _it_ back to
-the former, which will be the return value of `foldRightʹ`.
-
-Assume the following implementation of `Trampoline#apply`:
-
-```Scala
-enum Trampoline[+A]:
-  @annotation.tailrec
-  final def apply(): A = this match
-    case Done(value) =>
-      value                                          // line #a
-    case Call(closure) =>
-      closure(())()                                  // line #b
-    case FlatMap(Done(value), sequel) =>
-      sequel(value)()                                // line #c
-    case FlatMap(Call(closure), sequel) =>
-      (closure :: sequel)(())()                      // line #d
-    case FlatMap(FlatMap(self, prequel), sequel) =>
-      FlatMap(self, prequel :: sequel)()             // line #e
-
-object Trampoline:
-  // Kleisli composition
-  extension [A, B](prequel: A => Trampoline[B])
-    inline def ::[C](sequel: B => Trampoline[C]): A => Trampoline[C] =
-      prequel(_).flatMap(sequel)
-```
-
-The first time `Trampoline#apply` is invoked - line #10 -, it is _given_ control:
-
-```Scala
-FlatMap(Done(ga), { s =>
-                    foldRightʹ(s, Trampoline.pure(G.pure(LazyList.empty[B]))) {
-                      (a, lgsb) =>
-                        G.map2Trampoline(g(a), lgsb)(_ #:: _) }
-                  }
-)()
-```
-
-By line #c, this reduces to:
-
-```Scala
-foldRightʹ(ga, lb) { (a, lgsb) =>
-                     G.map2Trampoline(g(a), lgsb)(_ #:: _) }()
-```
-
-where `lb` is `Trampoline.pure(G.pure(LazyList.empty[B]))`. Before `apply`ing, the first invocation to `foldRightʹ` - in a
-call on the stack - will assign to `rhs` in line #16 the (`Trampoline[LazyList[B]]`) value
-`Call { _ => Trampoline.pure(faʹ.tail).flatMap(foldRightʹ(_, lb)(f)) }`. Through lines #24 and #08, `rhs` will further
-compile into:
-
-```Scala
-FlatMap(Call { _ => Trampoline.pure(faʹ.tail).flatMap(foldRightʹ(_, lb)(f)) }, { gtl => <g(faʹ.head) #:: gtl> } andThen Done(_))
-```
-
-where `faʹ` is `fa` in the first invocation to `foldRightʹ`, and `g(faʹ.head): G[B]` is the application of `g` to `a` from
-line #08 (`a` being `faʹ.head`).
-The function `{ gtl => <g(a) #:: gtl> } andThen Done(_)` is the result of `G.map2Trampoline(g(a), lgsb)(_ #:: _)`, where
-`<gb #:: gtl>` represents:
-
-1. the unwrapping of `gb: G[B]` and `gtl: G[LazyList[B]]` from `G`;
-
-1. the application of the "cons" (`#::`) operator to these two, respective, operands;
-
-1. the wrapping of the new `LazyList` into `G`.
-
-Now, `apply` is given control back and it invokes itself `@tailrec`ursively; by line #d, this reduces to:
-
-```Scala
-({ _ => Trampoline.pure(faʹ.tail).flatMap(foldRightʹ(_, lb)(f)) } :: { gtl => <g(faʹ.head) #:: gtl> } andThen Done(_))(())()
-```
-
-Applying the Kleisli composition (`::`), this will yield the function:
-
-```Scala
-{ _ => Trampoline.pure(faʹ.tail).flatMap(foldRightʹ(_, lb)(f)).flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_)) }
-```
-
-Applying unit (`()`) to this function yields (`faʹ.tail` is being accessed):
-
-```Scala
-Trampoline.pure(faʹ.tail).flatMap(foldRightʹ(_, lb)(f)).flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_))
-```
-
-which reduces in two steps to:
-
-```Scala
-FlatMap(Done(faʹ.tail)
-       , foldRightʹ(_, lb)(f))
-  .flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_))
-```
-
-and in another step to:
-
-```Scala
-FlatMap(FlatMap(Done(faʹ.tail)
-               , foldRightʹ(_, lb)(f))
-       , { gtl => <g(faʹ.head) #:: gtl> } andThen Done(_))
-```
-
-Now, `apply` invokes itself `@tailrec`ursively a second time; by line #e, this reduces to:
-
-```Scala
-FlatMap(Done(faʹ.tail)
-       , foldRightʹ(_, lb)(f) :: { gtl => <g(faʹ.head) #:: gtl> } andThen Done(_))()
-```
-
-By applying the Kleisli composition (`::`), the receiver to `apply` reduces to:
-
-```Scala
-FlatMap(Done(faʹ.tail)
-       , foldRightʹ(_, lb)(f).flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_)))
-```
-
-Now, `apply` invokes itself `@tailrec`ursively a third time; by line #c, this reduces to:
-
-```Scala
-foldRightʹ(faʹ.tail, lb)(f).flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_))()
-```
-
-Letting `faʹʹ` be `faʹ.tail`, the second trampolined invocation to `foldRightʹ(faʹʹ, lb)(f)` yields:
-
-```Scala
-FlatMap(Call { _ => Trampoline.pure(faʹʹ.tail).flatMap(foldRightʹ(_, lb)(f)) }
-       , { gtl => <g(faʹʹ.head) #:: gtl> } andThen Done(_))
-```
-
-Note that there is no `Trampoline#apply`ing here, and this latter `FlatMap` is a returned _value_, _not_ a _receiver_: we were
-being called on the stack, with `apply` still awaiting to be performed (so we _cannot_ "reduce by line #d" - yet):
-
-```Scala
-FlatMap(Call { _ => Trampoline.pure(faʹʹ.tail).flatMap(foldRightʹ(_, lb)(f)) }
-       , { gtl => <g(faʹʹ.head) #:: gtl> } andThen Done(_))
-  .flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_))()
-```
-
-which reduces to:
-
-```Scala
-FlatMap(FlatMap(Call { _ => Trampoline.pure(faʹʹ.tail).flatMap(foldRightʹ(_, lb)(f)) }
-               , { gtl => <g(faʹʹ.head) #:: gtl> } andThen Done(_))
-       , { gtl => <g(faʹ.head) #:: gtl> } andThen Done(_))()
-```
-
-`apply` invokes itself `@tailrec`ursively a fourth time; by line #e, this reduces to:
-
-```Scala
-FlatMap(Call { _ => Trampoline.pure(faʹʹ.tail).flatMap(foldRightʹ(_, lb)(f)) }
-       , ({ gtl => <g(faʹʹ.head) #:: gtl> } andThen Done(_)) :: ({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_)))()
-```
-
-By applying the Kleisli composition (`::`), the receiver to `apply` reduces to:
-
-```Scala
-FlatMap(Call { _ => Trampoline.pure(faʹʹ.tail).flatMap(foldRightʹ(_, lb)(f)) }
-             , ({ gtl => <g(faʹʹ.head) #:: gtl> } andThen Done(_))
-                 .flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_)))()
-```
-
-Only now, by line #d we have:
-
-```Scala
-({ _ => Trampoline.pure(faʹʹ.tail).flatMap(foldRightʹ(_, lb)(f)) } :: (({ gtl => <g(faʹʹ.head) #:: gtl> } andThen Done(_))
-                                                                          .flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_))))(())()
-```
-
-Applying the Kleisli composition (`::`) reduces to:
-
-```Scala
-({ _ => Trampoline.pure(faʹʹ.tail).flatMap(foldRightʹ(_, lb)(f)) }
-   .flatMap(({ gtl => <g(faʹʹ.head) #:: gtl> } andThen Done(_))
-              .flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_))))(())()
-```
-
-Applying unit (`()`) to this function yields (`faʹʹ.tail` is being accessed):
-
-```Scala
-Trampoline.pure(faʹʹ.tail)
-  .flatMap(foldRightʹ(_, lb)(f))
-  .flatMap(({ gtl => <g(faʹʹ.head) #:: gtl> } andThen Done(_))
-             .flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_)))()
-```
-
-which reduces in two steps to:
-
-```Scala
-FlatMap(Done(faʹʹ.tail)
-       , foldRightʹ(_, lb)(f))
-  .flatMap(({ gtl => <g(faʹʹ.head) #:: gtl> } andThen Done(_))
-             .flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_)))()
-```
-
-and in another step to:
-
-```Scala
-FlatMap(FlatMap(Done(faʹʹ.tail)
-               , foldRightʹ(_, lb)(f))
-       , ({ gtl => <g(faʹʹ.head) #:: gtl> } andThen Done(_))
-           .flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_)))()
-```
-
-Now, `apply` invokes itself `@tailrec`ursively a fifth time; by line #e, this reduces to:
-
-```Scala
-FlatMap(Done(faʹʹ.tail)
-       , foldRightʹ(_, lb)(f) :: (({ gtl => <g(faʹʹ.head) #:: gtl> } andThen Done(_))
-                                    .flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_))))()
-```
-
-By applying the Kleisli composition (`::`), the receiver to `apply` reduces to:
-
-```Scala
-FlatMap(Done(faʹʹ.tail)
-       , foldRightʹ(_, lb)(f)
-           .flatMap(({ gtl => <g(faʹʹ.head) #:: gtl> } andThen Done(_))
-                      .flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_))))()
-```
-
-Now, `apply` invokes itself `@tailrec`ursively a sixth time; by line #c, this reduces to:
-
-```Scala
-foldRightʹ(faʹʹ.tail, lb)(f)
-  .flatMap(({ gtl => <g(faʹʹ.head) #:: gtl> } andThen Done(_))
-             .flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_)))()
-```
-
-Let us supposed that `faʹʹ.tail` is empty: `foldRightʹ(faʹʹ.tail, lb)(f)` yields `lb`, which gives:
-
-```Scala
-Trampoline.pure(G.pure(LazyList.empty[B]))
-  .flatMap(({ gtl => <g(faʹʹ.head) #:: gtl> } andThen Done(_))
-             .flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_)))()
-```
-
-that reduces in two steps to:
-
-```Scala
-FlatMap(Done(G.pure(LazyList.empty[B]))
-       , ({ gtl => <g(faʹʹ.head) #:: gtl> } andThen Done(_))
-           .flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_)))()
-```
-
-Now, `apply` invokes itself `@tailrec`ursively a seventh time; by line #c, this reduces to:
-
-```Scala
-Done(<g(faʹʹ.head) #:: G.pure(LazyList.empty[B])>)
-  .flatMap({ gtl => <g(faʹ.head) #:: gtl> } andThen Done(_))()
-```
-
-and in another step to:
-
-```Scala
-FlatMap(Done(<g(faʹʹ.head) #:: G.pure(LazyList.empty[B])>)
-       , { gtl => <g(faʹ.head) #:: gtl> } andThen Done(_))()
-```
-
-Now, `apply` invokes itself `@tailrec`ursively an eighth time; by line #c, this reduces to:
-
-```Scala
-Done(<g(faʹ.head) #:: g(faʹʹ.head) #:: G.pure(LazyList.empty[B])>)()
-```
-
-Invoking itself `@tailrec`ursively the ninth time; by line #a, `apply` yields:
-
-```Scala
-<g(faʹ.head) #:: g(faʹʹ.head) #:: G.pure(LazyList.empty[B])>
 ```
 
 Solution - Part 3

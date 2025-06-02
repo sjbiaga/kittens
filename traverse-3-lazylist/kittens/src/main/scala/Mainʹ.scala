@@ -26,6 +26,7 @@ implicit val kittensOptionApplicative: Applicativeʹ[Option] =
 trait Traverseʹ[F[_]] extends Traverse[F]:
   def traverseʹ[G[_]: Applicativeʹ, A, B](fa: F[A])(f: A => G[B]): G[F[B]]
   def foldRightʹ[A, B](fa: F[A], lb: Trampoline[B])(f: (A, Trampoline[B]) => Trampoline[B]): Trampoline[B]
+  def foldRightʹʹ[A, B](fa: F[A], lb: Trampoline[B])(f: (A, Trampoline[B]) => Trampoline[B]): Trampoline[B]
 
 implicit val kittensLazyListTraverseʹ: Traverseʹ[LazyList] =
   new Traverseʹ[LazyList]:
@@ -45,8 +46,16 @@ implicit val kittensLazyListTraverseʹ: Traverseʹ[LazyList] =
           val rhs = Call(foldRightʹ(s.tail, lb)(f))
           f(s.head, rhs)
       }
+    def foldRightʹʹ[A, B](fa: LazyList[A], lb: Trampoline[B])(f: (A, Trampoline[B]) => Trampoline[B]): Trampoline[B] =
+      if fa.isEmpty
+      then
+        lb
+      else
+        val rhs = Call(foldRightʹʹ(fa.tail, lb)(f))
+        f(fa.head, rhs)
 
 object Mainʹ:
+
   def main(args: Array[String]): Unit =
     try
 
@@ -76,6 +85,17 @@ object Mainʹ:
         T.traverseʹ[Option, Int, Int](LazyList((1 to 100000)*))(Option.apply)
           .get
           .size
+      }
+
+      println {
+        try
+          val T = implicitly[Traverseʹ[LazyList]]
+          lazy val rec: (Long, Trampoline[Long]) => Trampoline[Long] =
+            { (a, tb) => T.foldRightʹʹ(LazyList(a), tb)(rec) }
+          T.foldRightʹʹ(LazyList(0L), Trampoline.Call(_ => ???))(rec)()
+        catch
+          case _: StackOverflowError =>
+            "not stack safe!"
       }
 
     catch

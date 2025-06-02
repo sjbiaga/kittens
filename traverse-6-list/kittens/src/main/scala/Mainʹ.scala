@@ -28,6 +28,7 @@ implicit val kittensʹListTraverse: Traverse[Exercise_07_5.ʹ.List] =
       fa.foldRightʹ(lb)(f)
 
 object Mainʹ:
+
   def main(args: Array[String]): Unit =
     try
       import Exercise_07_5.ʹ.List

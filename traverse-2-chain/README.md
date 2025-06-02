@@ -176,7 +176,7 @@ import cats.Applicative, cats.Eval, cats.instances.option._
 
 val G = implicitly[Applicative[Option]]
 
-val f: Int => Option[Int] = Some(_)
+val f: Int => Option[Int] = { n => println(n); Some(n) }
 ```
 
 Let us suppose that we have a `Chain` with three items _0_ -> `10`, _1_ -> `100`, _2_ -> `1000` - the first three powers of
@@ -231,7 +231,7 @@ Now, line #33 has a little added to it, which yields a `FlatMap(flist, identity 
 the invocation of `Eval#value` (line #33), the "last" defer will be the first to be `evaluate`d: but how can we "pull" it out
 of the `FlatMap`?! This will be also the case with the other defers - wrapped inside a `FlatMap`.
 
-The answer is that `flist` pattern matches a `Defer` instance:
+Going backwards, the answer is that `flist` - from line #33 - pattern matches a `Defer` instance:
 
 ```Scala
 FlatMap(Defer { () => <block #24> }, identity andThen Now(_)).value
@@ -240,24 +240,48 @@ FlatMap(Defer { () => <block #24> }, identity andThen Now(_)).value
 Now this `evaluate` (on behalf of `.value`) can pattern match:
 
 ```Scala
-({ () => <block #24> }.flatMap(identity andThen Now(_))).apply()
+({ () => <block #24> }.apply()).flatMap(identity andThen Now(_))
 ```
 
 It executes the block from line #24, which `println`s `5` and applies `G.map2Eval` to `f(a)` and `rhs100`, `println`ing 10.
-Because `f` yields `Some(_)` and the method invoked is `Applicative[Option].map2Eval`, the `Eval` program `rhs100` (as
+Because `f` yields `Some(10)` and the method invoked is `Applicative[Option].map2Eval`, the `Eval` program `rhs100` (as
 second parameter named "`lfb`") will be _altered_:
 
 ```Scala
 lfb.map { // or: rhs100.map
-  case Some(b) => Some(f(10, b)): Option[List[Int]]
+  case Some(b) => Some(f2(10, b)): Option[List[Int]]
   case None    => None
 }: Eval[Option[List[Int]]]
 ```
 
+---
+
+Because the function parameter `f2` stands for the binary function in line #26, and assuming there wiil be no fail fast, we
+could rewrite the above case as:
+
+```Scala
+lfb.map { b => Some(<function-block #26>(10, b.get)) }
+```
+
+or further - turning `b` into a placeholder:
+
+```Scala
+lfb.map { (_.get) andThen <function-block #26>(10, _) andThen Option.apply }
+```
+
+which - dropping `Option.apply` (but remembering to add it back) and leaving just one placeholder (albeit that does not
+compile) - we could abbreviate as:
+
+```Scala
+<function-block #26>(10, _.get)
+```
+
+---
+
 In other words, the heap now looks like this:
 
 ```Scala
-FlatMap(rhs100, <function-block #26> andThen Now(_))
+FlatMap(rhs100, <function-block #26>(10, _.get) andThen Now(_))
   .flatMap(identity andThen Now(_))
 ```
 
@@ -265,7 +289,7 @@ The `flatMap` method intervenes before looping in `evaluate`:
 
 ```Scala
 FlatMap(FlatMap(rhs100
-               , <function-block #26> andThen Now(_))
+               , <function-block #26>(10, _.get) andThen Now(_))
        , identity andThen Now(_))
 ```
 
@@ -273,7 +297,7 @@ Now this `evaluate` can pattern match (and continue to loop):
 
 ```Scala
 FlatMap(rhs100
-       , (<function-block #26> andThen Now(_))
+       , (<function-block #26>(10, _.get) andThen Now(_))
            .flatMap(identity andThen Now(_)))
 ```
 
@@ -281,26 +305,26 @@ FlatMap(rhs100
 
 ```Scala
 FlatMap(Defer { () => <block #12> }
-       , (<function-block #26> andThen Now(_))
+       , (<function-block #26>(10, _.get) andThen Now(_))
            .flatMap(identity andThen Now(_)))
 ```
 
 Same as before, `evaluate` can pattern match:
 
 ```Scala
-{ () => <block #12> }.flatMap((<function-block #26> andThen Now(_))
-                                .flatMap(identity andThen Now(_))
-                             ).apply()
+({ () => <block #12> }.apply()).flatMap((<function-block #26>(10, _.get) andThen Now(_))
+                                          .flatMap(identity andThen Now(_))
+                                       )
 ```
 
-When this function is applied, the block from line #12 `println`s `5` and applies `G.map2Eval` to `f(a)` and `rhs1000`,
-`println`ing `100`. Because `f` yields `Some(_)` and the method invoked is `Applicative[Option].map2Eval`, the `Eval` program
-`rhs1000` will be _altered_ - disguised as an `Eval#map` directed to `Eval#flatMap` and instantiated as a `FlatMap`:
+When this function is applied, the block from line #12 `println`s `3` and applies `G.map2Eval` to `f(a)` and `rhs1000`,
+`println`ing `100`. Because `f` yields `Some(100)` and the method invoked is `Applicative[Option].map2Eval`, the `Eval`
+program `rhs1000` will be _altered_ - disguised as an `Eval#map` directed to `Eval#flatMap` and instantiated as a `FlatMap`:
 
 ```Scala
 FlatMap(rhs1000
-       , <function-block #14> andThen Now(_))
-  .flatMap((<function-block #26> andThen Now(_))
+       , <function-block #14>(100, _.get) andThen Now(_))
+  .flatMap((<function-block #26>(10, _.get) andThen Now(_))
              .flatMap(identity andThen Now(_)))
 ```
 
@@ -308,8 +332,8 @@ The `flatMap` method intervenes before looping in `evaluate`:
 
 ```Scala
 FlatMap(FlatMap(rhs1000
-               , <function-block #14> andThen Now(_))
-       , (<function-block #26> andThen Now(_))
+               , <function-block #14>(100, _.get) andThen Now(_))
+       , (<function-block #26>(10, _.get) andThen Now(_))
            .flatMap(identity andThen Now(_)))
 ```
 
@@ -317,8 +341,8 @@ Now this `evaluate` can pattern match (and continue to loop):
 
 ```Scala
 FlatMap(rhs1000
-       , (<function-block #14> andThen Now(_))
-           .flatMap((<function-block #26> andThen Now(_))
+       , (<function-block #14>(100, _.get) andThen Now(_))
+           .flatMap((<function-block #26>(10, _.get) andThen Now(_))
                       .flatMap(identity andThen Now(_))))
 ```
 
@@ -326,29 +350,29 @@ FlatMap(rhs1000
 
 ```Scala
 FlatMap(Later { <block #01> }
-       , (<function-block #14> andThen Now(_))
-           .flatMap((<function-block #26> andThen Now(_))
+       , (<function-block #14>(100, _.get) andThen Now(_))
+           .flatMap((<function-block #26>(10, _.get) andThen Now(_))
                       .flatMap(identity andThen Now(_))))
 ```
 
 Similar as before (but with `Later` instead of `Defer`), `evaluate` can pattern match:
 
 ```Scala
-((<function-block #14> andThen Now(_))
-   .flatMap((<function-block #26> andThen Now(_))
-              .flatMap(identity andThen Now(_)))).apply(<block #01>)
+((<function-block #14>(100, _.get) andThen Now(_)).apply(<block #01>))
+   .flatMap((<function-block #26>(10, _.get) andThen Now(_))
+              .flatMap(identity andThen Now(_)))
 ```
 
-Executing the "block from line #01", it `println`s `1`, invokes `f(1000)` - which `println`s `1000` - and yields `Some(_)`.
+Executing the "block from line #01", it `println`s `1`, invokes `f(1000)` - which `println`s `1000` - and yields `Some(1000)`.
 The method `Option#map` is invoked with the latter receiver, which will pass `1000` to the `it` parameter to the block from
 line #03: this will `println` `2` and perform the _first_ "cons" operation, yielding `1000 :: Nil`, lifted in `G`/`Option`.
 
 The resulting `List` lifted in `G` will be applied:
 
 ```Scala
-((<function-block #14> andThen Now(_))
-   .flatMap((<function-block #26> andThen Now(_))
-              .flatMap(identity andThen Now(_)))).apply(Some(1000 :: Nil))
+((<function-block #14>(100, _.get) andThen Now(_)).apply(Some(1000 :: Nil)))
+   .flatMap((<function-block #26>(10, _.get) andThen Now(_))
+              .flatMap(identity andThen Now(_)))
 ```
 
 1. block from line #14: this will `println` `4` and perform the _second_ "cons" operation, yielding `100 :: (1000 :: Nil)`,
@@ -356,23 +380,23 @@ The resulting `List` lifted in `G` will be applied:
 
 ```Scala
 Now(Some(100 :: 1000 :: Nil))
-   .flatMap((<function-block #26> andThen Now(_))
-              .flatMap(identity andThen Now(_)))
+  .flatMap((<function-block #26>(10, _.get) andThen Now(_))
+             .flatMap(identity andThen Now(_)))
 ```
 
 which compiles to:
 
 ```Scala
 FlatMap(Now(Some(100 :: 1000 :: Nil))
-       , (<function-block #26> andThen Now(_))
+       , (<function-block #26>(10, _.get) andThen Now(_))
            .flatMap(identity andThen Now(_)))
 ```
 
 Now this `evaluate` can pattern match (and continue to loop):
 
 ```Scala
-(<function-block #26> andThen Now(_))
-  .flatMap(identity andThen Now(_)).apply(Some(100 :: 1000 :: Nil))
+((<function-block #26>(10, _.get) andThen Now(_)).apply(Some(100 :: 1000 :: Nil)))
+   .flatMap(identity andThen Now(_))
 ```
 
 2. block from line #26: this will `println` `6` and perform the _third_ "cons" operation,
@@ -396,6 +420,58 @@ Now this `evaluate` can pattern match (and continue to loop):
 (identity andThen Now(_)).apply(Some(10 :: 100 :: 1000 :: Nil))
 ```
 
-3. `evaluate`ing `Now(Some(10 :: 100 :: 1000 :: Nil))`, it ends with `Some(10 :: 100 :: 1000 :: Nil)`.
+3. `evaluate`ing `Now(Some(10 :: 100 :: 1000 :: Nil))`, it ends with `Some(10 :: 100 :: 1000 :: Nil): Option[List[Int]]`.
+
+4. Let us assume otherwise that - at some point - `block #01` returned `None`:
+
+```Scala
+((<function-block #14>(100, _.get) andThen Now(_)).apply(None))
+   .flatMap((<function-block #26>(10, _.get) andThen Now(_))
+              .flatMap(identity andThen Now(_)))
+```
+
+This further reduces to:
+
+```Scala
+Now(None)
+   .flatMap((<function-block #26>(10, _.get) andThen Now(_))
+              .flatMap(identity andThen Now(_)))
+```
+
+which compiles to:
+
+```Scala
+FlatMap(Now(None)
+       , (<function-block #26>(10, _.get) andThen Now(_))
+           .flatMap(identity andThen Now(_)))
+```
+
+which evaluates to:
+
+```Scala
+((<function-block #26>(10, _.get) andThen Now(_)).apply(None))
+   .flatMap(identity andThen Now(_))
+```
+
+which reduces to:
+
+```Scala
+Now(None).flatMap(identity andThen Now(_))
+```
+
+which compiles to:
+
+```Scala
+FlatMap(Now(None), identity andThen Now(_))
+```
+
+which evaluates to:
+
+```Scala
+Now(None)
+```
+
+and to `None`: this is the fail fast semantics; the heap is built, yet, no matter how big it had gotten, it _must_ be reduced
+without omitting intermediary but trivial compilations or evaluations.
 
 [First](https://github.com/sjbiaga/kittens/blob/main/traverse-1-list/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/traverse-1-list/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/traverse-3-lazylist/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/traverse-7-poke/README.md)

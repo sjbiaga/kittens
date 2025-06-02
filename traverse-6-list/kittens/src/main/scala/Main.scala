@@ -27,6 +27,7 @@ val kittensListTraverse: Traverse[List] =
       catsStdInstancesForList.foldRight(fa, lb)(f)
 
 object Main:
+
   def main(args: Array[String]): Unit =
     given Traverse[List] = kittensListTraverse
     try

@@ -173,7 +173,7 @@ implicit val kittensʹListTraverse: Traverse[Exercise_07_5.ʹ.List] =
 
 Surprisingly, the same problem persists as before; as a proof that the traversal is _right to left_, numbers are `println`ed
 in reverse order. This is because, although `kittensʹListTraverse.foldRight` has `Eval` in its very definition, it is
-implemented in terms of the stack safe method `ʹ.List#foldRight`, yes, but not also abiding to fail fast semantics.
+implemented in terms of the stack safe method `ʹ.List#foldRight`, yes, but not also abiding to a fail fast semantics.
 
 ---
 
