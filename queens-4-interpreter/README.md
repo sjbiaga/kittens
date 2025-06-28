@@ -9,7 +9,7 @@ We recall the definition of `Trampoline`:
 import cats.~>
 
 sealed abstract trait Trampoline[A]:
-  import Trampoline._
+  import Trampoline.*
 
   def visit[F[_]](v: Visitor[F]): F[A]
 
@@ -62,7 +62,7 @@ and that of a `MonadInterpreter` which wraps the nested singleton object that im
 
 ```Scala
 import cats.{ Defer, Monad }
-import cats.syntax.all._
+import cats.syntax.all.*
 
 class MonadInterpreter[M[_]: Monad: Defer]:
   val M = Monad[M]
@@ -76,7 +76,7 @@ class MonadInterpreter[M[_]: Monad: Defer]:
 We will require also the following imports:
 
 ```Scala
-import cats._, cats.free.{ Trampoline => CatsTrampoline, _}, cats.instances.tailRec._
+import cats.*, cats.free.{ Trampoline => CatsTrampoline, * }, cats.instances.tailRec.*
 import scala.util.control.TailCalls.TailRec
 import cats.effect.unsafe.implicits.global, cats.effect.IO
 ```

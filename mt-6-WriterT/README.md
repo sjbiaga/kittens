@@ -103,14 +103,14 @@ Recall the `Expr`ession `enum`eration with the cases:
 1. nullary - `Zero`, `One`:
 
 ```Scala
-import scala.util.control.TailCalls._
+import scala.util.control.TailCalls.*
 import scala.util.parsing.combinator.JavaTokenParsers
 
 import cats.{ ~>, Id }
-import cats.instances.string._
+import cats.instances.string.*
 
 import cats.data.Writer
-import cats.data.WriterT._
+import cats.data.WriterT.*
 
 enum Expr[+T]:
   case Add[+T](lhs: Expr[T], rhs: Expr[T]) extends Expr[T]

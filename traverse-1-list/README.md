@@ -214,7 +214,7 @@ As an example, traversing a list with `Option` would return the original list wr
 in the original list, the traversing function returned `None`:
 
 ```scala
-scala> import cats.instances.option._, cats.syntax.traverse._
+scala> import cats.instances.option.*, cats.syntax.traverse.*
 
 scala> List(1,2,3,4,5).traverse { it => if it % 4 != 0 then { println(it); Some(it) } else None }
 1
@@ -255,7 +255,7 @@ However, the `Applicative` may also choose to collect _all_ failures, in a typec
 for instance `Semigroup[Vector[Int]]` - the case of `Validated`:
 
 ```scala
-scala> import cats.data.Validated, Validated. { valid, invalid }, cats.instances.vector._
+scala> import cats.data.Validated, Validated. { valid, invalid }, cats.instances.vector.*
 
 scala> List(1,2,3,4,5).traverse { it => if it % 4 == 0 then valid(it) else { println(it); invalid(Vector(it)) } }
 1

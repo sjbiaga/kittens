@@ -11,7 +11,7 @@ Give an implementation based on `Expr` for an `ExprT` `case class` as a monad tr
 [Hint: use the following extension methods and typeclasses for `Expr`.]
 
 ```Scala
-import scala.util.control.TailCalls._
+import scala.util.control.TailCalls.*
 import scala.util.parsing.combinator.JavaTokenParsers
 
 import alleycats.{ Zero => `0`, One => `1` }
@@ -654,14 +654,14 @@ Solution
 ```Scala
 import alleycats.{ Zero => `0`, One => `1` }
 
-import cats._
+import cats.*
 import cats.data.Nested
 
-import cats.syntax.coflatMap._
-import cats.syntax.flatMap._
-import cats.syntax.functor._
+import cats.syntax.coflatMap.*
+import cats.syntax.flatMap.*
+import cats.syntax.functor.*
 
-import Expr._
+import Expr.*
 
 final case class ExprT[F[_], A](value: F[Expr[A]]):
 

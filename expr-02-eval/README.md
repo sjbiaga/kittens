@@ -10,7 +10,7 @@ When mixing `Val`ues of different types (such as both `Int` and `Double`), type 
 as `Int | Double`). For this particular case, we give a recursive evaluation algorithm:
 
 ```Scala
-import Expr._
+import Expr.*
 def eval(expr: Expr[Int | Double])(implicit unit: unit): Double =
   expr match
     case Zero => 0d

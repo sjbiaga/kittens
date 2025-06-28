@@ -1,7 +1,7 @@
-import cats.free._, Free._
-import cats.syntax.all._
+import cats.free.*, Free.*
+import cats.syntax.all.*
 
-import Expr._, Tree._, Ring._
+import Expr.*, Tree.*, Ring.*
 
 case class Algorithmsʹ(n: Int):
   private def fibonacci(k: Int): Free[Tree, Tree[Expr[Int]]] =

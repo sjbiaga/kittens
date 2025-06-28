@@ -2,7 +2,7 @@ import alleycats.{ Zero => `0`, One => `1` }
 
 import cats.free.Cofree, cats.Eval
 
-import ExprF._
+import ExprF.*
 
 object Main:
 

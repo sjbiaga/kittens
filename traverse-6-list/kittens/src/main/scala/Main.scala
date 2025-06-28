@@ -2,7 +2,7 @@ package cats
 
 import cats.data.Chain
 import cats.instances.list.catsStdInstancesForList
-import cats.syntax.traverse._
+import cats.syntax.traverse.*
 
 val kittensListTraverse: Traverse[List] =
   new Traverse[List]:

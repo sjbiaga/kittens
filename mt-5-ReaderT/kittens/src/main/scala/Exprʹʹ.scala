@@ -5,7 +5,7 @@ import Numbers.jsonNumber
 
 object Exprʹʹ:
 
-  import Expr._
+  import Expr.*
 
   private val whitespace: Parser[Unit] = charIn(" \t\r\n").void
   private val whitespaces0: Parser0[Unit] = whitespace.rep0.void

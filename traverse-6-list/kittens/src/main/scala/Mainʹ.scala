@@ -1,11 +1,11 @@
 package cats
 
 import cats.data.Chain
-import cats.syntax.traverse._
+import cats.syntax.traverse.*
 
 implicit val kittensʹListTraverse: Traverse[Exercise_07_5.ʹ.List] =
   import Exercise_07_5.ʹ.List
-  import List._
+  import List.*
   new Traverse[List]:
     override def traverse[G[_]: Applicative, A, B](fa: List[A])(f: A => G[B]): G[List[B]] =
       implicitly[Applicative[G]] match
@@ -32,7 +32,7 @@ object Mainʹ:
   def main(args: Array[String]): Unit =
     try
       import Exercise_07_5.ʹ.List
-      import List._
+      import List.*
 
       println {
         List((1 to 10)*)

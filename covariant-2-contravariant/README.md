@@ -193,8 +193,8 @@ val res: Int = 8
 Or, we can use the `lmap` and `rmap` syntax by importing it:
 
 ```Scala
-import cats.syntax.profunctor._
-import Factory._
+import cats.syntax.profunctor.*
+import Factory.*
 C(4).lmap((_: String).toInt)
 C(4).rmap(_ * 2)
 ```
@@ -241,8 +241,8 @@ Using `lmap`, we can still _sum_ a `String` with an `Int`eger and return a `Stri
 this value as a `String`.
 
 ```scala
-scala> import cats.syntax.profunctor._
-scala> import Factoryʹ._
+scala> import cats.syntax.profunctor.*
+scala> import Factoryʹ.*
 
 scala> Cʹ(4).lmap((_: String).toInt)
 val res0: Factoryʹ[String, String] = anon$2@24690f54

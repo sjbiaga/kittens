@@ -1,6 +1,6 @@
 import cats.data.Validated
 
-import Expr._
+import Expr.*
 import cats.data.Validated.{ Valid, Invalid }
 
 object Main:

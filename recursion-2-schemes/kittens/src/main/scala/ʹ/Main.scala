@@ -1,9 +1,9 @@
 package ʹ
 
-import cats.Functor, cats.syntax.functor._
+import cats.Functor, cats.syntax.functor.*
 
-import ExprF._
-import FacF._
+import ExprF.*
+import FacF.*
 
 object Main:
 
@@ -20,7 +20,7 @@ object Main:
     def inL[R](xa: ExprF[R]) = Left(xa)
     def inR[R](fa: FacF[R, Long]) = Right(fa)
 
-  import ExprFacF._
+  import ExprFacF.*
 
   def factorial(n: Long): ExprFacF[Long] =
     if n <= 0

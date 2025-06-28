@@ -7,7 +7,7 @@ Let us see what happens in this three lines:
 
 ```Scala
 import cats.Monoid
-import cats.syntax.monoid._
+import cats.syntax.monoid.*
 0 |+| 1 |+| 3 |+| 7
 ```
 
@@ -21,8 +21,8 @@ finds in scope - among those afore mentioned.
 Let us now show how "`2 plus 2 equals not 4`":
 
 ```Scala
-import cats.syntax.invariant._
-//import cats.instances.string._ // not needed
+import cats.syntax.invariant.*
+//import cats.instances.string.* // not needed
 implicit val kittensMonoidForInt: Monoid[Int] = Monoid[String].imap(_.toInt)(_.toString)
 2 |+| 2
 ```

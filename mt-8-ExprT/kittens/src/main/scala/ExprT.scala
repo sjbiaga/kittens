@@ -1,13 +1,13 @@
 import alleycats.{ Zero => `0`, One => `1` }
 
-import cats._
+import cats.*
 import cats.data.Nested
 
-import cats.syntax.coflatMap._
-import cats.syntax.flatMap._
-import cats.syntax.functor._
+import cats.syntax.coflatMap.*
+import cats.syntax.flatMap.*
+import cats.syntax.functor.*
 
-import Expr._
+import Expr.*
 
 final case class ExprT[F[_], A](value: F[Expr[A]]):
 

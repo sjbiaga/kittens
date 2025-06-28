@@ -1,8 +1,8 @@
 import algebra.ring.DivisionRing
-import cats._, cats.free._, cats.arrow._, Free._
-import cats.syntax.all._
+import cats.*, cats.free.*, cats.arrow.*, Free.*
+import cats.syntax.all.*
 
-import Expr._, Tree._, Ring._
+import Expr.*, Tree.*, Ring.*
 
 def treeify(R: DivisionRing[?]): FunctionK[Expr, Tree] =
   new FunctionK[Expr, Tree]:

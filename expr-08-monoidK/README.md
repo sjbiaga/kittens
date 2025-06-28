@@ -32,7 +32,7 @@ Via the
 we can use two `Expr` operands at a higher combination level using the `<+>` rich wrapper method:
 
 ```scala
-scala> import cats.syntax.semigroupk._
+scala> import cats.syntax.semigroupk.*
 
 scala> given unit = One
 lazy val given_unit: unit

@@ -1,6 +1,6 @@
-import cats.Functor, cats.syntax.functor._
+import cats.Functor, cats.syntax.functor.*
 
-import ExprF._
+import ExprF.*
 
 object Main:
 

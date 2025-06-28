@@ -18,11 +18,11 @@ of `Traverse` for `ʹ.List` (we put `ʹ.List` in package `Exercise_07_5` too) in
 ```Scala
 package cats
 
-import cats.syntax.traverse._
+import cats.syntax.traverse.*
 
 implicit val kittensʹListTraverse: Traverse[Exercise_07_5.ʹ.List] =
   import Exercise_07_5.ʹ.List
-  import List._
+  import List.*
   new Traverse[List]:
     override def foldLeft[A, B](fa: List[A], b: B)(f: (B, A) => B): B =
       fa.foldLeft(b)(f)
@@ -113,11 +113,11 @@ intermediary `Chain` cannot be converted directly from, because of private acces
 
 ```Scala
 import cats.data.Chain
-import cats.syntax.traverse._
+import cats.syntax.traverse.*
 
 implicit val kittensʹListTraverse: Traverse[Exercise_07_5.ʹ.List] =
   import Exercise_07_5.ʹ.List
-  import List._
+  import List.*
   new Traverse[List]:
     override def traverse[G[_]: Applicative, A, B](fa: List[A])(f: A => G[B]): G[List[B]] =
       implicitly[Applicative[G]] match
@@ -157,7 +157,7 @@ Switching to `foldRight`, we are compelled to have to use `G.map2Eval`:
 ```Scala
 implicit val kittensʹListTraverse: Traverse[Exercise_07_5.ʹ.List] =
   import Exercise_07_5.ʹ.List
-  import List._
+  import List.*
   new Traverse[List]:
     override def traverse[G[_]: Applicative, A, B](fa: List[A])(f: A => G[B]): G[List[B]] =
       implicitly[Applicative[G]] match
@@ -222,7 +222,7 @@ Now, the change to `kittensʹListTraverse` is minimal: just call method `fa.fold
 ```Scala
 implicit val kittensʹListTraverse: Traverse[Exercise_07_5.ʹ.List] =
   import Exercise_07_5.ʹ.List
-  import List._
+  import List.*
   new Traverse[List]:
     ...
     override def foldRight[A, B](fa: List[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
@@ -240,7 +240,7 @@ implemented, using `Chain.traverseViaChain`:
 ```Scala
 implicit val kittensʹListTraverse: Traverse[Exercise_07_5.ʹ.List] =
   import Exercise_07_5.ʹ.List
-  import List._
+  import List.*
   new Traverse[List]:
     override def traverse[G[_]: Applicative, A, B](fa: List[A])(f: A => G[B]): G[List[B]] =
       val G = implicitly[Applicative[G]]

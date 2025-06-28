@@ -2,7 +2,7 @@ import alleycats.{ Zero => `0`, One => `1` }
 
 import cats.data.Reader
 
-import Expr._
+import Expr.*
 
 object Main:
 
@@ -57,7 +57,7 @@ object Main:
     given `1`[Double] = `1`(1d)
 
     {
-      import Exprʹ._
+      import Exprʹ.*
 
       val start = System.currentTimeMillis
 
@@ -78,7 +78,7 @@ object Main:
     }
 
     {
-      import Exprʹʹ._
+      import Exprʹʹ.*
 
       val start = System.currentTimeMillis
 
@@ -104,7 +104,7 @@ object Main:
       val r =
         for
           lhs <- {
-            import Exprʹ._
+            import Exprʹ.*
 
             given Exprʹ[Double] = Reader(parseAll(expr, _).get)
 
@@ -118,7 +118,7 @@ object Main:
               .lhs
           }
           rhs <- {
-            import Exprʹʹ._
+            import Exprʹʹ.*
 
             given Exprʹ[Double] = Reader(parserExpr.parseAll(_).right.get)
 

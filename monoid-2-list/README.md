@@ -11,7 +11,7 @@ In order to do the same thing for `List`s, wrapping should create a singleton li
 method named `combineAll` of the `Monoid` typeclass:
 
 ```Scala
-import cats.syntax.invariant._
+import cats.syntax.invariant.*
 import cats.{ Eq, Monoid }
 implicit def kittensMonoidForList[A: Monoid: Eq]: Monoid[List[A]] =
   val M = implicitly[Monoid[A]]
@@ -23,7 +23,7 @@ implicit def kittensMonoidForList[A: Monoid: Eq]: Monoid[List[A]] =
 Now, for example, the following are true:
 
 ```Scala
-import cats.syntax.monoid._
+import cats.syntax.monoid.*
 ((Nil: List[Int]) |+| List(0)) eq Nil
 ((Nil: List[Int]) |+| List(0, 1, 3, 7)) == List(11)
 ```

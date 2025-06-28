@@ -1,6 +1,6 @@
 package ʹʹʹ
 
-import ExprF._
+import ExprF.*
 
 object Main:
 

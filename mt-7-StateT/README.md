@@ -740,7 +740,7 @@ extension [F[_], SA, SB, A](self: IndexedStateT[F, SA, SB, A])
 [Hint: fill in the blanks in the following code:
 
 ```Scala
-scala> import cats._, cats.data._
+scala> import cats.*, cats.data.*
 
 def imap[SC](f: SB => SC)(g: SC => SB)(implicit F: Functor[F], I: Invariant[F]): IndexedStateT[F, SA, SC, A] =
   IndexedStateT.applyF {

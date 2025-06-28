@@ -7,7 +7,7 @@ We have seen that for the three equivalent trampolines, there were three natural
 the `fibonacci` method thrice instead. However, suppose we had a `class` of `Algorithms`:
 
 ```Scala
-import Trampoline._
+import Trampoline.*
 
 case class Algorithms(n: Int):
   private def fibonacci(k: Int): Trampoline[Int] = ???
@@ -26,7 +26,7 @@ Taking after [doobie](https://github.com/typelevel/doobie), we could implement a
 import cats.~>
 
 sealed abstract trait Trampoline[A]:
-  import Trampoline._
+  import Trampoline.*
 
   def visit[F[_]](v: Visitor[F]): F[A] // line #06
 
@@ -109,7 +109,7 @@ implicit val kittensTrampolineDeferInstance: Defer[Trampoline] =
 So, let us suppose now we had a `class` of `Algorithms`:
 
 ```Scala
-import Trampoline._
+import Trampoline.*
 
 case class Algorithms(n: Int):
   private def fibonacci(k: Int): Trampoline[Int] =
@@ -186,7 +186,7 @@ implicitly[Monad[Eval]]
 MonadInterpreter[Eval].TrampolineInterpreter.apply(a.rec).value
 
 import scala.util.control.TailCalls.TailRec
-import cats.instances.tailRec._
+import cats.instances.tailRec.*
 implicitly[Monad[TailRec]]
 MonadInterpreter[TailRec].TrampolineInterpreter.apply(a.rec).result
 

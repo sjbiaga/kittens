@@ -2,7 +2,7 @@ import alleycats.{ Zero => `0`, One => `1` }
 
 import cats.data.State
 
-import Expr._
+import Expr.*
 
 object Main:
 

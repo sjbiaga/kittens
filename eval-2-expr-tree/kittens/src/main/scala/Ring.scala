@@ -1,6 +1,6 @@
 import algebra.ring.DivisionRing
 
-import Expr._
+import Expr.*
 
 object Ring:
   implicit val kittensIntRing: DivisionRing[Int] =

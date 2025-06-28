@@ -3,7 +3,7 @@ package Exercise_07_3
 import cats.{ Applicative, Eval, Traverse }
 import cats.instances.option.catsStdInstancesForOption
 
-import kittens.Trampoline, Trampoline._
+import kittens.Trampoline, Trampoline.*
 
 implicit val kittensOptionApplicative: Applicativeʹ[Option] =
   new Applicativeʹ[Option]:

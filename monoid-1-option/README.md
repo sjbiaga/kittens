@@ -19,8 +19,8 @@ nel.reduce == 7
  - mapping a function `A => B` and then reducing using a `Monoid[B]` is known as `foldMap` in the `Foldable` trait:
 
 ```Scala
-import cats.instances.list._
-import cats.syntax.foldable._
+import cats.instances.list.*
+import cats.syntax.foldable.*
 List(1, 2, 3).foldMap(_.toString) == "123"
 ```
 
@@ -49,7 +49,7 @@ nel.reduce(kittensEndoMonoid.algebra).apply(3) == 8
 then use it:
 
 ```Scala
-import cats.syntax.semigroup._
+import cats.syntax.semigroup.*
 1 |+| 2
 Some(1) |+| Some(2) // does not compile
 ```
@@ -67,7 +67,7 @@ But let us suppose that if the result is `Some(0)`, then as `0` is the identity 
 `None` instead. So let us create our own instance of `Monoid[Option[A]]`:
 
 ```Scala
-import cats.syntax.invariant._
+import cats.syntax.invariant.*
 implicit def kittensMonoidForOption[A: Monoid]: Monoid[Option[A]] =
   Monoid[A].imap(Option.apply)(_.get)
 Option(1) |+| Option(2)

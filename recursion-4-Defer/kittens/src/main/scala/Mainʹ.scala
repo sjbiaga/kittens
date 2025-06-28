@@ -1,4 +1,4 @@
-import Expr._
+import Expr.*
 
 import alleycats.{ Zero => `0`, One => `1` }
 
@@ -127,7 +127,7 @@ object Mainʹ:
     }
 
     println { // chaining
-      import cats.syntax.flatMap._
+      import cats.syntax.flatMap.*
       {
         Cont.defer(Inv(x"(1.0-0.0) * (1.0+0.0)").asInstanceOf[Expr[Double]])
         >>= builderCont

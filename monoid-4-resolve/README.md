@@ -17,13 +17,13 @@ resulting in: `List(None, Option(List(4,4)))`. Using implicits, we can do this i
 ```Scala
 // An example of implicit parameters, classes, and methods
 
-import cats.Monoid, cats.instances.int._
+import cats.Monoid, cats.instances.int.*
 
 object Ops:
   implicit class SemigroupOps[A: Monoid] private[Ops] (lhs: A): // line #6
     def |*|(rhs: A) = implicitly[Monoid[A]].combine(lhs, rhs)
 
-import Ops._
+import Ops.*
 
 implicit class ListMonoid[A: Monoid] extends Monoid[List[A]]: // line #11
   def empty: List[A] = Nil
@@ -41,7 +41,7 @@ object ListMonoid:
 object OptionMonoid:
   implicit def optionMonoid[A: Monoid]: Monoid[Option[A]] = new OptionMonoid[A] // line #25
 
-import ListMonoid._, OptionMonoid._
+import ListMonoid.*, OptionMonoid.*
 ```
 
 We start by importing it and then we want the elements of monoids to be combined via a special syntax as the `|*|`

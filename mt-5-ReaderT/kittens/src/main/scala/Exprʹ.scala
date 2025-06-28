@@ -2,7 +2,7 @@ import scala.util.parsing.combinator.JavaTokenParsers
 
 object Exprʹ extends JavaTokenParsers:
 
-  import Expr._
+  import Expr.*
 
   def expr(implicit unit: unit): Parser[Expr[Double]] =
     term ~ rep(("+"|"-") ~ term) ^^ {

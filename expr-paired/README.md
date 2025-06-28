@@ -9,7 +9,7 @@ Exercise 06.2
 Using the following `import`, `type`s (rather than `cats.~>`), and `val`ues:
 
 ```Scala
-import algebra.ring._
+import algebra.ring.*
 
 type Id[T] = T
 type Pair[T] = (T, T)

@@ -1,13 +1,13 @@
 package Exercise_08_1
 package Part1_5
 
-import scala.util.control.TailCalls._
+import scala.util.control.TailCalls.*
 import scala.util.parsing.combinator.JavaTokenParsers
 
 import cats.{ ~>, Id }
 
 import cats.data.Writer
-import cats.data.WriterT._
+import cats.data.WriterT.*
 
 enum Expr[+T]:
   case Add[+T](lhs: Expr[T], rhs: Expr[T]) extends Expr[T]

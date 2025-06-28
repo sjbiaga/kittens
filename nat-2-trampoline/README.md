@@ -11,7 +11,7 @@ the implementation of a `Trampoline`, let us recall it here:
 
 ```Scala
 sealed abstract trait Trampoline[+A]:
-  import Trampoline._
+  import Trampoline.*
 
   final def map[B](fun: A => B): Trampoline[B] =
     this.flatMap(fun andThen pure)
@@ -49,7 +49,7 @@ And we could implement a recursive algorithm. This time, let us try `fibonacci`,
 `Unit`:
 
 ```Scala
-import Trampoline._
+import Trampoline.*
 
 def fibonacci(k: Int): Trampoline[Int] =
   if k < 2
@@ -93,7 +93,7 @@ as a `Free` monad, so the _natural transformation_ is the following:
 
 ```Scala
 import cats.arrow.FunctionK, cats.~>
-import cats.free.{ Trampoline => CatsTrampoline, _ }
+import cats.free.{ Trampoline => CatsTrampoline, * }
 
 val kittensTrampolineToCatsTrampoline: Trampoline ~> CatsTrampoline =
   new FunctionK[Trampoline, CatsTrampoline]:

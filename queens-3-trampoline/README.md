@@ -185,7 +185,7 @@ enum Trampoline[+A]:
   case Call[A](closure: Unit => Trampoline[A]) extends Trampoline[A]
   case FlatMap[A, B](self: Trampoline[A], sequel: A => Trampoline[B]) extends Trampoline[B]
 
-  import Trampoline._
+  import Trampoline.*
 
   final def map[B](fun: A => B): Trampoline[B] =
     this.flatMap(fun andThen pure)

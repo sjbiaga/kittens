@@ -14,7 +14,7 @@ enum Expr[+T]:
   case Val[T](n: T) extends Expr[T]
 
 object Expr:
-  import scala.util.control.TailCalls._
+  import scala.util.control.TailCalls.*
   implicit val kittensʹExprMonad: Monad[Expr] =
     new StackSafeMonad[Expr]:
       def pure[A](a: A): Expr[A] = Val(a)

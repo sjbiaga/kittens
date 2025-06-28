@@ -1,7 +1,7 @@
 package Exercise_08_1
 package Part1_5
 
-import Expr._
+import Expr.*
 
 object Main:
 

@@ -8,8 +8,8 @@ related - through a series of intermediary notions -, though independent. For in
 that computing the factorial of a number) can be transformed into loops if they are tail-recursive or can be made as such
 (like having the result passed as an argument) - without the need of monads or anything related to them. Conversely, monads
 are independent of recursion, but the `Cats-Effect` `IO` monad, for instance, executes a `FSM` of fibers via an iterative loop
-disguised as a `@tailrec`-annotated method called `runLoop`; nevertheless, if there is an invocation not in the scope of
-either `flatMap` or `map` (like a first invocation), it is not stack safe.
+disguised as a `@tailrec`-annotated method called `runLoop`. Nevertheless, if there is a recursive invocation not in the
+scope of either `flatMap` or `map` (like a first invocation), it is not stack safe.
 
 In order to pass through those intermediary steps and analyze those relations, we use as a running example a (variant of a)
 puzzle known as the `N Queens Problem`. Given a chess board - a square grid of `NxN` - and `N` queens, with other possible

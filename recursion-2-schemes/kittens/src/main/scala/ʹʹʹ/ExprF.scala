@@ -1,6 +1,6 @@
 package ʹʹʹ
 
-import cats.Functor, cats.syntax.functor._
+import cats.Functor, cats.syntax.functor.*
 
 sealed trait ExprF[+R]
 case class AddF[+R](lhs: R, rhs: R) extends ExprF[R]

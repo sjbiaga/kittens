@@ -1,11 +1,11 @@
 import scala.util.Random.{ nextInt, shuffle }
 
 import alleycats.{ Zero => `0`, One => `1` }
-import cats.instances.list._
-import cats.syntax.functor._
-import cats.syntax.traverse._
+import cats.instances.list.*
+import cats.syntax.functor.*
+import cats.syntax.traverse.*
 
-import Expr._
+import Expr.*
 
 enum Op:
   case +, -, *, /, ~, `0`, `1`
@@ -60,7 +60,7 @@ object Main:
     }
 
     {
-      import scala.util.control.TailCalls._
+      import scala.util.control.TailCalls.*
       type unit = Expr.Zero.type | Expr.One.type
       def eval(expr: Expr[Double])(implicit unit: unit, `0`: `0`[Double], `1`: `1`[Double]): Double =
         def evalʹ(xa: Expr[Double]): TailRec[Double] =

@@ -1,12 +1,12 @@
-import scala.util.control.TailCalls._
+import scala.util.control.TailCalls.*
 import scala.util.parsing.combinator.JavaTokenParsers
 
 import cats.{ ~>, Monoid, MonoidK }
-import cats.instances.string._
-import cats.instances.vector._
+import cats.instances.string.*
+import cats.instances.vector.*
 
 import cats.data.{ Validated, WriterT }
-import WriterT._
+import WriterT.*
 
 enum Expr[+T]:
   case Add[+T](lhs: Expr[T], rhs: Expr[T]) extends Expr[T]

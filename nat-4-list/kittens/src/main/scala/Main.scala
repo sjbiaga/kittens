@@ -1,9 +1,9 @@
 import cats.{ Eval, Monad, StackSafeMonad, ~> }
-import cats.syntax.flatMap._
+import cats.syntax.flatMap.*
 
 implicit val kittensʹListMonad: Monad[ʹ.List] =
   import ʹ.List
-  import List._
+  import List.*
   new StackSafeMonad[List]:
     override def pure[A](x: A): List[A] = x :: Nil
     override def map[A, B](fa: List[A])(f: A => B): List[B] = fa.map(f)
@@ -46,7 +46,7 @@ def list: ʹ.List ~> List =
 def listʹ: List ~> ʹ.List =
   new (List ~> ʹ.List):
     def apply[T](ls: List[T]): ʹ.List[T] =
-      import ʹ.List._
+      import ʹ.List.*
       ls.foldRight(Nil: ʹ.List[T])(_ :: _)
 
 object Main:
@@ -56,7 +56,7 @@ object Main:
     println(listʹ(List((1 to 10000)*)).size)
     try
       import ʹ.List
-      import List._
+      import List.*
       println(List(1, 2, 3))
       ((1 :: 2 :: Nil) ::: (3 :: Nil)).foreach(println)
       println((1 :: 2 :: 3 :: Nil).map { it => List(it + it, it * it) }.flatten)

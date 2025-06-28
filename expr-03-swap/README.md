@@ -47,10 +47,12 @@ implicit val kittensExprFunctor: Functor[Expr] =
 ```
 
 In order to _use_ the `map` method, the `functor` syntax must be in scope. `Cats` employs a sophisticated system of implicits
-to this end. This mechanism is explained in [Lesson 05 - Resolving `Monoid`s](https://github.com/sjbiaga/kittens/blob/main/monoid-4-resolve/README.md#resolving-monoids). Thus:
+to this end. This mechanism is explained in
+[Lesson 05 - Resolving `Monoid`s](https://github.com/sjbiaga/kittens/blob/main/monoid-4-resolve/README.md#resolving-monoids).
+Thus:
 
 ```scala
-scala> import cats.syntax.functor._
+scala> import cats.syntax.functor.*
 scala> (Inv(Val(2)): Expr[Int]).map(_ / 2)
 val res0: Expr[Int] = Inv(Val(1))
 ```
@@ -58,15 +60,16 @@ val res0: Expr[Int] = Inv(Val(1))
 Natural Transformations: Swapping the Additive with the Multiplicative
 ----------------------------------------------------------------------
 
-Category Theory is quite abstract, and the more advanced notions are introduced, the more difficult they get. Natural
-transformations are known as morphisms of functors. In `Cats`, they are available in the package `cats.arrow`, as the
+Category Theory is quite abstract, and the more advanced notions are introduced, the more difficult they get - in theory.
+Natural transformations are known as morphisms of functors. In `Cats`, they are available in the package `cats.arrow`, as the
 higher-kinded [`FunctionK`](https://typelevel.org/cats/datatypes/functionk.html) trait of kind `(* -> *, * -> *) -> *`, also
 written `~>`. Given two functors `F[_]` and `G[_]`, it defines a `SAM` method `apply[A](fa: F[A]): G[A]`.
 
 Nevertheless, a very straightforward "function" or natural transformation of signature `Expr ~> Expr` is that of swapping the
 additive and the multiplicative parts with one another: by pattern-matching on the parameter `expr: Expr[T]`, we can swap
 operators `Zero` with `One`, `Add` with `Mul`, and `Sub` with `Div` - and vice-versa. The operands are swapped in a recursive
-manner. The implementation is also very intuitive - much like [`eval`](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md#evaluation-of-expressions).
+manner. The implementation is also very intuitive - much like
+[`eval`](https://github.com/sjbiaga/kittens/blob/main/expr-02-eval/README.md#evaluation-of-expressions).
 
 ```Scala
 import cats.~>

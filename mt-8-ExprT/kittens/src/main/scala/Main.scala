@@ -4,13 +4,13 @@ import cats.{ ~>, Eval, Monad, Show }
 
 import cats.data.NonEmptyList
 
-import cats.instances.option._
-import cats.syntax.coflatMap._
-import cats.syntax.flatMap._
-import cats.syntax.partialOrder._
+import cats.instances.option.*
+import cats.syntax.coflatMap.*
+import cats.syntax.flatMap.*
+import cats.syntax.partialOrder.*
 
-import Expr._
-import ExprT._
+import Expr.*
+import ExprT.*
 
 object Main:
 

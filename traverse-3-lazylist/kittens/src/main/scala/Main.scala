@@ -1,8 +1,8 @@
 package Exercise_07_2
 
 import cats.{ Applicative, Eval, Traverse }
-import cats.instances.option._
-import cats.syntax.traverse._
+import cats.instances.option.*
+import cats.syntax.traverse.*
 
 implicit val kittensLazyListTraverse: Traverse[LazyList] =
   new Traverse[LazyList]:
@@ -48,7 +48,7 @@ object Main:
       }
 
       println {
-        import cats.instances.lazyList._
+        import cats.instances.lazyList.*
         val T = implicitly[Traverse[LazyList]]
         lazy val rec: (Long, Eval[Long]) => Eval[Long] =
           { (a, _) => T.foldRight(LazyList(a), Eval.now(a))(rec) }

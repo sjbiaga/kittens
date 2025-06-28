@@ -1,8 +1,8 @@
 package cats
 package data
 
-import cats.syntax.flatMap._
-import cats.syntax.traverse._
+import cats.syntax.flatMap.*
+import cats.syntax.traverse.*
 
 def kittensʹtraverseViaChain[G[_], A, B](
   as: scala.collection.immutable.IndexedSeq[A]
@@ -74,7 +74,7 @@ def kittensʹtraverseViaChain[G[_], A, B](
 
 implicit val kittensʹListTraverse: Traverse[Exercise_07_6.ʹ.List] =
   import Exercise_07_6.ʹ.List
-  import List._
+  import List.*
   new Traverse[List]:
     override def traverse[G[_]: Applicative, A, B](fa: List[A])(f: A => G[B]): G[List[B]] =
       implicitly[Applicative[G]] match
@@ -95,7 +95,7 @@ object Main:
   def main(args: Array[String]): Unit =
     try
       import Exercise_07_6.ʹ.List
-      import List._
+      import List.*
 
       val G = implicitly[Applicative[Option]]
 

@@ -1,6 +1,6 @@
 import cats.{ Applicative, Eval, Id, Traverse }
 
-import cats.syntax.traverse._
+import cats.syntax.traverse.*
 
 implicit def kittensTuple5Traverse[W, X, Y, Z]: Traverse[[A] =>> Tuple5[W, X, Y, Z, A]] =
   new Traverse[[A] =>> Tuple5[W, X, Y, Z, A]]:

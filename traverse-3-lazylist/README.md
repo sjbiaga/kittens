@@ -76,7 +76,7 @@ We used `sliding` and `take` methods, both of which construct _finite_ `LazyList
 However when we try to `traverse` the fibonacci series, the traversal never halts.
 
 ```scala
-scala> import cats.syntax.traverse._, cats.Id
+scala> import cats.syntax.traverse.*, cats.Id
 
 scala> fibonacci(0, 1).traverse[Id, Int](identity) // never halts, user presses Ctrl-C
 ^C
@@ -126,7 +126,7 @@ stack safe, the invocation of `f(s.head, rhs)` in line #f is not. For, consider 
 `foldRight`:
 
 ```Scala
-import cats.instances.lazyList._
+import cats.instances.lazyList.*
 
 val T = implicitly[Traverse[LazyList]]
 
@@ -210,7 +210,7 @@ The new `Traverseʹ[F[_]]` typeclass has two added methods:
 ```Scala
 import cats.{ Applicative, Traverse }
 
-import Trampoline._
+import Trampoline.*
 
 trait Traverseʹ[F[_]] extends Traverse[F]:
   def traverseʹ[G[_]: Applicativeʹ, A, B](fa: F[A])(f: A => G[B]): G[F[B]]

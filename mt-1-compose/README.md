@@ -80,7 +80,7 @@ If typeclass instances of the `Typeclass` typeclass, for, respectively, `List` a
 new typeclass instance of the `Typeclass` typeclass by invoking `compose` on the former with the latter as type parameter:
 
 ```scala
-scala> import cats.instances.list._, cats.instances.option._, cats.syntax.functor._
+scala> import cats.instances.list.*, cats.instances.option.*, cats.syntax.functor.*
 
 scala> Typeclass[List].compose[Option]
 val res0: cats.Typeclass[[α] =>> List[Option[α]]] = cats.Typeclass$$anon$1@2f8cb4c9

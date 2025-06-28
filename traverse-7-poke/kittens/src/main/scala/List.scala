@@ -9,7 +9,7 @@ object ʹ:
 
   class List[+T] private (private val node: List.Node[T], val size: Int) extends IterableOnce[T]:
 
-    import List._
+    import List.*
 
     override val knownSize: Int = size
 

@@ -18,7 +18,7 @@ subtract two `term`s, negate one `term`, or neither - in which case an expressio
 ```Scala
 import scala.util.parsing.combinator.JavaTokenParsers
 object Expr extends JavaTokenParsers:
-  import Expr._
+  import Expr.*
   def expr: Parser[Expr[Int | Double]] =
     term ~ ("+"|"-") ~ term ^^ {
       case lhs ~ "+" ~ rhs => Add(lhs, rhs)
@@ -46,10 +46,9 @@ def term: Parser[Expr[Int | Double]] =
   factor
 ```
 
-The factor parser is a method `factor` of type `Parser[Expr[Int | Double]]`; it can be either a `decimalNumber` or a
-`floatingPointNumber`, or else an `expr`ession in parentheses. Numbers zero and one are intercepted and mapped to objects
-`Zero`, respectively, `One`; else, a number - either `Int` or `Double` (hence the union type in the `Parser`) - is wrapped
-in a `Val`.
+The factor parser is a method `factor` of type `Parser[Expr[Int | Double]]`; it can be either a `floatingPointNumber` (`Int`
+or `Double`), or else an `expr`ession in parentheses. Numbers zero and one are intercepted and mapped to objects `Zero`,
+respectively, `One`; else, a number - either `Int` or `Double` (hence the union type in the `Parser`) - is wrapped in a `Val`.
 
 ```Scala
 def factor: Parser[Expr[Int | Double]] =

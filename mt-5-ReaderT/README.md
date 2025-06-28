@@ -317,7 +317,7 @@ choice of the parser must be free (only a `String` is the dependency of the buil
 ```Scala
 import cats.data.Reader
 
-import Expr._
+import Expr.*
 
 type Exprʹ[T] = Reader[String, Expr[T]]
 
@@ -347,7 +347,7 @@ import cats.{ Id, FlatMap, Monad }
 import cats.data.ReaderT
 import cats.free.Yoneda
 
-import Expr._
+import Expr.*
 
 type Readerʹ[A, B] = ReaderT[[α] =>> Yoneda[Id, α], A, B]
 
@@ -368,7 +368,7 @@ import cats.{ Id, FlatMap, Monad }
 import cats.data.ReaderT
 import cats.free.Coyoneda
 
-import Expr._
+import Expr.*
 
 type Readerʹʹ[A, B] = ReaderT[[α] =>> Coyoneda[Id, α], A, B]
 
@@ -385,7 +385,7 @@ implicit def kittensCoyonedaFlatMap[F[_]: Monad]: FlatMap[[α] =>> Coyoneda[F, �
 [Hint: define `Expr`essions and their evaluator as follows:
 
 ```Scala
-import scala.util.control.TailCalls._
+import scala.util.control.TailCalls.*
 
 import alleycats.{ Zero => `0`, One => `1` }
 
@@ -462,7 +462,7 @@ import scala.util.parsing.combinator.JavaTokenParsers
 
 object Exprʹ extends JavaTokenParsers:
 
-  import Expr._
+  import Expr.*
 
   def expr(implicit unit: unit): Parser[Expr[Double]] =
     term ~ rep(("+"|"-") ~ term) ^^ {
@@ -518,7 +518,7 @@ import Numbers.jsonNumber
 
 object Exprʹʹ:
 
-  import Expr._
+  import Expr.*
 
   private val whitespace: Parser[Unit] = charIn(" \t\r\n").void
   private val whitespaces0: Parser0[Unit] = whitespace.rep0.void
@@ -578,7 +578,7 @@ from the new left hand side that results as `lhs.map(<Op>(_, rhs))`:
 ```Scala
 import cats.data.Reader
 
-import Expr._
+import Expr.*
 
 type Exprʹ[T] = Reader[String, Expr[T]]
 
@@ -646,7 +646,7 @@ given `0`[Double] = `0`(0d)
 given `1`[Double] = `1`(1d)
 
 {
-  import Exprʹ._
+  import Exprʹ.*
 
   val start = System.currentTimeMillis
 
@@ -667,7 +667,7 @@ given `1`[Double] = `1`(1d)
 }
 
 {
-  import Exprʹʹ._
+  import Exprʹʹ.*
 
   val start = System.currentTimeMillis
 
@@ -701,7 +701,7 @@ Part 4, lest the invocation to `Buidler#build` - instead, we return `Builder#lhs
   val r =
     for
       lhs <- {
-        import Exprʹ._
+        import Exprʹ.*
 
         given Exprʹ[Double] = Reader(parseAll(expr, _).get)
 
@@ -715,7 +715,7 @@ Part 4, lest the invocation to `Buidler#build` - instead, we return `Builder#lhs
           .lhs
       }
       rhs <- {
-        import Exprʹʹ._
+        import Exprʹʹ.*
 
         given Exprʹ[Double] = Reader(parserExpr.parseAll(_).right.get)
 
@@ -752,7 +752,7 @@ import cats.{ Id, FlatMap, Monad }
 import cats.data.ReaderT
 import cats.free.Yoneda
 
-import Expr._
+import Expr.*
 
 type Readerʹ[A, B] = ReaderT[[α] =>> Yoneda[Id, α], A, B]
 
@@ -833,7 +833,7 @@ given `1`[Double] = `1`(1d)
   val r =
     for
       lhs <- {
-        import Exprʹ._
+        import Exprʹ.*
 
         given Exprʹʹ[Double] = ReaderT { x => Yoneda(parseAll(expr, x).get) }
 
@@ -847,7 +847,7 @@ given `1`[Double] = `1`(1d)
           .lhs
       }
       rhs <- {
-        import Exprʹʹ._
+        import Exprʹʹ.*
 
         given Exprʹʹ[Double] = ReaderT { x => Yoneda(parserExpr.parseAll(x).right.get) }
 
@@ -881,7 +881,7 @@ import cats.{ Id, FlatMap, Monad }
 import cats.data.ReaderT
 import cats.free.Coyoneda
 
-import Expr._
+import Expr.*
 
 type Readerʹʹ[A, B] = ReaderT[[α] =>> Coyoneda[Id, α], A, B]
 
@@ -962,7 +962,7 @@ given `1`[Double] = `1`(1d)
   val r =
     for
       lhs <- {
-        import Exprʹ._
+        import Exprʹ.*
 
         given Exprʹʹʹ[Double] = ReaderT { x => Coyoneda.lift(parseAll(expr, x).get) }
 
@@ -976,7 +976,7 @@ given `1`[Double] = `1`(1d)
           .lhs
       }
       rhs <- {
-        import Exprʹʹ._
+        import Exprʹʹ.*
 
         given Exprʹʹʹ[Double] = ReaderT { x => Coyoneda.lift(parserExpr.parseAll(x).right.get) }
 

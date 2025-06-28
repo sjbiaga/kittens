@@ -1,12 +1,12 @@
-import scala.util.control.TailCalls._
+import scala.util.control.TailCalls.*
 
 import algebra.ring.DivisionRing
 import alleycats.{ Zero => `0`, One => `1` }
 
 import cats.~>
 
-import Expr._
-import Tree._
+import Expr.*
+import Tree.*
 
 enum Op:
   case Add, Sub, Mul, Div, Inv

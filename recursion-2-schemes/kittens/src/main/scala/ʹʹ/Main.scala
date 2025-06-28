@@ -1,9 +1,9 @@
 package ʹʹ
 
 import cats.Functor
-import cats.syntax.functor._
+import cats.syntax.functor.*
 
-import ExprF._
+import ExprF.*
 
 object Main:
 

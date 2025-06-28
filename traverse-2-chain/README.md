@@ -172,7 +172,7 @@ Unfolding Case (1)
 Also, we can unfold case (1) to exemplify how it functions. Thus, we have an `Applicative` `G` and a traversal function `f`:
 
 ```Scala
-import cats.Applicative, cats.Eval, cats.instances.option._
+import cats.Applicative, cats.Eval, cats.instances.option.*
 
 val G = implicitly[Applicative[Option]]
 

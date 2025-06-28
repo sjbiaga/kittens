@@ -76,7 +76,7 @@ present both an infinite recursive variant - which raises the `StackOverflowErro
 1. For the `Function1[Int, *]` type constructor with a context, we give the following excerpt from a `REPL` session:
 
 ```scala
-scala> imports cats.Defer, cats.instances.function._
+scala> imports cats.Defer, cats.instances.function.*
 
 scala> Defer[[T] =>> Function1[Int, T]].fix[Int] { (m: Int => Int) => { (n: Int) => m(n-4) } }  // infinite recursion
 val res0: Int => Int = Lambda$1860/0x00007f13d861e1c8@4fa4b57f
@@ -140,7 +140,7 @@ Note how the parameter to `fix` is `Int` (not a function), but `F[A]` results as
 2. For the `Eval` type constructor, we give the following excerpt from a `REPL` session:
 
 ```scala
-scala> imports cats._
+scala> imports cats.*
 
 scala> def m(f: Eval[Int => Int]): Eval[Int => Int] = Eval.now { n => f.value(n-4) }
 def m(f: cats.Eval[Int => Int]): cats.Eval[Int => Int]
@@ -604,7 +604,7 @@ Solution - Part 1
 We define `Expr`essions, their parser, interpolator, evaluator, builder, and simplifier, as follows:
 
 ```Scala
-import scala.util.control.TailCalls._
+import scala.util.control.TailCalls.*
 import scala.util.parsing.combinator.JavaTokenParsers
 
 import alleycats.{ Zero => `0`, One => `1` }
@@ -946,7 +946,7 @@ as well as, neater, we illustrate the chaining of the (uncluttered) `flatMap` sy
 
 ```Scala
 println { // chaining
-  import cats.syntax.flatMap._
+  import cats.syntax.flatMap.*
   {
     Cont.defer(Inv(x"(1.0-0.0) * (1.0+0.0)").asInstanceOf[Expr[Double]])
     >>= builderCont

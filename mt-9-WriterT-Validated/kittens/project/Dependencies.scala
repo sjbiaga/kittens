@@ -1,4 +1,4 @@
-import sbt._
+import sbt.*
 
 object Dependencies {
   lazy val catseffect = "org.typelevel" %% "cats-effect" % "3.7-4972921"

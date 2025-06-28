@@ -1,6 +1,6 @@
 import cats.{ Eval, Functor }
 
-import ExprF._
+import ExprF.*
 
 object Mainʹ:
 

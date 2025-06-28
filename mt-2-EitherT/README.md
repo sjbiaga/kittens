@@ -62,7 +62,7 @@ Thus, either flattening an `EitherT[F, A, EitherT[F, A, B]]`, or an `F[Either[A,
 `F[Either[A, F[Either[A, B]]]]`, the higher-kinded types `Either` and `F` _alternate_:
 
 ```scala
-scala> import cats.instances.option._
+scala> import cats.instances.option.*
 
 scala> EitherT(Option(Right(EitherT(Option(Right(1)))))).flatten
 val res0: cats.data.EitherT[Option, Nothing, Int] = EitherT(Some(Right(1)))

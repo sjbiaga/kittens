@@ -4,7 +4,7 @@ import cats.{ Id, FlatMap, Monad }
 import cats.data.ReaderT
 import cats.free.Coyoneda
 
-import Expr._
+import Expr.*
 
 object Mainʹʹ:
 
@@ -88,7 +88,7 @@ object Mainʹʹ:
       val r =
         for
           lhs <- {
-            import Exprʹ._
+            import Exprʹ.*
 
             given Exprʹʹʹ[Double] = ReaderT { x => Coyoneda.lift(parseAll(expr, x).get) }
 
@@ -102,7 +102,7 @@ object Mainʹʹ:
               .lhs
           }
           rhs <- {
-            import Exprʹʹ._
+            import Exprʹʹ.*
 
             given Exprʹʹʹ[Double] = ReaderT { x => Coyoneda.lift(parserExpr.parseAll(x).right.get) }
 

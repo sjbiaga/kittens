@@ -11,7 +11,7 @@ First, implement a _stack safe_ typeclass instance `kittensExprMonad` of the `Mo
 
 ```Scala
 import cats.Free
-import Free._
+import Free.*
 
 case class Algorithms(n: Int):
   private def fibonacci(k: Int): Free[Expr, Expr[Int]] =
@@ -156,7 +156,7 @@ We can derive `Node`s or `Leaf`s easily from an `Expr`ession, by cases, but the 
 `eval`uated beforehand: we do this latter in a `DivisionRing`:
 
 ```Scala
-import algebra.ring._
+import algebra.ring.*
 
 implicit def eval[A](expr: Expr[A])(implicit R: DivisionRing[A]): A =
   expr match

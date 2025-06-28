@@ -33,7 +33,7 @@ Check that there exists a `Cats` typeclass instance of the `Monad` typeclass for
 class with a `counter`:
 
 ```Scala
-import cats._, cats.free._, cats.arrow._, Free._
+import cats.*, cats.free.*, cats.arrow.*, Free.*
 
 case class Algorithms(n: Int, var counter: Int):
   private def fibonacci(k: Int): Trampoline[Int] =

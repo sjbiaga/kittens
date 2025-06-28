@@ -1,4 +1,4 @@
-import cats._, cats.free._, Free._
+import cats.*, cats.free.*, Free.*
 
 case class Algorithms(n: Int, var counter: Int):
   private def fibonacci(k: Int): Trampoline[Int] =

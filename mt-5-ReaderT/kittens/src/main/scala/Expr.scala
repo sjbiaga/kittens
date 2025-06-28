@@ -1,4 +1,4 @@
-import scala.util.control.TailCalls._
+import scala.util.control.TailCalls.*
 
 import alleycats.{ Zero => `0`, One => `1` }
 

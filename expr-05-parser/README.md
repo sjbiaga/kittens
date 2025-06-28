@@ -13,7 +13,7 @@ The parser library has a `rep` combinator, which parses repetitions: in our case
 
 ```Scala
 object Expr extends JavaTokenParsers:
-  import Expr._
+  import Expr.*
   def expr(implicit unit: unit): Parser[Expr[Int | Double]] =
     term ~ rep(("+"|"-") ~ term) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
@@ -58,12 +58,12 @@ def factor(implicit unit: unit): Parser[Expr[Int | Double]] =
 ```
 
 We may see that the `implicit` `unit` parameter is used here to _prevent_ turning a negated expression via `Inv` into a
-subtraction via `Sub`; this is why all parser have this `implicit` parameter, though unused: it cannot be omitted, because of
+subtraction via `Sub`; this is why all parsers have this `implicit` parameter, though unused: it cannot be omitted, because of
 the linear way in which parsers depend on each other.
 
 As [before](https://github.com/sjbiaga/kittens/blob/main/expr-04-parser/README.md), the literal parser is a method `literal`
-of type `Parser[Expr[Int | Double]]`; it can be either a `decimalNumber` or a `floatingPointNumber`, or else specifically
-(although not a literal per se) an `Expr`ession in parentheses:
+of type `Parser[Expr[Int | Double]]`; it can be either a `floatingPointNumber`, or else specifically (although not a literal
+per se) an `Expr`ession in parentheses:
 
 ```Scala
 def literal(implicit unit: unit): Parser[Expr[Int | Double]] =

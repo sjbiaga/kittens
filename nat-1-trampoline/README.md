@@ -94,8 +94,8 @@ or, we can use an uncluttered `for`-comprehension (the two `import`s _must_ be u
 // middle snippet
 
 import cats.Monad
-//import cats.syntax.flatMap._
-//import cats.syntax.functor._
+//import cats.syntax.flatMap.*
+//import cats.syntax.functor.*
 
 def test[F[_]](implicit M: Monad[F]) =
   for
@@ -112,8 +112,8 @@ or the equivalent through Scala translation scheme (the "syntax" `import`s requi
 // bottom snippet
 
 import cats.Monad
-import cats.syntax.flatMap._
-import cats.syntax.functor._
+import cats.syntax.flatMap.*
+import cats.syntax.functor.*
 
 def test[F[_]](using M: Monad[F]): F[Double] =
   val d = (_: Int).toDouble

@@ -4,7 +4,7 @@ import cats.{ Id, FlatMap,  Monad }
 import cats.data.ReaderT
 import cats.free.Yoneda
 
-import Expr._
+import Expr.*
 import cats.free.Yoneda
 
 object Mainʹ:
@@ -89,7 +89,7 @@ object Mainʹ:
       val r =
         for
           lhs <- {
-            import Exprʹ._
+            import Exprʹ.*
 
             given Exprʹʹ[Double] = ReaderT { x => Yoneda(parseAll(expr, x).get) }
 
@@ -103,7 +103,7 @@ object Mainʹ:
               .lhs
           }
           rhs <- {
-            import Exprʹʹ._
+            import Exprʹʹ.*
 
             given Exprʹʹ[Double] = ReaderT { x => Yoneda(parserExpr.parseAll(x).right.get) }
 

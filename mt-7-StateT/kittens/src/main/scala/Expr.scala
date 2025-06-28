@@ -1,4 +1,4 @@
-import scala.util.control.TailCalls._
+import scala.util.control.TailCalls.*
 import scala.util.parsing.combinator.JavaTokenParsers
 
 import algebra.ring.{ DivisionRing, Ring }
@@ -6,8 +6,8 @@ import alleycats.{ Zero => `0`, One => `1` }
 
 import cats.~>
 
-import Expr._
-import Tree._
+import Expr.*
+import Tree.*
 
 enum Expr[+T]:
   case Add[+T](lhs: Expr[T], rhs: Expr[T]) extends Expr[T]

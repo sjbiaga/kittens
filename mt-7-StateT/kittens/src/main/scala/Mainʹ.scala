@@ -3,8 +3,8 @@ import alleycats.{ Zero => `0`, One => `1` }
 import cats.Eval
 import cats.data.IndexedState
 
-import Expr._
-import Tree._
+import Expr.*
+import Tree.*
 
 object Mainʹ:
 

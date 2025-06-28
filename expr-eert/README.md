@@ -9,7 +9,7 @@ Exercise 06.4
 Using the following `import`, `type`s (rather than `cats.~>`), and `val`ues:
 
 ```Scala
-import algebra.ring._
+import algebra.ring.*
 
 enum Op:
   case Add, Sub, Mul, Div, Inv
@@ -21,7 +21,7 @@ enum Tree[T]:
                left: Option[Tree[T]],
                right: Option[Tree[T]]) extends Tree[T]
 
-import Tree._
+import Tree.*
 
 trait FunctionKʹ[R[_], F[_], G[_]]:
   def apply[A: R](fa: F[A]): G[A]

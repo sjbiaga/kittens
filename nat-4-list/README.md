@@ -17,7 +17,7 @@ object ʹ:
   // because constructor is private, Nil is unique
   class List[+T] private (private val node: List.Node[T], val size: Int) extends IterableOnce[T]:
 
-    import List._
+    import List.*
 
     override val knownSize: Int = size
 
@@ -170,7 +170,7 @@ object ʹ:
 
   class List[+T] private (private val node: List.Node[T], val size: Int) extends IterableOnce[T]:
 
-    import List._
+    import List.*
 
     override val knownSize: Int = size
 
@@ -418,7 +418,7 @@ import cats.{ Eval, Monad, StackSafeMonad, ~> }
 
 implicit val kittensʹListMonad: Monad[ʹ.List] =
   import ʹ.List
-  import List._
+  import List.*
   new StackSafeMonad[List]:
     override def pure[A](x: A): List[A] = x :: Nil
     override def map[A, B](fa: List[A])(f: A => B): List[B] = fa.map(f)
@@ -565,7 +565,7 @@ def list: ʹ.List ~> List =
 def listʹ: List ~> ʹ.List =
   new (List ~> ʹ.List):
     def apply[T](ls: List[T]): ʹ.List[T] =
-      import ʹ.List._
+      import ʹ.List.*
       ls.foldRight(Nil: ʹ.List[T])(_ :: _)
 ```
 
@@ -574,7 +574,7 @@ We exemplify some trivial operators, the monadic interface, the natural transfor
 ```Scala
 try
   import ʹ.List
-  import List._
+  import List.*
   println(List(1, 2, 3))
   ((1 :: 2 :: Nil) ::: (3 :: Nil)).foreach(println)
   println((1 :: 2 :: 3 :: Nil).map { it => List(it + it, it * it) }.flatten)

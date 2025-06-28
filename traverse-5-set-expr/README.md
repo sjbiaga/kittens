@@ -15,7 +15,7 @@ typeclass for `List`, as in the following `opsify` method:
 ```Scala
 import scala.util.Random.{ nextInt, shuffle }
 
-import Expr._
+import Expr.*
 
 enum Op:
   case +, -, *, /, ~, `0`, `1`
@@ -127,7 +127,7 @@ implicit def eval[A](xs: Expr[Set[A]])(implicit zero: Zero[Set[A]], one: One[Set
 `Expr`ession `for`-comprehensions
 ---------------------------------
 
-We `import scala.util.control.TailCalls._` and reimplement the `kittensʹExprMonad` typeclass instance of the `Monad` typeclass
+We `import scala.util.control.TailCalls.*` and reimplement the `kittensʹExprMonad` typeclass instance of the `Monad` typeclass
 for `Expr` by instantiating `StackSafeMonad[Expr]`, and give `flatten` and `map` methods a stack safe definition (although,
 more elaborate):
 
@@ -146,7 +146,7 @@ enum Expr[+T]:
   case Val[T](n: T) extends Expr[T]
 
 object Expr:
-  import scala.util.control.TailCalls._
+  import scala.util.control.TailCalls.*
   implicit val kittensʹExprMonad: Monad[Expr] =
     new StackSafeMonad[Expr]:
       def pure[A](a: A): Expr[A] = Val(a)
@@ -272,7 +272,7 @@ object Expr:
 Let us analyze more closely what happens in `flatten` and `map`; suppose we had the following `for`-comprehension:
 
 ```Scala
-import cats.syntax.flatMap._, cats.syntax.functor._
+import cats.syntax.flatMap.*, cats.syntax.functor.*
 
 val w: Expr[Expr[Int]] =
   for
@@ -610,7 +610,7 @@ of:
 The `foldRight` method is implemented too in a stack safe manner using `Cats`' `Eval` monad in a nested `foldRightʹ` method.
 
 ```Scala
-import scala.util.control.TailCalls._
+import scala.util.control.TailCalls.*
 
 import alleycats.{ Zero => `0`, One => `1` }
 

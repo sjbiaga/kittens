@@ -385,7 +385,7 @@ object ExprFacF:
 We have defined the two convenience methods `in`ject left (`inL`) and right (`inR`); the `factorial` corecursive algorithm is:
 
 ```Scala
-import ExprFacF._
+import ExprFacF.*
 
 def factorial(n: Long): ExprFacF[Long] =
   if n <= 0

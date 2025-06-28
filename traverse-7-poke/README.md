@@ -29,8 +29,8 @@ prior to invoke `Eval#value`.
 package cats
 package data
 
-import cats.syntax.flatMap._
-import cats.syntax.traverse._
+import cats.syntax.flatMap.*
+import cats.syntax.traverse.*
 
 def kittensʹtraverseViaChain[G[_], A, B](
   as: scala.collection.immutable.IndexedSeq[A]
@@ -108,7 +108,7 @@ We define the `kittensʹListTraverse` typeclass instance of `Traverse` for `ʹ.L
 ```Scala
 implicit val kittensʹListTraverse: Traverse[Exercise_07_6.ʹ.List] =
   import Exercise_07_6.ʹ.List
-  import List._
+  import List.*
   new Traverse[List]:
     override def traverse[G[_]: Applicative, A, B](fa: List[A])(f: A => G[B]): G[List[B]] =
       implicitly[Applicative[G]] match
@@ -132,7 +132,7 @@ first method `loop`, and then test fail fast semantics for the `Applicative[Opti
 ```Scala
     try
       import Exercise_07_6.ʹ.List
-      import List._
+      import List.*
 
       val G = implicitly[Applicative[Option]]
 
