@@ -171,6 +171,13 @@ def method(arg1, arg2, ...): Trampoline[T] = // translation
 where it can be seen that `map` (lines #b-#c) applies to the function argument `{ (resN: T) => combine(resK*): T }`, returning
 a `Trampoline[T]`, whereas `flatMap` (lines #a-#d) applies to the function argument `{ (resN_1: T) => #b-#c: Trampoline[T] }`.
 
+Thus, the type of the parameter in the signature of the sole `map` is `A => B`, while of all the (other) `flatMap`s is
+`A => Trampoline[B]`. This is because _once_ `map` is used - although it takes a function `A => B` as argument (with `B` as
+result type) -, having `Trampoline[B]` as result type becomes an _invariant_ for all other `flatMap`s as well. Note that,
+given an `f: A => B`, then `_.map(f): Trampoline[A] => Trampoline[B]`, and, given a `g: A => Trampoline[B]`, then also
+`_.flatMap(g): Trampoline[A] => Trampoline[B]`: their signatures - once the function parameter is given - are the same,
+except that `A` may differ, whereas `B` may not. The source type `A` of `f` _or_ `g` varies with the type of the receiver.
+
 `Trampoline` `Monad`
 --------------------
 
