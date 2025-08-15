@@ -82,7 +82,7 @@ Examples
 
 Make a backup of `~/.dotty_history`, then copy the `.dotty_history` from some lesson, and launch the `REPL`:
 
-    scala-cli repl -S 3.7.2-RC1 --dep org.typelevel::cats-effect:3.6.2                        \
+    scala-cli repl -S 3.7.3-RC2 --dep org.typelevel::cats-effect:3.6.3                        \
                                 --dep org.typelevel::cats-core:2.13.0                         \
                                 --dep org.typelevel::cats-free:2.13.0                         \
                                 --dep org.typelevel::algebra:2.13.0                           \

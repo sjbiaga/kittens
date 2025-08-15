@@ -883,10 +883,10 @@ be "forgotten" as a value of some type `SBʹ`. Composing `run` with `f`, the `In
 this "forgetful" function:
 
 ```Scala
-def transformF[G[_]: Applicative, SC, B](
+def transformF[G[_], B, SC](
   f: F[(SB, A)] => G[(SC, B)]
-)(implicit F: FlatMap[F]): IndexedStateT[G, SA, SC, B] =
-  IndexedStateT.apply(run andThen f)
+)(implicit F: FlatMap[F], G: Applicative[G]): IndexedStateT[G, SA, SC, B] =
+  IndexedStateT(s => f(run(s)))
 ```
 
 Methods from the companion object
