@@ -56,7 +56,7 @@ type Writerʹ[T] = Writer[String, T]
 
 type Exprʹ[T] = Writerʹ[Expr[T]]  // the `Parser` and builder base types
 
-type Doubleʹ = Writer[String, Double]  // the return type of the evaluator
+type Doubleʹ = Writerʹ[Double]  // the return type of the evaluator
 ```
 
 When logging a new message, while combining existing logs, a method `putʹ[T, U]` delegates to the method `putT[Id, String, T]`
@@ -129,13 +129,13 @@ hint types and methods as well:
 ```Scala
 object Expr extends JavaTokenParsers:
 
-  type unit = Expr.Zero.type | Expr.One.type
+  type unit = Zero.type | One.type
 
   type Writerʹ[T] = Writer[String, T]
 
   type Exprʹ[T] = Writerʹ[Expr[T]]
 
-  type Doubleʹ = Writer[String, Double]
+  type Doubleʹ = Writerʹ[Double]
 
   def putʹ[T, U](valʹ: T)(log: Writerʹ[U]*)(msg: String): Writerʹ[T] =
     putT[Id, String, T](valʹ)(log.foldRight(msg)(_.swap.value + _) + "\n")
@@ -149,7 +149,7 @@ We modify the type of the _parser_ to `Exprʹ[Int | Double]` - which is a writer
 binary) operator:
 
 ```Scala
-  def expr(implicit unit: unit): Parser[Exprʹ[Int | Double]] =
+  def expr(using unit): Parser[Exprʹ[Int | Double]] =
     term ~ rep(("+"|"-") ~ term) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "+" ~ rhs) =>
@@ -159,7 +159,7 @@ binary) operator:
       }
     }
 
-  def term(implicit unit: unit): Parser[Exprʹ[Int | Double]] =
+  def term(using unit): Parser[Exprʹ[Int | Double]] =
     factor ~ rep(("*"|"/") ~ factor) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "*" ~ rhs) =>
@@ -169,9 +169,9 @@ binary) operator:
       }
     }
 
-  def factor(implicit unit: unit): Parser[Exprʹ[Int | Double]] =
+  def factor(using unit): Parser[Exprʹ[Int | Double]] =
     ("+"|"-") ~ literal ^^ {
-      case "-" ~ rhs if unit eq Zero =>
+      case "-" ~ rhs if summon[unit] eq Zero =>
         putʹ(Inv(rhs.value))(rhs)("unary negation")
       case "+" ~ rhs =>
         putʹ(Add(Zero, rhs.value))(rhs)("addition with zero")
@@ -180,7 +180,7 @@ binary) operator:
     } |
     literal
 
-  def literal(implicit unit: unit): Parser[Exprʹ[Int | Double]] =
+  def literal(using unit): Parser[Exprʹ[Int | Double]] =
     floatingPointNumber ^^ {
       _.toDouble match
         case 0d => putʹ(Zero)("constant zero: Double")
@@ -193,7 +193,7 @@ binary) operator:
         case 1 => putʹ(One)("constant one: Int")
         case n => putʹ(Val(n))(s"value $n: Int")
     } |
-    "("~> expr(using unit) <~")" ^^ { _.tell("parentheses\n") }
+    "("~> expr <~")" ^^ { _.tell("parentheses\n") }
 ```
 
 There is no combination of logs for the nullary operators - because there are none existing. Also, an expression in
@@ -203,7 +203,7 @@ The only change to the interpolator is that of the return type, which is just ad
 
 ```Scala
   implicit class ExprInterpolator(private val sc: StringContext) extends AnyVal:
-    def x(args: Any*)(implicit unit: unit): Exprʹ[Int | Double] =
+    def x(args: Any*)(using unit): Exprʹ[Int | Double] =
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
@@ -264,7 +264,7 @@ The builder is modified in the signatures of the "operator" methods (except `inv
 ```Scala
   final case class Builder[T](lhs: Exprʹ[T], private var save: List[Exprʹ[T]]):
     private def fill(n: Int) = List.fill(0 max n)(())
-    def swapping(implicit unit: unit) =
+    def swapping(using unit) =
       Builder(putʹ(swap(lhs.value))(lhs)("swapping"), save)
     def add(rhs: Expr[T], n: Int = 1)(using m: String = "") =
       Builder (
@@ -344,7 +344,7 @@ The return type of `eval` is a `Double` `Writerʹ` - or `Doubleʹ`. The messages
 a simple manner, using the same `putʹ` method.
 
 ```Scala
-  def eval(expr: Expr[Double])(implicit unit: unit): Doubleʹ =
+  def eval(expr: Expr[Double])(using unit: unit): Doubleʹ =
     def evalʹ(xa: Expr[Double]): TailRec[Doubleʹ] =
       xa match
         case Zero              => done(putʹ(0d)("constant zero"))
@@ -396,7 +396,7 @@ The following "prime" methods are added: `_.addʹ(_)`, `_.subtractʹ(_)`, `_.mul
 ```Scala
   final case class Builder[T](lhs: Exprʹ[T], private var save: List[Exprʹ[T]]):
     private def fill(n: Int) = List.fill(0 max n)(())
-    def swapping(implicit unit: unit) =
+    def swapping(using unit) =
       Builder(putʹ(swap(lhs.value))(lhs)("swapping"), save)
     def add(rhs: Expr[T], n: Int = 1)(using m: String = "") =
       Builder (
@@ -541,7 +541,7 @@ Solution - Part 6
 ```Scala
 object Expr extends JavaTokenParsers:
 
-  type unit = Expr.Zero.type | Expr.One.type
+  type unit = Zero.type | One.type
 
   type Writerʹ[T] = Writer[String, T]
 
@@ -560,7 +560,7 @@ object Expr extends JavaTokenParsers:
    indentation for parenthesized expressions:
 
 ```Scala
-  def expr(implicit unit: unit, indent: String): Parser[Exprʹ[Int | Double]] =
+  def expr(using unit, String): Parser[Exprʹ[Int | Double]] =
     term ~ rep(("+"|"-") ~ term) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "+" ~ rhs) =>
@@ -570,7 +570,7 @@ object Expr extends JavaTokenParsers:
       }
     }
 
-  def term(implicit unit: unit, indent: String): Parser[Exprʹ[Int | Double]] =
+  def term(using unit, String): Parser[Exprʹ[Int | Double]] =
     factor ~ rep(("*"|"/") ~ factor) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "*" ~ rhs) =>
@@ -580,7 +580,7 @@ object Expr extends JavaTokenParsers:
       }
     }
 
-  def factor(implicit unit: unit, indent: String): Parser[Exprʹ[Int | Double]] =
+  def factor(using unit, String): Parser[Exprʹ[Int | Double]] =
     ("+"|"-") ~ literal ^^ {
       case "-" ~ rhs if unit eq Zero =>
         putʹ(Inv(rhs.value))(rhs)("unary negation")
@@ -591,7 +591,7 @@ object Expr extends JavaTokenParsers:
     } |
     literal
 
-  def literal(implicit unit: unit, indent: String): Parser[Exprʹ[Int | Double]] =
+  def literal(using unit: unit, indent: String): Parser[Exprʹ[Int | Double]] =
     floatingPointNumber ^^ {
       _.toDouble match
         case 0d => putʹ(Zero)("constant zero: Double")
@@ -613,7 +613,7 @@ The log lines containing `"parentheses"` only _end with_ this `String`, instead 
 
 ```Scala
   implicit class ExprInterpolator(private val sc: StringContext) extends AnyVal:
-    def x(args: Any*)(implicit unit: unit): Exprʹ[Int | Double] =
+    def x(args: Any*)(using unit: unit): Exprʹ[Int | Double] =
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
@@ -631,7 +631,7 @@ The log lines containing `"parentheses"` only _end with_ this `String`, instead 
     def indent(rhs: Exprʹ[T]): Exprʹ[T] =
       rhs.mapWritten(_.split("\n").map(indent + _).mkString("", "\n", "\n"))
     private def fill(n: Int) = List.fill(0 max n)(())
-    def swapping(implicit unit: unit) =
+    def swapping(using unit) =
       Builder(putʹ(swap(lhs.value))(lhs)("swapping"), save)
     def add(rhs: Expr[T], n: Int = 1)(using m: Option[String] = None) =
       Builder (
@@ -782,7 +782,7 @@ Note that `mapWritten` is used, which changes (i.e., indents) only the log.
 5. The slight modification to the evaluator is that an implicit _empty_ indentation must be defined in the scope of `evalʹ`.
 
 ```Scala
-  def eval(expr: Expr[Double])(implicit unit: unit): Doubleʹ =
+  def eval(expr: Expr[Double])(using unit: unit): Doubleʹ =
     implicit val indent: String = ""
     def evalʹ(xa: Expr[Double]): TailRec[Doubleʹ] =
       xa match

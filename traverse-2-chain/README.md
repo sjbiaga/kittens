@@ -93,7 +93,7 @@ So, let us discuss the processing, in each case.
   variable `flist` to program the compilation of an unevaluated singleton in `G`:
 
 ```Scala
-var flist = Eval.later { G.map(f(a))(_ :: Nil) } // or:
+var flist = Eval.later { G.map(f(a))(_ :: Nil) } // or ascribed:
 var flist: Eval[G[List[B]]] = Eval.later { G.map(f(a): G[B])((_: B) :: (Nil: List[B])) }
 ```
 
@@ -103,7 +103,7 @@ var flist: Eval[G[List[B]]] = Eval.later { G.map(f(a): G[B])((_: B) :: (Nil: Lis
 
 ```Scala
 val rhs = flist
-flist = Eval.defer { G.map2Eval(f(a), rhs)(_ :: _) } // or:
+flist = Eval.defer { G.map2Eval(f(a), rhs)(_ :: _) } // or ascribed:
 flist = Eval.defer { G.map2Eval(f(a): G[B], rhs: Eval[G[List[B]]])((_: B) :: (_: List[B])) }
 ```
 
@@ -111,7 +111,7 @@ flist = Eval.defer { G.map2Eval(f(a): G[B], rhs: Eval[G[List[B]]])((_: B) :: (_:
   inner type):
 
 ```Scala
-flist.map(G.map(_)(Chain.fromSeq(_))) // or:
+flist.map(G.map(_)(Chain.fromSeq(_))) // or ascribed:
 (flist: Eval[G[List[B]]]).map(G.map(_: G[List[B]])(Chain.fromSeq(_: List[B]))): Eval[G[Chain[B]]]
 ```
 
@@ -131,7 +131,7 @@ var fchain: Eval[G[Chain[B]]] = Eval.defer { loop(start, start + step) }
 
 ```Scala
 val rhs = loop(start, end min start + step)
-fchain = fchain.flatMap(G.map2Eval(_, rhs)(_ ++ _)) // or:
+fchain = fchain.flatMap(G.map2Eval(_, rhs)(_ ++ _)) // or ascribed:
 fchain = fchain.flatMap(G.map2Eval((_: G[Chain[B]]), rhs: Eval[G[Chain[B]]])((_: Chain[B]) ++ (_: Chain[B])))
 ```
 
@@ -142,7 +142,7 @@ fchain = fchain.flatMap(G.map2Eval((_: G[Chain[B]]), rhs: Eval[G[Chain[B]]])((_:
    through `Eval`s: this _outer_ program is executed in a _stack safe_ manner by calling `Eval#value` upon it.
 
 ```Scala
-loop(0, as.size).value // or:
+loop(0, as.size).value // or ascribed:
 loop(0, as.size).value: G[Chain[B]]
 ```
 

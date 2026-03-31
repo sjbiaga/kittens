@@ -74,10 +74,10 @@ enum Trampoline[+A]:
 
   import Trampoline.*
 
-  final def map[B](fun: A => B): Trampoline[B] =
+  def map[B](fun: A => B): Trampoline[B] =
     this.flatMap(fun andThen pure)
 
-  final def flatMap[B](sequel: A => Trampoline[B]): Trampoline[B] =
+  def flatMap[B](sequel: A => Trampoline[B]): Trampoline[B] =
     FlatMap(this, Kleisli(sequel))
 
   @annotation.tailrec

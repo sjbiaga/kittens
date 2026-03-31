@@ -30,7 +30,7 @@ def kittensʹtraverseViaChain[G[_], A, B](
                 it :: ls
             }
           }
-          idx = idx - 1
+          idx -= 1
         flist.map { ls =>
           G.map(ls) { it =>
             Chain.fromSeq(it)
@@ -89,7 +89,7 @@ implicit val kittensʹListTraverse: Traverse[Exercise_07_6.ʹ.List] =
     override def foldLeft[A, B](fa: List[A], b: B)(f: (B, A) => B): B =
       fa.foldLeft(b)(f)
     override def foldRight[A, B](fa: List[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
-      fa.foldRightʹ(lb)(f)
+      fa.foldRight(lb)(f)
 
 object Main:
   def main(args: Array[String]): Unit =

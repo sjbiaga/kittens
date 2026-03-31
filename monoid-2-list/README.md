@@ -15,8 +15,7 @@ import cats.syntax.invariant.*
 import cats.{ Eq, Monoid }
 implicit def kittensMonoidForList[A: Monoid: Eq]: Monoid[List[A]] =
   val M = implicitly[Monoid[A]]
-  val E = implicitly[Eq[A]]
-  M.imap { (it: A) => if E.eqv(it, M.empty) then (Nil: List[A]) else List[A](it) }
+  M.imap { (it: A) => if M.isEmpty(it) then (Nil: List[A]) else List[A](it) }
          { (it: List[A]) => if it.isEmpty then M.empty else M.combineAll(it) }
 ```
 

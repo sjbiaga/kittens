@@ -4,7 +4,7 @@ Lesson 03: A Rich Language of Expressions (cont'd)
 ==================================================
 
 Exercise 03.1
-----------------------
+-------------
 
 Knowing that `Val(2): Expr[Int]` can always be "inflated" to `Val(Val(2)): Expr[Expr[Int]]`, give a typeclass instance of
 the `CoflatMap` typeclass for `Expr`. [Hint: implement the `coflatten` method.]
@@ -78,9 +78,9 @@ Note that we cannot evaluate with `eval` a "higher-order" expression of type `Ex
 eval(kittensExprCoflatMap.coflatten(Inv(Mul(One, Add(Val(1), Zero))))) // compile error
 ```
 
-To give a typeclass instance of the `FlatMap` typeclass for `Expr`, see
+(To give a typeclass instance of the `FlatMap` typeclass for `Expr`, see
 [Exercise 06.6](https://github.com/sjbiaga/kittens/blob/main/eval-2-expr-tree/README.md#exercise-066) for an implementation
-of `flatten`.
+of `flatten`.)
 
 Solution - Part 2
 -----------------
@@ -113,16 +113,32 @@ the bound `f` is directly used as a return value.
 scala> given unit = One
 
 scala> kittensExprCoflatMap.coflatten(Inv(Mul(Val((_: Double).+(1)), Add(Val((_: Double).*(0)), Val((_: Double).-(1))))))
-val res2: Expr[Expr[Double => Double]] = Inv(Mul(Val(Val(rs$line$20$$$Lambda/0x00007fe53766dfc0@4d4b0e1a)),Add(Val(Val(rs$line$20$$$Lambda/0x00007fe53766e3b0@5c4de465)),Val(Val(rs$line$20$$$Lambda/0x00007fe53766e7a0@36e6ea6c)))))
+val res2: Expr[Expr[Double => Double]] = Inv(
+  Mul(
+    lhs = Val(Val(rs$line$12$$$Lambda/0x000000002176af18@34d4425f)),
+    rhs = Add(
+      lhs = Val(Val(rs$line$12$$$Lambda/0x000000002176b310@270a51df)),
+      rhs = Val(Val(rs$line$12$$$Lambda/0x000000002176b708@1269c5fb))
+    )
+  )
+)
 
 scala> kittensExprCoflatMap.coflatMap(Inv(Mul(Val((_: Double).+(1)), Add(Val((_: Double).*(0)), Val((_: Double).-(1))))))(evalʹ)
-val res3: Expr[Double => Double] = Inv(Mul(Val(rs$line$10$$$Lambda/0x00007f3c43624220@783a8ec4),Add(Val(rs$line$10$$$Lambda/0x00007f3c43625978@34afee7c),Val(rs$line$10$$$Lambda/0x00007f3c43650000@7e632933))))
+val res3: Expr[Double => Double] = Inv(
+  Mul(
+    lhs = Val(rs$line$13$$$Lambda/0x000000002178eb20@4f8b199b),
+    rhs = Add(
+      lhs = Val(rs$line$13$$$Lambda/0x000000002178ef18@eaf513),
+      rhs = Val(rs$line$13$$$Lambda/0x000000002178f310@7c899986)
+    )
+  )
+)
 ```
 
 Now, because `Expr` is a functor, we can map the _application function_ with some argument (`_(0d)`) and obtain an
 `Expr[Double]` value, which this we can evaluate to a number:
 
-```Scala
+```scala
 scala> res3.map(_(0d))
 val res4: Expr[Double] = Inv(Mul(Val(1.0),Add(Val(0.0),Val(-1.0))))
 
@@ -134,7 +150,15 @@ We might have avoided the use of `coflatMap` altogether and straightly rely only
 
 ```scala
 scala> Inv(Mul(Val((_: Double).+(1)), Add(Val((_: Double).*(0)), Val((_: Double).-(1)))))
-val res6: Expr[Double => Double] = Inv(Mul(Val(rs$line$9$$$Lambda/0x00007f504b6613d8@6467ce1a),Add(Val(rs$line$9$$$Lambda/0x00007f504b6617c8@5637ed9d),Val(rs$line$9$$$Lambda/0x00007f504b661bb8@45174eba))))
+val res6: Expr[Double => Double] = Inv(
+  Mul(
+    lhs = Val(rs$line$16$$$Lambda/0x00000000217ac210@3d730cb1),
+    rhs = Add(
+      lhs = Val(rs$line$16$$$Lambda/0x00000000217ac608@9133a23),
+      rhs = Val(rs$line$16$$$Lambda/0x00000000217aca00@7b8385cf)
+    )
+  )
+)
 
 scala> evalʹ(res6)
 val res7: Double => Double = Lambda/0x00007f504b6a6000@2c8542d4

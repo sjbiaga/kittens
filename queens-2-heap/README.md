@@ -48,8 +48,9 @@ object Heap:
       .headOption
       .map {
         _() match
-          case Some(it: More) => More((it.calls ++ calls.tail)*)     // line #24
+          case Some(it: Call) if calls.tail.isEmpty => it            // line #24
           case Some(it: Call) => More((it +: calls.tail)*)           // line #25
+          case Some(it: More) => More((it.calls ++ calls.tail)*)     // line #26
           case _ => More(calls.tail*)
       }
 ```
@@ -59,9 +60,9 @@ have issued an error: `TailRec optimisation not applicable, method call is neith
 
 A parameterless `final` method `call` is used to invoke the closures in the heap, regardless of the subtype extending
 `Heap`. Another `protected` method is `apply` with the return type `Option[Heap]`. There is one `case object` `Done` that
-does not reserve any heap: it marks the end of recursion. Then, just a single recursive call captured as a closure is handled
-with the `Call` `case class`, of just one parameter - the closure. Notice that all closures have as return type the base
-`sealed trait` `Heap`.
+does not reserve any heap: it marks the (local) end of recursion. Then, just a single recursive call captured as a closure is
+handled with the `Call` `case class`, of just one parameter - the closure. Notice that all closures have as return type the
+base `sealed trait` `Heap`.
 
 There are two more issues that need to be settled:
 
@@ -127,12 +128,14 @@ in line #19: upon pattern-matching as the `heap` variable in line #06, the secon
 receiver of type `More`.
 
 Now, because the head element in the sequence is likely to be a `Call` object, a second pass through lines #b-#e will return
-an object of type `More`. So answering (1), in line #24, the more recent calls (`it.calls`) are prepended to the earlier
+an object of type `More`. So answering (1), in line #26, the more recent calls (`it.calls`) are prepended to the earlier
 calls (`calls.tail`), yielding `More((it.calls ++ calls.tail)*)`. In this manner there is always a single instance of `More`
 because care is taken to flatten the closures in a stack-like sequence.
 
-Of course, when a row is done and line #a is reached, then line #25 will pattern-match. Thus, an instance of `Call` is
-“pushed on” the heap. Otherwise, the `FSM` will continue with the tail of the heap, until there are no more closures, which
-signifies the end of the algorithm.
+Of course, when a row is done and line #a is reached, then either line #24 or line #25 will pattern-match: thus, in the
+latter case, an instance of `Call` is “pushed on” the heap. Otherwise, the `FSM` will continue with the tail of the heap,
+until there are no more closures, which signifies the (local) end of the algorithm.
+
+Note that we could have defined `Done` as `val Done = More()`; also, line #24 is optional.
 
 [First](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/queens-1-native/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/expr-01-trait/README.md)

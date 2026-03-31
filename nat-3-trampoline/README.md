@@ -138,7 +138,7 @@ case class Algorithms(n: Int):
   def fac: Trampoline[Int] = kittensTrampolineDeferInstance.defer(factorial(n))
   def rec: Trampoline[Int] = kittensTrampolineDeferInstance.defer(rec(n))
 
-val a = Algorithms(25000)
+val a = Algorithms(1000)
 ```
 
 Note that - for stack safety - we _must_ wrap the _top_ invocations in `defer`: otherwise, the top calls could overflow the
@@ -162,10 +162,10 @@ class MonadInterpreter[M[_]](implicit M: Monad[M], D: Defer[M]):
       M.flatMap(D.defer(apply(self)))(cont andThen apply)                 // line #b
 ```
 
-If the pure "`value`" results from line #a alone, then the algorithm is thus ended. However, `apply(self)` from line #b is
-likely to happen more often: in the latter case, `M.flatMap` _delays_ - regardless of the monad type - by _compilation_ to
-`M` monad's "low-level" language. Assume we were called from line #39; then, for `Call`s, `self` is `Done(())`, so `apply`
-will recurse exactly _once_ from #b to #a (and then jump back).
+If the pure "`value`" results from line #a alone, then the algorithm is thus (locally) ended. However, `apply(self)` from
+line #b is likely to happen more often: in the latter case, `M.flatMap` _delays_ - regardless of the monad type - by
+_compilation_ to `M` monad's "low-level" language. Assume we were called from line #39; then, for `Call`s, `self` is
+`Done(())`, so `apply` will recurse exactly _once_ from #b to #a (and then jump back).
 
 Nevertheless, it is important that `apply` were _not_ recursive, for otherwise we could not guarantee stack safety. For this
 reason, we require an implicit `Defer[M]` typeclass instance be in scope, so that we also _defer_ `apply(self)` calls in
@@ -196,7 +196,7 @@ MonadInterpreter[IO].TrampolineInterpreter.apply(a.rec).unsafeRunSync()
 
 import cats.free.{ Trampoline => CatsTrampoline }
 implicitly[Monad[CatsTrampoline]]
-MonadInterpreter[CatsTrampoline].TrampolineInterpreter.apply(a.rec).runTailRec()()
+MonadInterpreter[CatsTrampoline].TrampolineInterpreter.apply(a.rec).runTailRec.apply()
 
 import cats.Id
 implicitly[Monad[Id]] eq catsInstancesForId == true

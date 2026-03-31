@@ -14,8 +14,8 @@ object Main:
       new Functor[ExprFacF]:
         override def map[A, B](ea: ExprFacF[A])(f: A => B): ExprFacF[B] =
           ea match
-            case Left(xa) => Left(kittensExprFunctor.map(xa)(f))
-            case Right(fa) => Right(kittensFacFunctor.map(fa)(f))
+            case Left(xa) => Left(kittensExprFFunctor.map(xa)(f))
+            case Right(fa) => Right(kittensFacFFunctor.map(fa)(f))
 
     def inL[R](xa: ExprF[R]) = Left(xa)
     def inR[R](fa: FacF[R, Long]) = Right(fa)

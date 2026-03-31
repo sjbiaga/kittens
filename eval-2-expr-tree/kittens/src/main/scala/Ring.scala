@@ -18,8 +18,8 @@ implicit def kittensExprRing[A]: DivisionRing[Expr[A]] =
   new DivisionRing[Expr[A]]:
     override val zero = Zero
     override val one = One
-    override def negate(n: Expr[A]) = Inv(n)
-    override def reciprocal(n: Expr[A]) = ???
+    override def negate(n: Expr[A]) = Sub(Zero, n)
+    override def reciprocal(n: Expr[A]) = Div(One, n)
     override def plus(m: Expr[A], n: Expr[A]) = Add(m, n)
     override def minus(m: Expr[A], n: Expr[A]) = Sub(m, n)
     override def times(m: Expr[A], n: Expr[A]) = Mul(m, n)

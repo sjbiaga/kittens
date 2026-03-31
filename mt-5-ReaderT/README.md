@@ -107,22 +107,22 @@ just `map` the function `f` and we are half way there. In this light, we can imp
 
 ```Scala
 def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Kleisli[F, AA, C] =
-  Kleisli { a =>
-    val g: B => F[C] = f(_).run(a)
+  Kleisli { aa =>
+    val g: B => F[C] = f(_).run(aa)
     val h: A => F[C] = run andThen F.lift(g) andThen F.flatten
-    h(a)
+    h(aa)
   }
 ```
 
 Now we can see that the order of functions that enter the composition via `andThen` is the same with `map`'s: first `run` and
-then `f(_).run(a)`; and, specifically, `F.flatten`. Let us make explicit the arguments by applying the composition to `a: A`:
+then `f(_).run(aa)`; and, specifically, `F.flatten`. Let us make explicit the arguments by applying the composition to `aa: A`:
 
 ```Scala
 def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Kleisli[F, AA, C] =
-  Kleisli { (a: A) =>
-    val fb: F[B] = this.run(a)
+  Kleisli { (aa: AA) =>
+    val fb: F[B] = this.run(aa)
     val ffc: F[F[C]] = F.map(fb) { (b: B) =>
-      val fc: F[C] = f(b).run(a)
+      val fc: F[C] = f(b).run(aa)
       fc
     }
     val fc: F[C] = F.flatten(ffc)
@@ -131,7 +131,7 @@ def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Klei
 ```
 
 A lot of things seem to happen now. Yet, basically, there are two _pair of braces_, the _outer_ one and the _inner_ one. The
-outer one maps an `A`, whereas the inner one handles a `B`. However, both apply `a: A`: the difference is that the outer
+outer one maps an `AA`, whereas the inner one handles a `B`. However, both apply `aa: AA`: the difference is that the outer
 `run` is invoked with `this` as receiver, while the inner `run` is invoked with `f(b)` as receiver. For the latter invocation
 succeeding the former, we need a `b`, that is unwrapped by the typeclass instance `F` from `fb` - the result of the former.
 
@@ -140,10 +140,10 @@ us replace `F.map` with `F.flatMap`:
 
 ```Scala
 def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Kleisli[F, AA, C] =
-  Kleisli { (a: A) =>
-    val fb: F[B] = this.run(a)
+  Kleisli { (aa: AA) =>
+    val fb: F[B] = this.run(aa)
     val fc: F[C] = F.flatMap(fb) { (b: B) =>
-      val fc: F[C] = f(b).run(a)
+      val fc: F[C] = f(b).run(aa)
       fc
     }
     fc
@@ -155,7 +155,7 @@ _intermediary_ values:
 
 ```Scala
 def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Kleisli[F, AA, C] =
-  Kleisli { a => F.flatMap(this.run(a))(f(_).run(a)) }
+  Kleisli { aa => F.flatMap(this.run(aa))(f(_).run(aa)) }
 ```
 
 and further let us use `Cats`' `flatMap` _syntax_:
@@ -164,7 +164,7 @@ and further let us use `Cats`' `flatMap` _syntax_:
 import cats.syntax.flatMap.*
 
 def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Kleisli[F, AA, C] =
-  Kleisli { a => this.run(a).flatMap(f(_).run(a)) }
+  Kleisli { aa => this.run(aa).flatMap(f(_).run(aa)) }
 ```
 
 or, introducing `g` again:
@@ -173,18 +173,18 @@ or, introducing `g` again:
 import cats.syntax.flatMap.*
 
 def flatMap[AA <: A, C](f: B => Kleisli[F, AA, C])(implicit F: FlatMap[F]): Kleisli[F, AA, C] =
-  Kleisli { a =>
-    val g: B => F[C] = f(_).run(a)
-    this.run(a).flatMap(g)
+  Kleisli { aa =>
+    val g: B => F[C] = f(_).run(aa)
+    this.run(aa).flatMap(g)
   }
 ```
 
 Now we can see that the actual invocation of `Kleisli#flatMap` - which is `this.flatMap(f)` - is _reflected_ at the
-implementation level as `this.run(a).flatMap(g)`, where both `run: A => F[B]` and `g: B => F[C]` are Kleisli arrows: hence,
-this implementation is identical in form with the composition of Kleisli arrows `run(_).flatMap(g)` applied to `a` - as
+implementation level as `this.run(aa).flatMap(g)`, where both `run: A => F[B]` and `g: B => F[C]` are Kleisli arrows: hence,
+this implementation is identical in form with the composition of Kleisli arrows `run(_).flatMap(g)` applied to `aa` - as
 mentioned in [Exercise 04.1](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md#exercise-041) for
-the `Trampoline` monad. As can be seen, once we have an `a: A`, we have both `run(a): F[B]` and `g: B => F[C]`, which - via
-`F.flatMap` - gives us an `F[C]`; and, both outer `F[B]` and inner `F[C]` result from applying `a: A`, in this order.
+the `Trampoline` monad. As can be seen, once we have `aa: AA`, we have both `run(aa): F[B]` and `g: B => F[C]`, which - via
+`F.flatMap` - gives us an `F[C]`; and, both outer `F[B]` and inner `F[C]` result from applying `aa: AA`, in this order.
 
 ```Scala
 def tap[AA <: A](implicit F: Functor[F]): Kleisli[F, AA, AA] =
@@ -401,9 +401,9 @@ enum Expr[+T]:
 
 object Expr:
 
-  type unit = Expr.Zero.type | Expr.One.type
+  type unit = Zero.type | One.type
 
-  def eval(expr: Expr[Double])(implicit unit: unit, `0`: `0`[Double], `1`: `1`[Double]): Double =
+  def eval(expr: Expr[Double])(using unit: unit, `0`: `0`[Double], `1`: `1`[Double]): Double =
     def evalʹ(xa: Expr[Double]): TailRec[Double] =
       xa match
         case Zero => done(`0`.zero)
@@ -447,7 +447,7 @@ object Expr:
 ```
 
 For the use case part, use a `for`-comprehension with two identical readers (`lhs` and `rhs`) built by invoking `Builder#lhs`,
-yielding `Div(lhs, rhs)`, so that `eval`uating results is `1` - indifferent of which dependency is injected.
+yielding `Div(lhs, rhs)`, so that `eval`uating results is `1` - regardless of which dependency is injected.
 
 Since `Reader` already uses `Id[*]` as context, `Kleisli#map` cannot get simpler than this, so that involving `Yoneda[Id, *]`
 or `Coyoneda[Id, *]` is not really an optimization here.]
@@ -464,7 +464,7 @@ object Exprʹ extends JavaTokenParsers:
 
   import Expr.*
 
-  def expr(implicit unit: unit): Parser[Expr[Double]] =
+  def expr(using unit): Parser[Expr[Double]] =
     term ~ rep(("+"|"-") ~ term) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "+" ~ rhs) => Add(lhs, rhs)
@@ -472,7 +472,7 @@ object Exprʹ extends JavaTokenParsers:
       }
     }
 
-  def term(implicit unit: unit): Parser[Expr[Double]] =
+  def term(using unit): Parser[Expr[Double]] =
     factor ~ rep(("*"|"/") ~ factor) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "*" ~ rhs) => Mul(lhs, rhs)
@@ -480,15 +480,15 @@ object Exprʹ extends JavaTokenParsers:
       }
     }
 
-  def factor(implicit unit: unit): Parser[Expr[Double]] =
+  def factor(using unit): Parser[Expr[Double]] =
     ("+"|"-") ~ literal ^^ {
-      case "-" ~ rhs if unit eq Zero => Inv(rhs)
+      case "-" ~ rhs if summon[unit] eq Zero => Inv(rhs)
       case "+" ~ rhs => Add(Zero, rhs)
       case "-" ~ rhs => Sub(Zero, rhs)
     } |
     literal
 
-  def literal(implicit unit: unit): Parser[Expr[Double]] =
+  def literal(using unit): Parser[Expr[Double]] =
     floatingPointNumber ^^ {
       _.toDouble match
         case 0d => Zero
@@ -498,7 +498,7 @@ object Exprʹ extends JavaTokenParsers:
     "("~> expr <~")"
 
   implicit class ExprInterpolator(private val sc: StringContext) extends AnyVal:
-    def x(args: Any*)(implicit unit: unit): Expr[Double] =
+    def x(args: Any*)(using unit): Expr[Double] =
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
@@ -525,7 +525,7 @@ object Exprʹʹ:
 
   private def char(cs: Char*): Parser[Char] = charIn(cs).surroundedBy(whitespaces0)
 
-  def expr(implicit unit: unit): Parser[Expr[Double]] =
+  def expr(using unit): Parser[Expr[Double]] =
     (term ~ (char('+', '-') ~ term).rep0).map {
       case (lhs, rhs) => rhs.foldLeft(lhs) {
         case (lhs, ('+', rhs)) => Add(lhs, rhs)
@@ -533,7 +533,7 @@ object Exprʹʹ:
       }
     }
 
-  def term(implicit unit: unit): Parser[Expr[Double]] =
+  def term(using unit): Parser[Expr[Double]] =
     (factor ~ (char('*', '/') ~ factor).rep0).map {
       case (lhs, rhs) => rhs.foldLeft(lhs) {
         case (lhs, ('*', rhs)) => Mul(lhs, rhs)
@@ -541,15 +541,15 @@ object Exprʹʹ:
       }
     }
 
-  def factor(implicit unit: unit): Parser[Expr[Double]] =
+  def factor(using unit): Parser[Expr[Double]] =
     (char('+', '-') ~ literal).map {
-      case ('-', rhs) if unit eq Zero => Inv(rhs)
+      case ('-', rhs) if summon[unit] eq Zero => Inv(rhs)
       case ('+', rhs) => Add(Zero, rhs)
       case ('-', rhs) => Sub(Zero, rhs)
     } |
     literal
 
-  def literal(implicit unit: unit): Parser[Expr[Double]] =
+  def literal(using unit): Parser[Expr[Double]] =
     jsonNumber.surroundedBy(whitespaces0).map {
       _.toDouble match
         case 0d => Zero
@@ -558,10 +558,10 @@ object Exprʹʹ:
     } |
     char('(') *> defer(expr) <* char(')')
 
-  def parserExpr(implicit unit: unit): Parser[Expr[Double]] = whitespaces0.with1 *> expr <* (whitespaces0 ~ end)
+  def parserExpr(using unit): Parser[Expr[Double]] = whitespaces0.with1 *> expr <* (whitespaces0 ~ end)
 
   implicit class ExprInterpolator(private val sc: StringContext) extends AnyVal:
-    def x(args: Any*)(implicit unit: unit): Expr[Double] =
+    def x(args: Any*)(using unit): Expr[Double] =
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }

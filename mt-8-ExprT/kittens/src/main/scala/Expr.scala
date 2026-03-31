@@ -283,13 +283,13 @@ object Expr extends JavaTokenParsers:
   implicit def kittensExprPartialOrder[A: PartialOrder]: PartialOrder[Expr[A]] =
     new PartialOrder[Expr[A]]:
       override def partialCompare(xa: Expr[A], ya: Expr[A]): Double =
-        val OA = PartialOrder[A]
+        val O = PartialOrder[A]
         def partialCompareʹ(x: Expr[A], y: Expr[A]): TailRec[Double] =
           (x, y) match
             case (Zero, One) => done(-1)
             case (One, Zero) => done(+1)
             case (Zero, Zero) | (One, One) => done(0)
-            case (Val(n), Val(nʹ)) => done(OA.partialCompare(n, nʹ))
+            case (Val(n), Val(nʹ)) => done(O.partialCompare(n, nʹ))
             case (Add(m, n), Add(mʹ, nʹ)) =>
               for
                 i <- tailcall { partialCompareʹ(m, mʹ) }
@@ -325,46 +325,46 @@ object Expr extends JavaTokenParsers:
   implicit def kittensExprEq[A: Eq]: Eq[Expr[A]] =
     new Eq[Expr[A]]:
       override def eqv(xa: Expr[A], ya: Expr[A]): Boolean =
-        val EA = Eq[A]
+        val E = Eq[A]
         def eqvʹ(x: Expr[A], y: Expr[A]): TailRec[Boolean] =
           (x, y) match
             case (Zero, Zero) | (One, One) => done(true)
-            case (Val(n), Val(nʹ)) => done(EA.eqv(n, nʹ))
+            case (Val(n), Val(nʹ)) => done(E.eqv(n, nʹ))
             case (Add(m, n), Add(mʹ, nʹ)) =>
               for
-                e <- eqvʹ(m, mʹ)
-                f <- eqvʹ(n, nʹ)
+                e <- tailcall { eqvʹ(m, mʹ) }
+                f <- tailcall { eqvʹ(n, nʹ) }
               yield
                 e && f
             case (Sub(m, n), Sub(mʹ, nʹ)) =>
               for
-                e <- eqvʹ(m, mʹ)
-                f <- eqvʹ(n, nʹ)
+                e <- tailcall { eqvʹ(m, mʹ) }
+                f <- tailcall { eqvʹ(n, nʹ) }
               yield
                 e && f
             case (Mul(m, n), Mul(mʹ, nʹ)) =>
               for
-                e <- eqvʹ(m, mʹ)
-                f <- eqvʹ(n, nʹ)
+                e <- tailcall { eqvʹ(m, mʹ) }
+                f <- tailcall { eqvʹ(n, nʹ) }
               yield
                 e && f
             case (Div(m, n), Div(mʹ, nʹ)) =>
               for
-                e <- eqvʹ(m, mʹ)
-                f <- eqvʹ(n, nʹ)
+                e <- tailcall { eqvʹ(m, mʹ) }
+                f <- tailcall { eqvʹ(n, nʹ) }
               yield
                 e && f
             case (Inv(n), Inv(nʹ)) =>
               for
-                e <- eqvʹ(n, nʹ)
+                e <- tailcall { eqvʹ(n, nʹ) }
               yield
                 e
             case _ => done(false)
         eqvʹ(xa, ya).result
 
-  type unit = Expr.Zero.type | Expr.One.type
+  type unit = Zero.type | One.type
 
-  def expr(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def expr(using unit): Parser[Expr[Int | Double]] =
     term ~ rep(("+"|"-") ~ term) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "+" ~ rhs) => Add(lhs, rhs)
@@ -372,7 +372,7 @@ object Expr extends JavaTokenParsers:
       }
     }
 
-  def term(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def term(using unit): Parser[Expr[Int | Double]] =
     factor ~ rep(("*"|"/") ~ factor) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "*" ~ rhs) => Mul(lhs, rhs)
@@ -380,15 +380,15 @@ object Expr extends JavaTokenParsers:
       }
     }
 
-  def factor(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def factor(using unit): Parser[Expr[Int | Double]] =
     ("+"|"-") ~ literal ^^ {
-      case "-" ~ rhs if unit eq Zero => Inv(rhs)
+      case "-" ~ rhs if summon[unit] eq Zero => Inv(rhs)
       case "+" ~ rhs => Add(Zero, rhs)
       case "-" ~ rhs => Sub(Zero, rhs)
     } |
     literal
 
-  def literal(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def literal(using unit): Parser[Expr[Int | Double]] =
     floatingPointNumber ^^ { n =>
       try
         n.toInt match
@@ -404,7 +404,7 @@ object Expr extends JavaTokenParsers:
     "("~> expr <~")"
 
   implicit class ExprInterpolator(private val sc: StringContext) extends AnyVal:
-    def x(args: Any*)(implicit unit: unit): Expr[Int | Double] =
+    def x(args: Any*)(using unit): Expr[Int | Double] =
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
@@ -495,7 +495,7 @@ object Expr extends JavaTokenParsers:
 
   final case class Builder[T](lhs: Expr[T], private var save: List[Expr[T]]):
     def fill(n: Int)(rhs: Expr[T]) = List.fill(0 max n)(rhs)
-    def swapping(implicit unit: unit) = Builder(swap(lhs), save)
+    def swapping(using unit) = Builder(swap(lhs), save)
     def add(rhs: Expr[T], n: Int = 1) = Builder(fill(n)(rhs).foldLeft(lhs)(Add(_, _)), save)
     def subtract(rhs: Expr[T], n: Int = 1) = Builder(fill(n)(rhs).foldLeft(lhs)(Sub(_, _)), save)
     def multiply(rhs: Expr[T], n: Int = 1) = Builder(fill(n)(rhs).foldLeft(lhs)(Mul(_, _)), save)

@@ -296,13 +296,13 @@ object Expr extends JavaTokenParsers:
   implicit def kittensExprPartialOrder[A: PartialOrder]: PartialOrder[Expr[A]] =
     new PartialOrder[Expr[A]]:
       override def partialCompare(xa: Expr[A], ya: Expr[A]): Double =
-        val OA = PartialOrder[A]
+        val O = PartialOrder[A]
         def partialCompareʹ(x: Expr[A], y: Expr[A]): TailRec[Double] =
           (x, y) match
             case (Zero, One) => done(-1)
             case (One, Zero) => done(+1)
             case (Zero, Zero) | (One, One) => done(0)
-            case (Val(n), Val(nʹ)) => done(OA.partialCompare(n, nʹ))
+            case (Val(n), Val(nʹ)) => done(O.partialCompare(n, nʹ))
             case (Add(m, n), Add(mʹ, nʹ)) =>
               for
                 i <- tailcall { partialCompareʹ(m, mʹ) }
@@ -338,46 +338,46 @@ object Expr extends JavaTokenParsers:
   implicit def kittensExprEq[A: Eq]: Eq[Expr[A]] =
     new Eq[Expr[A]]:
       override def eqv(xa: Expr[A], ya: Expr[A]): Boolean =
-        val EA = Eq[A]
+        val E = Eq[A]
         def eqvʹ(x: Expr[A], y: Expr[A]): TailRec[Boolean] =
           (x, y) match
             case (Zero, Zero) | (One, One) => done(true)
-            case (Val(n), Val(nʹ)) => done(EA.eqv(n, nʹ))
+            case (Val(n), Val(nʹ)) => done(E.eqv(n, nʹ))
             case (Add(m, n), Add(mʹ, nʹ)) =>
               for
-                e <- eqvʹ(m, mʹ)
-                f <- eqvʹ(n, nʹ)
+                e <- tailcall { eqvʹ(m, mʹ) }
+                f <- tailcall { eqvʹ(n, nʹ) }
               yield
                 e && f
             case (Sub(m, n), Sub(mʹ, nʹ)) =>
               for
-                e <- eqvʹ(m, mʹ)
-                f <- eqvʹ(n, nʹ)
+                e <- tailcall { eqvʹ(m, mʹ) }
+                f <- tailcall { eqvʹ(n, nʹ) }
               yield
                 e && f
             case (Mul(m, n), Mul(mʹ, nʹ)) =>
               for
-                e <- eqvʹ(m, mʹ)
-                f <- eqvʹ(n, nʹ)
+                e <- tailcall { eqvʹ(m, mʹ) }
+                f <- tailcall { eqvʹ(n, nʹ) }
               yield
                 e && f
             case (Div(m, n), Div(mʹ, nʹ)) =>
               for
-                e <- eqvʹ(m, mʹ)
-                f <- eqvʹ(n, nʹ)
+                e <- tailcall { eqvʹ(m, mʹ) }
+                f <- tailcall { eqvʹ(n, nʹ) }
               yield
                 e && f
             case (Inv(n), Inv(nʹ)) =>
               for
-                e <- eqvʹ(n, nʹ)
+                e <- tailcall { eqvʹ(n, nʹ) }
               yield
                 e
             case _ => done(false)
         eqvʹ(xa, ya).result
 
-  type unit = Expr.Zero.type | Expr.One.type
+  type unit = Zero.type | One.type
 
-  def expr(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def expr(using unit): Parser[Expr[Int | Double]] =
     term ~ rep(("+"|"-") ~ term) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "+" ~ rhs) => Add(lhs, rhs)
@@ -385,7 +385,7 @@ object Expr extends JavaTokenParsers:
       }
     }
 
-  def term(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def term(using unit): Parser[Expr[Int | Double]] =
     factor ~ rep(("*"|"/") ~ factor) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "*" ~ rhs) => Mul(lhs, rhs)
@@ -393,15 +393,15 @@ object Expr extends JavaTokenParsers:
       }
     }
 
-  def factor(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def factor(using unit): Parser[Expr[Int | Double]] =
     ("+"|"-") ~ literal ^^ {
-      case "-" ~ rhs if unit eq Zero => Inv(rhs)
+      case "-" ~ rhs if summon[unit] eq Zero => Inv(rhs)
       case "+" ~ rhs => Add(Zero, rhs)
       case "-" ~ rhs => Sub(Zero, rhs)
     } |
     literal
 
-  def literal(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def literal(using unit): Parser[Expr[Int | Double]] =
     floatingPointNumber ^^ {
       _.toDouble match
         case 0d => Zero
@@ -417,7 +417,7 @@ object Expr extends JavaTokenParsers:
     "("~> expr <~")"
 
   implicit class ExprInterpolator(private val sc: StringContext) extends AnyVal:
-    def x(args: Any*)(implicit unit: unit): Expr[Int | Double] =
+    def x(args: Any*)(using unit): Expr[Int | Double] =
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
@@ -508,7 +508,7 @@ object Expr extends JavaTokenParsers:
 
   final case class Builder[T](lhs: Expr[T], private var save: List[Expr[T]]):
     def fill(n: Int)(rhs: Expr[T]) = List.fill(0 max n)(rhs)
-    def swapping(implicit unit: unit) = Builder(swap(lhs), save)
+    def swapping(using unit) = Builder(swap(lhs), save)
     def add(rhs: Expr[T], n: Int = 1) = Builder(fill(n)(rhs).foldLeft(lhs)(Add(_, _)), save)
     def subtract(rhs: Expr[T], n: Int = 1) = Builder(fill(n)(rhs).foldLeft(lhs)(Sub(_, _)), save)
     def multiply(rhs: Expr[T], n: Int = 1) = Builder(fill(n)(rhs).foldLeft(lhs)(Mul(_, _)), save)
@@ -665,13 +665,13 @@ import Expr.*
 
 final case class ExprT[F[_], A](value: F[Expr[A]]):
 
-  def map[B](f: A => B)(implicit F: Functor[F]): ExprT[F, B] =
+  def map[B](f: A => B)(using Functor[F]): ExprT[F, B] =
     transform(_.map(f))
 
-  def flatMap[B](f: A => ExprT[F, B])(implicit F: Monad[F]): ExprT[F, B] =
+  def flatMap[B](f: A => ExprT[F, B])(using Monad[F]): ExprT[F, B] =
     flatMapF(f(_).value)
 
-  def flatMapF[B](f: A => F[Expr[B]])(implicit F: Monad[F]): ExprT[F, B] =
+  def flatMapF[B](f: A => F[Expr[B]])(using Monad[F]): ExprT[F, B] =
     flatTransform(_.map(f).flattenF)
 
   def flatTransform[B](f: Expr[A] => F[Expr[B]])(implicit F: FlatMap[F]): ExprT[F, B] =
@@ -680,10 +680,10 @@ final case class ExprT[F[_], A](value: F[Expr[A]]):
   def transform[B](f: Expr[A] => Expr[B])(implicit F: Functor[F]): ExprT[F, B] =
     ExprT(F.map(value)(f))
 
-  def subflatMap[B](f: A => Expr[B])(implicit F: Functor[F]): ExprT[F, B] =
+  def subflatMap[B](f: A => Expr[B])(using Functor[F]): ExprT[F, B] =
     transform(_.flatMap(f))
 
-  def cosubflatMap[B](f: Expr[A] => B)(implicit F: Bimonad[F]): ExprT[F, B] =
+  def cosubflatMap[B](f: Expr[A] => B)(using Bimonad[F]): ExprT[F, B] =
     transform(_.coflatMap(f))
 
   def mapK[G[_]](f: F ~> G): ExprT[G, A] = ExprT(f(value))
@@ -703,10 +703,10 @@ final case class ExprT[F[_], A](value: F[Expr[A]]):
   def forall(f: A => Boolean)(implicit F: Functor[F], `0`: `0`[A], `1`: `1`[A]): F[Boolean] =
     F.map(value)(_.forall(f))
 
-  def partialCompare(that: ExprT[F, A])(implicit po: PartialOrder[F[Expr[A]]]): Double =
-    po.partialCompare(this.value, that.value)
+  def partialCompare(that: ExprT[F, A])(using PartialOrder[F[Expr[A]]]): Double =
+    PartialOrder[ExprT[F, A]].partialCompare(this, that)
 
-  def ===(that: ExprT[F, A])(implicit eqf: Eq[F[Expr[A]]]): Boolean =
+  def ===(that: ExprT[F, A])(using Eq[F[Expr[A]]]): Boolean =
     Eq[ExprT[F, A]].eqv(this, that)
 
   def traverse[G[_]: Applicative, B](f: A => G[B])(implicit F: Traverse[F], `0`: `0`[A], `1`: `1`[A]): G[ExprT[F, B]] =
@@ -726,7 +726,7 @@ final case class ExprT[F[_], A](value: F[Expr[A]]):
   def flattenF[B](implicit F: Monad[F], ev: A <:< F[Expr[B]]): ExprT[F, B] =
     flatMapF(ev)
 
-  def coflatten(implicit F: Bimonad[F]): ExprT[F, ExprT[F, A]] =
+  def coflatten(implicit F: Monad[F]): ExprT[F, ExprT[F, A]] =
     ExprT(F.map(value)(_.coflatten.map(F.pure).map(ExprT.apply)))
 
   def coflattenF(implicit F: CoflatMap[F]): ExprT[F, Expr[A]] =
@@ -734,15 +734,15 @@ final case class ExprT[F[_], A](value: F[Expr[A]]):
 
 object ExprT:
 
-  implicit def kittensExprTPartialOrder[F[_], A](implicit po: PartialOrder[F[Expr[A]]]): PartialOrder[ExprT[F, A]] =
+  implicit def kittensExprTPartialOrder[F[_], A](using O: PartialOrder[F[Expr[A]]]): PartialOrder[ExprT[F, A]] =
     new PartialOrder[ExprT[F, A]]:
       override def partialCompare(x: ExprT[F, A], y: ExprT[F, A]): Double =
-        x.partialCompare(y)
+        O.partialCompare(x.value, y.value)
 
-  implicit def kittensExprTEq[F[_], A](implicit eqf: Eq[F[Expr[A]]]): Eq[ExprT[F, A]] =
+  implicit def kittensExprTEq[F[_], A](implicit E: Eq[F[Expr[A]]]): Eq[ExprT[F, A]] =
     new Eq[ExprT[F, A]]:
       override def eqv(x: ExprT[F, A], y: ExprT[F, A]): Boolean =
-        eqf.eqv(x.value, y.value)
+        E.eqv(x.value, y.value)
 ```
 
 [First](https://github.com/sjbiaga/kittens/blob/main/mt-1-compose/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/mt-7-StateT/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/mt-9-WriterT-Validated/README.md)

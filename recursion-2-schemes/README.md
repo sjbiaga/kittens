@@ -32,7 +32,7 @@ def fix[A](f: (=> A) => A): A = {
 ```
 
 And let us take as a running example the fixed point definition of `fibF` (here, the inferred type of the function parameter
-is `(=> Long => Long) => Long`):
+is `(=> Long => Long) => Long => Long`):
 
 ```Scala
 val fibF = fix[Long => Long] { fib =>
@@ -93,7 +93,7 @@ To use recursion schemes, `ExprF` must be a `Functor`:
 import cats.Functor
 
 object ExprF:
-  implicit def kittensExprFunctor: Functor[ExprF] =
+  implicit val kittensExprFFunctor: Functor[ExprF] =
      new Functor[ExprF]:
        override def map[A, B](xa: ExprF[A])(f: A => B): ExprF[B] =
          xa match
@@ -159,7 +159,7 @@ We present two recursion schemes, anamorphisms and catamorphisms: both are recur
 
 The dictionary entry for `Ana` is:
 
-     A prefix in words from the Greek, denoting up, upward.
+    A prefix in words from the Greek, denoting up, upward.
 
 and its definition:
 
@@ -173,8 +173,18 @@ We can observe that `f` is applied first and `Fix.apply` last.
 The generation via a corecursive algorithm can be visualized:
 
 ```scala
-scala> ana(factorial)(5)
-val res0: Fix[ExprF] = Fix(FacF(Fix(FacF(Fix(FacF(Fix(FacF(Fix(FacF(Fix(OneF),1)),2)),3)),4)),5))
+scala> ana(factorial).apply(5)
+val res0: Fix[ExprF] = Fix(
+  FacF(
+    n = Fix(
+      FacF(
+        n = Fix(FacF(n = Fix(FacF(n = Fix(FacF(n = Fix(OneF), k = 1L)), k = 2L)), k = 3L)),
+        k = 4L
+      )
+    ),
+    k = 5L
+  )
+)
 ```
 
 When we applied `5`, `factorial` is invoked - `f(a)` - and returns `FacF(4, 5)`. Wrapping in `Fix` awaits on the stack, while
@@ -185,7 +195,7 @@ resulting in `Fix(FacF(..., 5))`.
 
 The dictionary entry for `Cata` is:
 
-     The Latin and English form of a Greek preposition, used as a prefix to signify down, downward.
+    The Latin and English form of a Greek preposition, used as a prefix to signify down, downward.
 
 and its definition:
 
@@ -201,14 +211,19 @@ Now, if we try `res0.unfix`, we are not able to `eval`uate it, because its type 
 
 ```scala
 scala> res0.unfix
-val res1: ExprF[Fix[ExprF]] = FacF(Fix(FacF(Fix(FacF(Fix(FacF(Fix(FacF(Fix(OneF),1)),2)),3)),4)),5)
+val res1: ExprF[Fix[ExprF]] = FacF(
+  n = Fix(
+    FacF(n = Fix(FacF(n = Fix(FacF(n = Fix(FacF(n = Fix(OneF), k = 1L)), k = 2L)), k = 3L)), k = 4L)
+  ),
+  k = 5L
+)
 ```
 
 All we can do is `map` a function of type `Fix[ExprF] => Long`, which is `cata(f)` invoked recursively:
 
 ```scala
 scala> res1 map cata(eval)
-val res2: ExprF[Long] = FacF(24,5)
+val res2: ExprF[Long] = FacF(n = 24L, k = 5L)
 ```
 
 Now we can invoke `eval(res2)`, which comes from the outer `f` in `f(fix.unfix map cata(f))`.
@@ -217,7 +232,7 @@ In order to compute "`fibonacci(5)`", we generate with `ana` and evaluate with `
 
 ```scala
 scala> (ana(fibonacci) andThen cata(eval))(5)
-val res3: Long = 5
+val res3: Long = 5L
 ```
 
 ### Using `Eval` to achieve stack safety
@@ -324,7 +339,7 @@ case class InvF[+R](rhs: R) extends ExprF[R]
 case class ValF[T](n: T) extends ExprF[Nothing]
 
 object ExprF:
-  implicit val kittensExprFunctor: Functor[ExprF] =
+  implicit val kittensExprFFunctor: Functor[ExprF] =
      new Functor[ExprF]:
        override def map[A, B](xa: ExprF[A])(f: A => B): ExprF[B] =
          xa match
@@ -354,7 +369,7 @@ and with the `eval`uate (prime) algebra:
 case class FacF[+R, T](n: R, k: T)
 
 object FacF:
-  implicit def kittensFacFunctor[T]: Functor[[R] =>> FacF[R, T]] =
+  implicit def kittensFacFFunctor[T]: Functor[[R] =>> FacF[R, T]] =
      new Functor[[R] =>> FacF[R, T]]:
        override def map[A, B](fa: FacF[A, T])(f: A => B): FacF[B, T] =
          fa match
@@ -375,8 +390,8 @@ object ExprFacF:
     new Functor[ExprFacF]:
       override def map[A, B](ea: ExprFacF[A])(f: A => B): ExprFacF[B] =
         ea match
-          case Left(xa) => Left(kittensExprFunctor.map(xa)(f))
-          case Right(fa) => Right(kittensFacFunctor.map(fa)(f))
+          case Left(xa) => Left(kittensExprFFunctor.map(xa)(f))
+          case Right(fa) => Right(kittensFacFFunctor.map(fa)(f))
 
   def inL[R](xa: ExprF[R]) = Left(xa)
   def inR[R](fa: FacF[R, Long]) = Right(fa)
@@ -405,9 +420,12 @@ Of course, the `fibonacci` corecursive algorithm does not change its signature -
 
 ```Scala
 def fibonacci(n: Long): ExprF[Long] =
-  if n <= 1
+  if n == 0
   then
-    ValF(1L min (0L max n))
+    ZeroF
+  else if n == 1
+  then
+    OneF
   else
     AddF(n-1, n-2)
 ```

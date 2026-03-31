@@ -14,9 +14,9 @@ enum Expr[+T]:
 
 object Expr:
 
-  type unit = Expr.Zero.type | Expr.One.type
+  type unit = Zero.type | One.type
 
-  def eval(expr: Expr[Double])(implicit unit: unit, `0`: `0`[Double], `1`: `1`[Double]): Double =
+  def eval(expr: Expr[Double])(using unit: unit, `0`: `0`[Double], `1`: `1`[Double]): Double =
     def evalʹ(xa: Expr[Double]): TailRec[Double] =
       xa match
         case Zero => done(`0`.zero)

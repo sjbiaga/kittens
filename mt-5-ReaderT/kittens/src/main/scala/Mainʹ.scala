@@ -5,7 +5,6 @@ import cats.data.ReaderT
 import cats.free.Yoneda
 
 import Expr.*
-import cats.free.Yoneda
 
 object Mainʹ:
 

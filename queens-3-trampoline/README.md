@@ -183,8 +183,8 @@ except that `A` may differ, whereas `B` may not. The source type `A` of `f` _or_
 
 So the final code for the `Trampoline` is given below. In the `apply` method, "`closure :: sequel`" and "`prequel :: sequel`"
 are compositions of two functions via `flatMap`. This extension method (`::`) is defined in the companion object. The line
-`prequel(_).flatMap(sequel)` is an anonymous function, standing for `{ a => prequel(a).flatMap(sequel) }`: if passed the
-argument `a`, it obtains a `Trampoline` and with it as the receiver it compiles into the state `FlatMap(prequel(a), sequel)`:
+`prequel(_).flatMap(sequel)` is an anonymous function, standing for `{ a => prequel(a).flatMap(b => sequel(b)) }`: if passed
+the argument `a`, it obtains a `Trampoline` and with it as the receiver it compiles into the state `FlatMap(prequel(a), sequel)`:
 
 ```Scala
 enum Trampoline[+A]:
@@ -194,10 +194,10 @@ enum Trampoline[+A]:
 
   import Trampoline.*
 
-  final def map[B](fun: A => B): Trampoline[B] =
+  def map[B](fun: A => B): Trampoline[B] =
     this.flatMap(fun andThen pure)
 
-  final def flatMap[B](sequel: A => Trampoline[B]): Trampoline[B] =
+  def flatMap[B](sequel: A => Trampoline[B]): Trampoline[B] =
     FlatMap(this, sequel)
 
   @annotation.tailrec
@@ -220,7 +220,7 @@ object Trampoline:
     inline def apply[A](closure: => Trampoline[A]): Trampoline[A] = new Call(_ => closure)
 ```
 
-[In the literature, `::` is known as _left-to-right composition of Kleisli arrows_.
+[In the literature, such function `::` is known as _left-to-right composition of Kleisli arrows_.
 [Exercise 04.1](https://github.com/sjbiaga/kittens/blob/main/kleisli-2-trampoline/README.md#exercise-041) shows how `Kleisli`
 types can be used instead.]
 

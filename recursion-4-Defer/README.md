@@ -492,8 +492,8 @@ be passed the initial callback passed by user code. After first applying the fun
 `Bʹ` result of the `for`-comprehension, the second thing is to apply it the callback, which _always_ yields an `M[A]` (type
 `A` is invariable).
 
-Thus, there must be some connection between `Bʹ` and `A`: if they are the same, `ContT#eval` can be used by user code instead
-of `ContT#run`, to pass an unspecified initial callback.
+Thus, there must be some connection between `Bʹ` and `A`: if they are the same (or in the subtype relation), `ContT#eval` can
+be used by user code instead of `ContT#run`, to pass an unspecified initial callback.
 
 ---
 
@@ -623,9 +623,9 @@ enum Expr[+T]:
 
 object Expr extends JavaTokenParsers:
 
-  type unit = Expr.Zero.type | Expr.One.type
+  type unit = Zero.type | One.type
 
-  def expr(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def expr(using unit): Parser[Expr[Int | Double]] =
     term ~ rep(("+"|"-") ~ term) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "+" ~ rhs) => Add(lhs, rhs)
@@ -633,7 +633,7 @@ object Expr extends JavaTokenParsers:
       }
     }
 
-  def term(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def term(using unit): Parser[Expr[Int | Double]] =
     factor ~ rep(("*"|"/") ~ factor) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "*" ~ rhs) => Mul(lhs, rhs)
@@ -641,15 +641,15 @@ object Expr extends JavaTokenParsers:
       }
     }
 
-  def factor(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def factor(using unit): Parser[Expr[Int | Double]] =
     ("+"|"-") ~ literal ^^ {
-      case "-" ~ rhs if unit eq Zero => Inv(rhs)
+      case "-" ~ rhs if summon[unit] eq Zero => Inv(rhs)
       case "+" ~ rhs => Add(Zero, rhs)
       case "-" ~ rhs => Sub(Zero, rhs)
     } |
     literal
 
-  def literal(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def literal(using unit): Parser[Expr[Int | Double]] =
     floatingPointNumber ^^ {
       _.toDouble match
         case 0d => Zero
@@ -665,7 +665,7 @@ object Expr extends JavaTokenParsers:
     "("~> expr <~")"
 
   implicit class ExprInterpolator(private val sc: StringContext) extends AnyVal:
-    def x(args: Any*)(implicit unit: unit): Expr[Int | Double] =
+    def x(args: Any*)(using unit): Expr[Int | Double] =
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
@@ -756,7 +756,7 @@ object Expr extends JavaTokenParsers:
 
   final case class Builder[T](lhs: Expr[T], private var save: List[Expr[T]]):
     def fill(n: Int)(rhs: Expr[T]) = List.fill(0 max n)(rhs)
-    def swapping(implicit unit: unit) = Builder(swap(lhs), save)
+    def swapping(using unit) = Builder(swap(lhs), save)
     def add(rhs: Expr[T], n: Int = 1) = Builder(fill(n)(rhs).foldLeft(lhs)(Add(_, _)), save)
     def subtract(rhs: Expr[T], n: Int = 1) = Builder(fill(n)(rhs).foldLeft(lhs)(Sub(_, _)), save)
     def multiply(rhs: Expr[T], n: Int = 1) = Builder(fill(n)(rhs).foldLeft(lhs)(Mul(_, _)), save)

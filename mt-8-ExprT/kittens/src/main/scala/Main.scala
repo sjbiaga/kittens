@@ -17,7 +17,7 @@ object Main:
   val opt2ls: Option ~> List =
     new (Option ~> List):
       override def apply[A](fa: Option[A]): List[A] =
-        fa.map(_ :: Nil).getOrElse(Nil)
+        fa.fold(Nil)(_ :: Nil)
 
   case class Wrap[T](n: T)
 

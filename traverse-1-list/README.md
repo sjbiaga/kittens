@@ -9,7 +9,7 @@ with an instance of `Applicative[Id]`).
 ```Scala
 package cats
 
-trait Traverse[F[_]] extends Functor[F] {
+trait Traverse[F[_]] extends Functor[F] with ... {
   def traverse[G[_]: Applicative, A, B](fa: F[A])(f: A => G[B]): G[F[B]]
 
   def map[A, B](fa: F[A])(f: A => B): F[B] =
@@ -19,11 +19,41 @@ trait Traverse[F[_]] extends Functor[F] {
 }
 ```
 
+[The `Applicative[Id]` instance can be found in the companion object to the supertrait `Invariant` to `Traverse`:
+
+```Scala
+object Invariant extends ... {
+  implicit def catsInstancesForId: Distributive[Id] & Bimonad[Id] & CommutativeMonad[Id] & NonEmptyTraverse[Id] =
+    cats.catsInstancesForId
+}
+```
+
+which in turn returns the `cats.catsInstancesForId` value defined in the package object `cats`.]
+
 The idea behind the `traverse` method is that it iterates through the `fa`'s, and for each `a: A` it invokes `f`; now, `f(a)`
 is a `G[B]`, and - because `G` is a `Functor` - `G.map(f(a))(h)` can be used, where `h: <B> => F[B]` is a _collect_ function,
 usually in the "_accumulator_" form `k: (B, F[B]) => F[B]` (right) or `kʹ: (F[B], B) => F[B]` (left). `G` is an `Applicative`
 (a subtype of `Functor`) for a reason: the collection might be _initialized_ as empty, for example, via `G.pure(F.empty[B])`
 (if `F` had such method).
+
+When used in a `for`-comprehension, `G[_]` might stand for the type of its monad, so that something like the following
+(syntactic sugar) can be written:
+
+```Scala
+import cats.syntax.traverse.*
+
+for
+  .
+  .
+  .
+  fb <- fa.traverse { a => ... } // or ascribed:
+  //fb: F[B] <- (fa: F[A]).traverse { (a: A) => ...: G[B] }
+  .
+  .
+  .
+yield
+  ...
+```
 
 The `Applicative[G[_]]` trait has - inherited from the `Apply[G]` trait - a method `map2` as well as a method `map2Eval` for
 these two ([initializing and] accumulating) purposes, defined in terms of `map` and (indirectly via `product`) `ap`:
@@ -255,7 +285,7 @@ However, the `Applicative` may also choose to collect _all_ failures, in a typec
 for instance `Semigroup[Vector[Int]]` - the case of `Validated`:
 
 ```scala
-scala> import cats.data.Validated, Validated. { valid, invalid }, cats.instances.vector.*
+scala> import cats.data.Validated, Validated.{ valid, invalid }, cats.instances.vector.*
 
 scala> List(1,2,3,4,5).traverse { it => if it % 4 == 0 then valid(it) else { println(it); invalid(Vector(it)) } }
 1

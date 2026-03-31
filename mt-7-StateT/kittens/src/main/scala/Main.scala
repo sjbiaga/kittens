@@ -37,4 +37,4 @@ object Main:
 
     lazy val list: LazyList[Stateʹ] = expr #:: list
 
-    println { list.take(3).foldRight(x)(_.run(_).value._1) }
+    println { list.take(3).foldRight(x)(_.runS(_).value) }

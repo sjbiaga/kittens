@@ -103,7 +103,7 @@ val kittensTrampolineToCatsTrampoline: Trampoline ~> CatsTrampoline =
         case Call(g)       => Free.defer(apply(g(())))
         case FlatMap(s, g) => Free.defer(apply(s)).flatMap(g andThen apply)
 
-kittensTrampolineToCatsTrampoline.apply(fibonacci(15)).runTailRec()()
+kittensTrampolineToCatsTrampoline.apply(fibonacci(15)).runTailRec.apply()
 ```
 
 Another "monad which controls evaluation" in `Cats` is `Eval`, so the _natural transformation_ is the following:
@@ -129,14 +129,14 @@ Are these three natural transformations stack safe? To answer this question posi
 def rec(n: Int): Trampoline[Int] = if n == 0 then Done(0) else rec(n-1).flatMap(rec)
 ```
 
-that for `rec(10000)` generates a lot of `FlatMap` methods that _even_ the `toString` method raises the
-`java.lang.StackOverflowError` exception (for a higher order, `rec(100000)` raises this exception without returning). However,
+that for `rec(1000).toString` generates a lot of `FlatMap` methods that _even_ the `toString` method raises the
+`java.lang.StackOverflowError` exception (for a higher order, `rec(10000)` raises this exception without returning). However,
 neither of the following:
 
 ```Scala
-kittensTrampolineToTailRec.apply(rec(10000)).result
-kittensTrampolineToCatsTrampoline.apply(rec(10000)).runTailRec()()
-kittensTrampolineToCatsEval.apply(rec(10000))).value
+kittensTrampolineToTailRec.apply(rec(1000)).result
+kittensTrampolineToCatsTrampoline.apply(rec(1000)).runTailRec.apply()
+kittensTrampolineToCatsEval.apply(rec(1000))).value
 ```
 
 raises this exception. The implementations of the `apply` methods are recursive. If we proceed our analysis by cases,

@@ -29,10 +29,7 @@ object ʹ:
         case Nil => Nil
         case List(node, size) => new List(node.reverse(null), size)
 
-    def ::[S >: T](head: S): List[S] =
-      this match
-        case Nil => new List(Node(head, null), 1)
-        case List(tail, size) => new List(Node(head, tail), size + 1)
+    def ::[S >: T](head: S): List[S] = new List(Node(head, node), size + 1)
 
     def :::[S >: T](that: List[S]): List[S] =
       that match

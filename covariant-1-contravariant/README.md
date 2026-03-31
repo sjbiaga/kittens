@@ -84,6 +84,8 @@ class Dog extends Pet
 Contravariance
 --------------
 
+Actors are a typical example of contravariance, e.g., an `Actor[-M]` type with a method `tell(msg: M): Unit`.
+
 Let us further picture a contravariant class `A[-P <: Pet]` - or, equivalently, a class with a method with one parameter of
 type that of the parameter type `P <: Pet` (notice how this has an _upper_ bound):
 

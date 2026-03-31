@@ -25,9 +25,9 @@ object Free {
 }
 ```
 
-for `Function0[_]` is actually `Suspend[A](closure: () => A)`, which is very similar with `Call[A](closure: Unit => A)`, just
-as we have seen at the beginning of [Lesson 06](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md), in
-the implementation of our own `Trampoline`.
+for `Function0[_]` is actually `Suspend[Function0, A](closure: () => A)`, which is very similar with `Call[A](closure: Unit => A)`,
+just as we have seen at the beginning of [Lesson 06](https://github.com/sjbiaga/kittens/blob/main/nat-2-trampoline/README.md),
+in the implementation of our own `Trampoline`.
 
 Check that there exists a `Cats` typeclass instance of the `Monad` typeclass for `Function0`; then, given the `Algorithms`
 class with a `counter`:
@@ -42,9 +42,9 @@ case class Algorithms(n: Int, var counter: Int):
       liftF { () => 1 min (0 max k) }
     else
       for
-        m <- defer {  fibonacci(k - 2) }
-        n <- defer {  fibonacci(k - 1) }
-      yieldOB
+        m <- defer { fibonacci(k - 2) }
+        n <- defer { fibonacci(k - 1) }
+      yield
         n + m
   private def factorial(k: Int): Trampoline[Int] =
     if k < 1

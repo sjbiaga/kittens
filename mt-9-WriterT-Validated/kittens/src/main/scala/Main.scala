@@ -1,4 +1,4 @@
-import cats.data.Validated
+jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjimport cats.data.Validated
 
 import Expr.*
 import cats.data.Validated.{ Valid, Invalid }
@@ -13,7 +13,7 @@ object Main:
 
     {
       try
-        val Valid(expr, log) = x.listen.value
+        val Valid((expr, log)) = x.listen.value
         println(s"interpolated: ${expr} log:\n${log}")
       catch _ =>
         val Invalid(err) = x.listen.value
@@ -21,7 +21,7 @@ object Main:
     }
 
     {
-      val Valid(d, _) = x.listen.value
+      val Valid((d, _)) = x.listen.value
       val xʹ =
         Builder.start[Double](d)
         .add(One)
@@ -40,7 +40,7 @@ object Main:
         .lhs
 
       try
-        val Valid(expr, log) = xʹ.listen.value
+        val Valid((expr, log)) = xʹ.listen.value
         println(s"built: ${expr} log:\n${log}")
       catch _ =>
         val Invalid(err) = xʹ.listen.value
@@ -48,7 +48,7 @@ object Main:
     }
 
     {
-      val Valid(d, _) = x.listen.value
+      val Valid((d, _)) = x.listen.value
       val xʹ =
         Builder.start[Double](d)
         .add(One)
@@ -67,7 +67,7 @@ object Main:
         .lhs
 
       try
-        val Valid(expr, log) = xʹ.listen.value
+        val Valid((expr, log)) = xʹ.listen.value
         println(s"built: ${expr} log:\n${log}")
       catch _ =>
         val Invalid(err) = xʹ.listen.value
@@ -75,7 +75,7 @@ object Main:
     }
 
     {
-      val Valid(d, _) = x.listen.value
+      val Valid((d, _)) = x.listen.value
       val xʹ =
         Builder.start[Double](d)
         .add(One)
@@ -87,7 +87,7 @@ object Main:
         .lhs
 
       try
-        val Valid(expr, log) = xʹ.listen.value
+        val Valid((expr, log)) = xʹ.listen.value
         println(s"built: ${expr} log:\n${log}")
       catch _ =>
         val Invalid(err) = xʹ.listen.value

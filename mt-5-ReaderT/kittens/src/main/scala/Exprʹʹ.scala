@@ -12,7 +12,7 @@ object Exprʹʹ:
 
   private def char(cs: Char*): Parser[Char] = charIn(cs).surroundedBy(whitespaces0)
 
-  def expr(implicit unit: unit): Parser[Expr[Double]] =
+  def expr(using unit): Parser[Expr[Double]] =
     (term ~ (char('+', '-') ~ term).rep0).map {
       case (lhs, rhs) => rhs.foldLeft(lhs) {
         case (lhs, ('+', rhs)) => Add(lhs, rhs)
@@ -20,7 +20,7 @@ object Exprʹʹ:
       }
     }
 
-  def term(implicit unit: unit): Parser[Expr[Double]] =
+  def term(using unit): Parser[Expr[Double]] =
     (factor ~ (char('*', '/') ~ factor).rep0).map {
       case (lhs, rhs) => rhs.foldLeft(lhs) {
         case (lhs, ('*', rhs)) => Mul(lhs, rhs)
@@ -28,15 +28,15 @@ object Exprʹʹ:
       }
     }
 
-  def factor(implicit unit: unit): Parser[Expr[Double]] =
+  def factor(using unit): Parser[Expr[Double]] =
     (char('+', '-') ~ literal).map {
-      case ('-', rhs) if unit eq Zero => Inv(rhs)
+      case ('-', rhs) if summon[unit] eq Zero => Inv(rhs)
       case ('+', rhs) => Add(Zero, rhs)
       case ('-', rhs) => Sub(Zero, rhs)
     } |
     literal
 
-  def literal(implicit unit: unit): Parser[Expr[Double]] =
+  def literal(using unit): Parser[Expr[Double]] =
     jsonNumber.surroundedBy(whitespaces0).map {
       _.toDouble match
         case 0d => Zero
@@ -45,10 +45,10 @@ object Exprʹʹ:
     } |
     char('(') *> defer(expr) <* char(')')
 
-  def parserExpr(implicit unit: unit): Parser[Expr[Double]] = whitespaces0.with1 *> expr <* (whitespaces0 ~ end)
+  def parserExpr(using unit): Parser[Expr[Double]] = whitespaces0.with1 *> expr <* (whitespaces0 ~ end)
 
   implicit class ExprInterpolator(private val sc: StringContext) extends AnyVal:
-    def x(args: Any*)(implicit unit: unit): Expr[Double] =
+    def x(args: Any*)(using unit): Expr[Double] =
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }

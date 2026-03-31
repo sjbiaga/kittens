@@ -21,7 +21,7 @@ enum Expr[+T]:
 
 object Expr extends JavaTokenParsers:
 
-  type unit = Expr.Zero.type | Expr.One.type
+  type unit = Zero.type | One.type
 
   implicit val kittensDoubleRing: DivisionRing[Double] =
     new DivisionRing[Double]:
@@ -74,7 +74,7 @@ object Expr extends JavaTokenParsers:
               case Leaf(r)                           => done(Val(r))
           applyʹ(tree).result
 
-  def expr(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def expr(using unit): Parser[Expr[Int | Double]] =
     term ~ rep(("+"|"-") ~ term) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "+" ~ rhs) => Add(lhs, rhs)
@@ -82,7 +82,7 @@ object Expr extends JavaTokenParsers:
       }
     }
 
-  def term(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def term(using unit): Parser[Expr[Int | Double]] =
     factor ~ rep(("*"|"/") ~ factor) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "*" ~ rhs) => Mul(lhs, rhs)
@@ -90,15 +90,15 @@ object Expr extends JavaTokenParsers:
       }
     }
 
-  def factor(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def factor(using unit): Parser[Expr[Int | Double]] =
     ("+"|"-") ~ literal ^^ {
-      case "-" ~ rhs if unit eq Zero => Inv(rhs)
+      case "-" ~ rhs if summon[unit] eq Zero => Inv(rhs)
       case "+" ~ rhs => Add(Zero, rhs)
       case "-" ~ rhs => Sub(Zero, rhs)
     } |
     literal
 
-  def literal(implicit unit: unit): Parser[Expr[Int | Double]] =
+  def literal(using unit): Parser[Expr[Int | Double]] =
     floatingPointNumber ^^ { n =>
       try
         n.toInt match
@@ -114,7 +114,7 @@ object Expr extends JavaTokenParsers:
     "("~> expr <~")"
 
   implicit class ExprInterpolator(private val sc: StringContext) extends AnyVal:
-    def x(args: Any*)(implicit unit: unit): Expr[Int | Double] =
+    def x(args: Any*)(using unit): Expr[Int | Double] =
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
@@ -164,38 +164,38 @@ object Expr extends JavaTokenParsers:
   def eval[A](expr: Expr[A])(implicit R: DivisionRing[A], unit: unit, `0`: `0`[A], `1`: `1`[A]): A =
     def evalʹ(xa: Expr[A]): TailRec[A] =
       xa match
-        case Zero => done(`0`.zero)
-        case One => done(`1`.one)
-        case Val(n) => done(n)
+        case Zero                    => done(`0`.zero)
+        case One                     => done(`1`.one)
+        case Val(n)                  => done(n)
         case Inv(xn) if Zero eq unit =>
           for
             n <- tailcall { evalʹ(xn) }
           yield
             R.minus(`0`.zero, n)
-        case Inv(xn) if One eq unit =>
+        case Inv(xn) if One eq unit  =>
           for
             n <- tailcall { evalʹ(xn) }
           yield
             R.div(`1`.one, n)
-        case Add(xm, xn)       =>
+        case Add(xm, xn)             =>
           for
             m <- tailcall { evalʹ(xm) }
             n <- tailcall { evalʹ(xn) }
           yield
             R.plus(m, n)
-        case Sub(xm, xn)       =>
+        case Sub(xm, xn)             =>
           for
             m <- tailcall { evalʹ(xm) }
             n <- tailcall { evalʹ(xn) }
           yield
             R.times(m, n)
-        case Mul(xm, xn)       =>
+        case Mul(xm, xn)             =>
           for
             m <- tailcall { evalʹ(xm) }
             n <- tailcall { evalʹ(xn) }
           yield
             R.times(m, n)
-        case Div(xm, xn)       =>
+        case Div(xm, xn)             =>
           for
             m <- tailcall { evalʹ(xm) }
             n <- tailcall { evalʹ(xn) }
@@ -204,8 +204,8 @@ object Expr extends JavaTokenParsers:
     evalʹ(expr).result
 
   final case class Builder[T](lhs: Expr[T], private var save: List[Expr[T]]):
-    def fill(n: Int)(rhs: Expr[T]) = List.fill(0 max n)(rhs)
-    def swapping(implicit unit: unit) = Builder(swap(lhs), save)
+    private def fill(n: Int)(rhs: Expr[T]) = List.fill(0 max n)(rhs)
+    def swapping(using unit) = Builder(swap(lhs), save)
     def add(rhs: Expr[T], n: Int = 1) = Builder(fill(n)(rhs).foldLeft(lhs)(Add(_, _)), save)
     def subtract(rhs: Expr[T], n: Int = 1) = Builder(fill(n)(rhs).foldLeft(lhs)(Sub(_, _)), save)
     def multiply(rhs: Expr[T], n: Int = 1) = Builder(fill(n)(rhs).foldLeft(lhs)(Mul(_, _)), save)

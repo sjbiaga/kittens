@@ -256,7 +256,7 @@ In order to compute their average, all that is required is to `foldLeft` startin
 
 ```scala
 scala> res0.foldLeft(0 -> 0.0 -> Double.NaN) { case ((state, _), node) => node.run(state).value }
-val res1: ((Int, Double), Double) = ((4,1111.0),277.75)
+val res1: ((Int, Double), Double) = ((4, 1111.0), 277.75)
 ```
 
 The average is in the second element of the pair.
@@ -265,7 +265,7 @@ Now if we want to continue adding the same `LazyList`, all we have to do is pass
 
 ```scala
 scala> res0.foldLeft(res1) { case ((state, _), node) => node.run(state).value }
-val res2: ((Int, Double), Double) = ((8,2222.0),277.75)
+val res2: ((Int, Double), Double) = ((8, 2222.0), 277.75)
 ```
 
 Because the new sum is the double of the previous, and the count is twice too, the number two in the fraction cancels out, so
@@ -277,7 +277,7 @@ scala> add(5, add(10, add(20, add(25))))
 val res3: LazyList[Stateʹ] = LazyList(<not computed>)
 
 scala> res3.foldLeft(res2) { case ((state, _), node) => node.run(state).value }
-val res4: ((Int, Double), Double) = ((12,2282.0),190.16666666666666)
+val res4: ((Int, Double), Double) = ((12, 2282.0), 190.16666666666666)
 ```
 
 Is there another way we could implement the average of a _random_ sequence of `Double`s?! We would like to use the following
@@ -309,21 +309,21 @@ that `count` is now limited by _how many times_ we invoke `IndexedStateT#run` on
 the limit would have been its size):
 
 ```scala
-scala> inf.take(10).foldLeft(avg.run((0, 0.0, inf))) { case (state, _) => avg.run(state.value._1) }
-val res5: cats.Eval[((Int, Double, LazyList[Double]), Double)] = cats.Eval$$anon$4@6b26fe0a
+scala> List.fill(10)(()).foldLeft(avg.runS((0, 0.0, inf))) { case (state, _) => avg.runS(state.value) }
+val res5: cats.Eval[(Int, Double, LazyList[Double])] = cats.Eval$$anon$4@6b26fe0a
 
 scala> res5.value
-val res6: ((Int, Double, LazyList[Double]), Double) = ((11,4.591147974500079,LazyList(<not computed>)),0.41737708859091627)
+val res6: (Int, Double, LazyList[Double]) = (11, 4.591147974500079, LazyList(<not computed>))
 ```
 
 We can similarly continue the computation from `res6` (there is no need to specify the `LazyList` anymore):
 
 ```scala
-scala> inf.take(10).foldLeft(avg.run(res6._1)) { case (state, _) => avg.run(state.value._1) }
+scala> List.fill(10)(()).foldLeft(avg.run(res6)) { case (state, _) => avg.run(state.value._1) }
 val res7: cats.Eval[((Int, Double, LazyList[Double]), Double)] = cats.Eval$$anon$4@423ea10e
 
 scala> res7.value
-val res8: ((Int, Double, LazyList[Double]), Double) = ((22,10.78058960388977,LazyList(<not computed>)),0.4900268001768077)
+val res8: ((Int, Double, LazyList[Double]), Double) = ((22, 10.78058960388977, LazyList(<not computed>)), 0.4900268001768077)
 ```
 
 Exercise 08.3
@@ -364,34 +364,34 @@ Let `avg` be the computation of average for windows of size four; then we have:
 ```scala
 scala> val avg = avgʹ(4, println)
 
-scala> inf.take(10).foldLeft(avg.run((0, Double.NaN, inf))) { case (state, _) => avg.run(state.value._1) }
+scala> List.fill(10)(()).foldLeft(avg.runS((0, Double.NaN, inf))) { case (state, _) => avg.runS(state.value) }
 0.6491109214966045
 0.4667552365636114
-val res9: cats.Eval[((Int, Double, LazyList[Double]), Double)] = cats.Eval$$anon$4@53d1cd85
+val res9: cats.Eval[(Int, Double, LazyList[Double])] = cats.Eval$$anon$4@53d1cd85
 
 scala> res9.value
-val res10: ((Int, Double, LazyList[Double]), Double) = ((3,2.2530923940316683,LazyList(<not computed>)),0.751030798010556)
+val res10: (Int, Double, LazyList[Double]) = (3, 2.2530923940316683, LazyList(<not computed>))
 
-scala> inf.take(10).foldLeft(avg.run(res10._1)) { case (state, _) => avg.run(state.value._1) }
+scala> List.fill(10)(()).foldLeft(avg.runS(res10)) { case (state, _) => avg.runS(state.value) }
 0.7298302325394203
 0.5411544219642497
 0.34223248012134266
-val res11: cats.Eval[((Int, Double, LazyList[Double]), Double)] = cats.Eval$$anon$4@32dbc27f
+val res11: cats.Eval[(Int, Double, LazyList[Double])] = cats.Eval$$anon$4@32dbc27f
 
 scala> res11.value
-val res12: ((Int, Double, LazyList[Double]), Double) = ((2,0.7412616724619366,LazyList(<not computed>)),0.3706308362309683)
+val res12: (Int, Double, LazyList[Double]) = (2, 0.7412616724619366, LazyList(<not computed>))
 ```
 
 When the length of the list is a multiple of the size of the window, the callback must be invoked, but the computation should
 stop with a zero counter, `Double.NaN` sum and average, and the empty list.
 
 ```scala
-scala> inf.take(4).foldLeft(avg.run((0, Double.NaN, inf.take(4)))) { case (state, _) => avg.run(state.value._1) }
-val res13: cats.Eval[((Int, Double, LazyList[Double]), Double)] = cats.Eval$$anon$4@5079123
+scala> List.fill(10)(()).foldLeft(avg.runS((0, Double.NaN, inf.take(4)))) { case (state, _) => avg.runS(state.value) }
+val res13: cats.Eval[(Int, Double, LazyList[Double])] = cats.Eval$$anon$4@5079123
 
 scala> res13.value
 0.5662005202414435
-val res14: ((Int, Double, LazyList[Double]), Double) = ((0,NaN,LazyList()),NaN)
+val res14: (Int, Double, LazyList[Double]) = (0, NaN, LazyList())
 ```
 
 Solution - Part 2
@@ -461,16 +461,17 @@ F.map(runF: F[SA => F[(SB, A)]]) { <functional expression>: (SA => F[(SB, A)]) =
 
 which type checks as ascribed.
 
-In the inner block with parameter `fsba: F[(SB, A)]`, we can make the following two ascriptions for the partial application:
+Instead of the inner block with parameter `fsba: F[(SB, A)]`, we can make the following two ascriptions for the partial
+application:
 
 ```Scala
-F.lift(f.tupled: ((SB, A)) => (SC, B)): F[(SB, A)] => F[(SC, B)]
+... andThen F.lift(f.tupled: ((SB, A)) => (SC, B)): F[(SB, A)] => F[(SC, B)]
 ```
 
-All that is left now is to apply the second parameter `fsba` - that type checks. Of course, we could have written as well:
+Of course, we could have written as well:
 
 ```Scala
-F.map(fsba: F[(SB, A)])(f.tupled): F[(SC, B)]
+... andThen { fsba => F.map(fsba: F[(SB, A)])(f.tupled): F[(SC, B)] }
 ```
 
 ### Methods based on `transform`
@@ -496,7 +497,7 @@ def modify[SC](f: SB => SC)(implicit F: Functor[F]): IndexedStateT[F, SA, SC, A]
   bimap(f, identity: A => A)
 ```
 
-Both `map` and  `modify` invoke `bimap` with the same names of parameters, but in a different order (and of different types
+Both `map` and `modify` invoke `bimap` with the same names of parameters, but in a different order (and of different types
 in the choice of the type parameters). The former is also one of the two methods required to turn `IndexedStateT` into a monad.
 
 It is interesting how two totally unrelated methods - such as `map` and `modify` - can resort to practically the same
@@ -542,18 +543,20 @@ def get(implicit F: Functor[F]): IndexedStateT[F, SA, SB, SB] =
 ---
 
 In order to be possible to be implemented, `flatMap` requires that the _first_ state type parameter in the result of type
-`IndexedStateT[F[_], SB, SC, B]` of the function parameter - which is `SB` -, be identical with the _second_ state type
+`IndexedStateT[F[_], SB, SC, B]` of the function parameter - which is `SB` -, be the same with the _second_ state type
 parameter in the type of the receiver `IndexedStateT[F[_], SA, SB, B]` - which is `SB`:
 
 ```Scala
 def flatMap[SC, B](fas: A => IndexedStateT[F, SB, SC, B])(implicit F: FlatMap[F]): IndexedStateT[F, SA, SC, B] =
-  IndexedStateT.applyF(F.map(runF) { safsba =>
-    AndThen(safsba).andThen { fsba =>
-      F.flatMap(fsba) { case (sb, a) =>
-        fas(a).run(sb)
+  IndexedStateT.applyF {
+    F.map(runF) { safsba =>
+      AndThen(safsba).andThen { fsba =>
+        F.flatMap(fsba) { case (sb, a) =>
+          fas(a).run(sb)
+        }
       }
     }
-  })
+  }
 ```
 
 With this occasion, we can also observe how the type parameters used in the translation of `for`-comprehension are detected:
@@ -613,13 +616,15 @@ def flatMap[SC, B](fas: A => IndexedStateT[F, SB, SC, B])(implicit F: FlatMap[F]
 ```
 
 A variant of `flatMap` for the case where the function parameter is reduced in the return type to a `B` lifted in the effect
-`F`, is method `flatMapF`:
+`F`, is the[O method `flatMapF`:
 
 ```Scala
 def flatMapF[B](faf: A => F[B])(implicit F: FlatMap[F]): IndexedStateT[F, SA, SB, B] =
-  IndexedStateT.applyF(F.map(runF) {
-    AndThen(_) andThen F.liftFM { case (sb, a) => F.map(faf(a))((sb, _)) }
-  })
+  IndexedStateT.applyF {
+    F.map(runF) {
+      AndThen(_) andThen F.liftFM { case (sb, a) => F.map(faf(a))((sb, _)) }
+    }
+  }
 ```
 
 The "final" state is not modified when the method `run` is invoked on the resulting `IndexedStateT[F, SA, SB, B]`, invocation
@@ -703,15 +708,14 @@ based on `Int` - the type of the accumulator-state:
 ```scala
 scala> def inf(n: Int = 1): LazyList[Int] = n #:: inf(n + 1)
 
-scala> inf().take(10).foldLeft(res0.run((0, Int.MinValue, inf()))) {
+scala> List.fill(10)(()).foldLeft(res0.runS((0, Int.MinValue, inf()))) {
      |   case (state, _) =>
-     |     val ((count, sum, list), _) = state.value
-     |     res0.run((count, sum.toInt, list.map(_.toInt)))
+     |     val (count, sum, list) = state.value
+     |     res0.runS((count, sum.toInt, list.map(_.toInt)))
      | }
 2.0
 5.0
 8.0
-val res1: cats.Eval[((Int, Double, LazyList[Double]), Double)] = cats.Eval$$anon$1@5f188628
 ```
 
 ---
@@ -729,12 +733,12 @@ is why it is able to (invoke) `contramap` with `f` as argument, and _then_ (invo
 Exercise 08.5
 =============
 
-Implement the `imap` extension method to `IndexedStateT[F, SA, SB, A]`, that uses a typeclass instance of the `Invariant`
-typeclass for the effect `F`, to invoke the homonym method on a receiver `I: Invariant[F]`:
+Implement the `imap` extension method to `IndexedStateT[F, SA, SB, A]`, that uses indirectly a typeclass instance of the
+`Invariant` typeclass for the effect `F`, to invoke the homonym method on a receiver `Functor[F]`:
 
 ```Scala
 extension [F[_], SA, SB, A](self: IndexedStateT[F, SA, SB, A])
-  def imap[SC](f: SB => SC)(g: SC => SB)(implicit F: Functor[F], I: Invariant[F]): IndexedStateT[F, SA, SC, A] =
+  def imap[SC](f: SB => SC)(g: SC => SB)(implicit F: Functor[F]): IndexedStateT[F, SA, SC, A] =
 ```
 
 [Hint: fill in the blanks in the following code:
@@ -742,11 +746,11 @@ extension [F[_], SA, SB, A](self: IndexedStateT[F, SA, SB, A])
 ```Scala
 scala> import cats.*, cats.data.*
 
-def imap[SC](f: SB => SC)(g: SC => SB)(implicit F: Functor[F], I: Invariant[F]): IndexedStateT[F, SA, SC, A] =
+def imap[SC](f: SB => SC)(g: SC => SB)(implicit F: Functor[F]): IndexedStateT[F, SA, SC, A] =
   IndexedStateT.applyF {
     F.map(runF) {
       AndThen(_: SA => F[(SB, A)]).andThen {
-        I.imap(_: F[(SB, A)]) { ... } { ... }
+        F.imap(_: F[(SB, A)]) { ... } { ... }
       }: SA => F[(SC, A)]
     }: F[SA => F[(SC, A)]]
   }
@@ -758,6 +762,7 @@ where the `imap` method is defined thus:
 trait Invariant[F[_]] ... {
   def imap[X, Y](fa: F[X])(f: X => Y)(g: Y => X): F[Y]
 }
+trait Functor[F[_]] extends Invariant[F] { ... }
 ```
 
 Substitute `(SB, A)` for `X` and `(SC, A)` for `Y`.]
@@ -814,11 +819,11 @@ The anonymous innermost function:
 
 ```Scala
 extension [F[_], SA, SB, A](self: IndexedStateT[F, SA, SB, A])
-  def imap[SC](f: SB => SC)(g: SC => SB)(implicit F: Functor[F], I: Invariant[F]): IndexedStateT[F, SA, SC, A] =
+  def imap[SC](f: SB => SC)(g: SC => SB)(implicit F: Functor[F]): IndexedStateT[F, SA, SC, A] =
     IndexedStateT.applyF {
       F.map(runF) {
         AndThen(_) andThen {
-          I.imap(_) { case (sb, a) => (f(sb), a) } { case (sc, a) => (g(sc), a) }
+          F.imap(_) { case (sb, a) => (f(sb), a) } { case (sc, a) => (g(sc), a) }
         }
       }
     }
@@ -842,13 +847,11 @@ We invoke `imap` on `avg` and `AVG` values:
 ```scala
 scala> avg.imap(Avg.apply) { it => (it.count, it.sum, it.list) }
 val res0:
-  cats.data.IndexedStateT[cats.Eval, (Int, Double, LazyList[Double]), Avg,
-    Double] = cats.data.IndexedStateT@43ce5381
+  cats.data.IndexedStateT[cats.Eval, (Int, Double, LazyList[Double]), Avg, Double] = cats.data.IndexedStateT@43ce5381
 
 scala> AVG.imap { it => (it.count, it.sum, it.list) } (Avg.apply)
 val res1:
-  cats.data.IndexedStateT[cats.Eval, Avg, (Int, Double, LazyList[Double]),
-    Double] = cats.data.IndexedStateT@1ab993b2
+  cats.data.IndexedStateT[cats.Eval, Avg, (Int, Double, LazyList[Double]), Double] = cats.data.IndexedStateT@1ab993b2
 ```
 
 and observe that `res1`'s "initial" state type is `Avg`, same as `res0`'s "final" state type (or, the other way around).
@@ -862,17 +865,15 @@ scala> for
      |   (x, y)
      |
 val res2:
-  cats.data.IndexedStateT[cats.Eval, (Int, Double, LazyList[Double]),
-    (Int, Double, LazyList[Double]), (Double, Double)] = cats.data.IndexedStateT@37079700
+  cats.data.IndexedStateT[cats.Eval, (Int, Double, LazyList[Double]), (Int, Double, LazyList[Double]), (Double, Double)] = cats.data.IndexedStateT@37079700
 
-scala> inf().take(10).foldLeft(res2.run((0, Double.NaN, inf()))) { case (state, _) => res2.run(state.value._1) }
+scala> List.fill(10)(()).foldLeft(res2.runS((0, Double.NaN, inf()))) { case (state, _) => res2.runS(state.value) }
 2.0
 5.0
 8.0
 11.0
 14.0
 17.0
-val res3: cats.Eval[((Int, Double, LazyList[Double]), (Double, Double))] = cats.Eval$$anon$1@1a19727e
 ```
 
 ---
@@ -1310,10 +1311,10 @@ println {
 
 lazy val list: LazyList[Stateʹ] = expr #:: list
 
-println { list.take(3).foldRight(x)(_.run(_).value._1) }
+println { list.take(3).foldRight(x)(_.runS(_).value) }
 ```
 
-We used `foldRight` in order to pass an anonymous function - for brevity. We invoke `IndexedStateT#run` method with the same
+We used `foldRight` in order to pass an anonymous function - for brevity. We invoke `IndexedStateT#runS` method with the same
 receiver `expr` applying it `swap`ped expressions one after another.
 
 Solution - Part 2
@@ -1364,9 +1365,9 @@ lazy val list: LazyList[Unit] = () #:: list
 
 println {
   list.take(3).foldLeft(Left(x): Expr[Double] Either Tree[Double]) {
-    case (Left(xa), _)  => Right(expr.run(xa).value._1)
-    case (Right(ta), _) => Left(tree.run(ta).value._1)
-  }.right.get
+    case (Left(xa), _)  => Right(expr.runS(xa).value)
+    case (Right(ta), _) => Left(tree.runS(ta).value)
+  }
 }
 ```
 
@@ -1379,9 +1380,9 @@ state.
 For, suppose we have the following translation of the above `for`-comprehension:
 
 ```Scala
-expr.flatMap[Tree[Double], Int] { _ =>
-  tree.flatMap[Tree[Double], Int] { _ =>
-    expr.map[Int] { x =>
+expr.flatMap[Int, Tree[Double]] { _ =>    // x0
+  tree.flatMap[Int, Tree[Double]] { _ =>  // t1
+    expr.map[Int] { x =>                  // x2
       x.toInt
     }
   }

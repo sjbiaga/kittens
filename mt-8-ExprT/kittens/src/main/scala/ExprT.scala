@@ -11,13 +11,13 @@ import Expr.*
 
 final case class ExprT[F[_], A](value: F[Expr[A]]):
 
-  def map[B](f: A => B)(implicit F: Functor[F]): ExprT[F, B] =
+  def map[B](f: A => B)(using Functor[F]): ExprT[F, B] =
     transform(_.map(f))
 
-  def flatMap[B](f: A => ExprT[F, B])(implicit F: Monad[F]): ExprT[F, B] =
+  def flatMap[B](f: A => ExprT[F, B])(using Monad[F]): ExprT[F, B] =
     flatMapF(f(_).value)
 
-  def flatMapF[B](f: A => F[Expr[B]])(implicit F: Monad[F]): ExprT[F, B] =
+  def flatMapF[B](f: A => F[Expr[B]])(using Monad[F]): ExprT[F, B] =
     flatTransform(_.map(f).flattenF)
 
   def flatTransform[B](f: Expr[A] => F[Expr[B]])(implicit F: FlatMap[F]): ExprT[F, B] =
@@ -26,10 +26,10 @@ final case class ExprT[F[_], A](value: F[Expr[A]]):
   def transform[B](f: Expr[A] => Expr[B])(implicit F: Functor[F]): ExprT[F, B] =
     ExprT(F.map(value)(f))
 
-  def subflatMap[B](f: A => Expr[B])(implicit F: Functor[F]): ExprT[F, B] =
+  def subflatMap[B](f: A => Expr[B])(using Functor[F]): ExprT[F, B] =
     transform(_.flatMap(f))
 
-  def cosubflatMap[B](f: Expr[A] => B)(implicit F: Bimonad[F]): ExprT[F, B] =
+  def cosubflatMap[B](f: Expr[A] => B)(using Bimonad[F]): ExprT[F, B] =
     transform(_.coflatMap(f))
 
   def mapK[G[_]](f: F ~> G): ExprT[G, A] = ExprT(f(value))
@@ -49,10 +49,10 @@ final case class ExprT[F[_], A](value: F[Expr[A]]):
   def forall(f: A => Boolean)(implicit F: Functor[F], `0`: `0`[A], `1`: `1`[A]): F[Boolean] =
     F.map(value)(_.forall(f))
 
-  def partialCompare(that: ExprT[F, A])(implicit po: PartialOrder[F[Expr[A]]]): Double =
-    po.partialCompare(this.value, that.value)
+  def partialCompare(that: ExprT[F, A])(using PartialOrder[F[Expr[A]]]): Double =
+    PartialOrder[ExprT[F, A]].partialCompare(this, that)
 
-  def ===(that: ExprT[F, A])(implicit eqf: Eq[F[Expr[A]]]): Boolean =
+  def ===(that: ExprT[F, A])(using Eq[F[Expr[A]]]): Boolean =
     Eq[ExprT[F, A]].eqv(this, that)
 
   def traverse[G[_]: Applicative, B](f: A => G[B])(implicit F: Traverse[F], `0`: `0`[A], `1`: `1`[A]): G[ExprT[F, B]] =
@@ -72,7 +72,7 @@ final case class ExprT[F[_], A](value: F[Expr[A]]):
   def flattenF[B](implicit F: Monad[F], ev: A <:< F[Expr[B]]): ExprT[F, B] =
     flatMapF(ev)
 
-  def coflatten(implicit F: Bimonad[F]): ExprT[F, ExprT[F, A]] =
+  def coflatten(implicit F: Monad[F]): ExprT[F, ExprT[F, A]] =
     ExprT(F.map(value)(_.coflatten.map(F.pure).map(ExprT.apply)))
 
   def coflattenF(implicit F: CoflatMap[F]): ExprT[F, Expr[A]] =
@@ -80,12 +80,12 @@ final case class ExprT[F[_], A](value: F[Expr[A]]):
 
 object ExprT:
 
-  implicit def kittensExprTPartialOrder[F[_], A](implicit po: PartialOrder[F[Expr[A]]]): PartialOrder[ExprT[F, A]] =
+  implicit def kittensExprTPartialOrder[F[_], A](using O: PartialOrder[F[Expr[A]]]): PartialOrder[ExprT[F, A]] =
     new PartialOrder[ExprT[F, A]]:
       override def partialCompare(x: ExprT[F, A], y: ExprT[F, A]): Double =
-        x.partialCompare(y)
+        O.partialCompare(x.value, y.value)
 
-  implicit def kittensExprTEq[F[_], A](implicit eqf: Eq[F[Expr[A]]]): Eq[ExprT[F, A]] =
+  implicit def kittensExprTEq[F[_], A](implicit E: Eq[F[Expr[A]]]): Eq[ExprT[F, A]] =
     new Eq[ExprT[F, A]]:
       override def eqv(x: ExprT[F, A], y: ExprT[F, A]): Boolean =
-        eqf.eqv(x.value, y.value)
+        E.eqv(x.value, y.value)

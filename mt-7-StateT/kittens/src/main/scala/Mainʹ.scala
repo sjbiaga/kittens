@@ -75,7 +75,7 @@ object Mainʹ:
 
     println {
       list.take(3).foldLeft(Left(x): Expr[Double] Either Tree[Double]) {
-        case (Left(xa), _)  => Right(expr.run(xa).value._1)
-        case (Right(ta), _) => Left(tree.run(ta).value._1)
-      }.right.get
+        case (Left(xa), _)  => Right(expr.runS(xa).value)
+        case (Right(ta), _) => Left(tree.runS(ta).value)
+      }
     }

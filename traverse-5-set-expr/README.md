@@ -129,7 +129,7 @@ implicit def eval[A](xs: Expr[Set[A]])(implicit zero: Zero[Set[A]], one: One[Set
 
 We `import scala.util.control.TailCalls.*` and reimplement the `kittensʹExprMonad` typeclass instance of the `Monad` typeclass
 for `Expr` by instantiating `StackSafeMonad[Expr]`, and give `flatten` and `map` methods a stack safe definition (although,
-more elaborate):
+more elaborate and slower):
 
 ```Scala
 import cats.{ Eval, Monad }
@@ -394,7 +394,7 @@ yield
 which yields:
 
 ```Scala
-List(Mul(Val(1), Val(0)), Mul(Val(1), Val(5)), Mul(Val(4), Val(0)), Mul(Val(4), Val(0)))
+List(Mul(Val(1), Val(0)), Mul(Val(1), Val(5)), Mul(Val(4), Val(0)), Mul(Val(4), Val(5)))
 ```
 
 The combinatorics is the same. The only difference is that, while finding and `map`ping _items_ from sub-`Expr`essions,
@@ -511,7 +511,7 @@ We can make an observation in each case:
 1. the pseudo-item as _operand_, can be either a left hand side or a _right hand side_ - in our case, the latter.
 
 Another thing to notice is that, while the `b`s ranged over by line #b vary, the `a` from line #a _does not_. Also, note that
-when `a` varies, the `b`s - ranged overy by line #b - vary unconditionally in _the same_ way: the dependency on `a` is the
+when `a` varies, the `b`s - ranged over by line #b - vary unconditionally in _the same_ way: the dependency on `a` is the
 same. The only thing that changes with `a` or `b` is what arguments are passed to `f`.
 
 ---
@@ -591,13 +591,13 @@ Solution - Part 2
 -----------------
 
 The `traverse` method is implemented in a stack safe manner using Scala's `TailRec`ursive monad in a nested `traverseʹ`
-method . For the `Add`, `Mul`, `Sub`, and `Div` cases, `G.map2` is applied on the two results - of type `G[Expr[B]]` - from
+method. For the `Add`, `Mul`, `Sub`, and `Div` cases, `G.map2` is applied on the two results - of type `G[Expr[B]]` - from
 traversing the unwrapped arguments, with a third argument binary function the wrapping back in the respective case. For the
 `Inv` case, the traversal is similar but simpler, using `G.map`. The interesting case is of `Val`: here only the parameter
 function `f` is applied to the value, yielding a `G[B]`, which is then mapped to a `Val` using the same unary method `G.map`.
 
 The `foldLeft` method also is implemented in a stack safe manner using Scala's `TailRec`ursive monad in a nested `foldLeftʹ`
-method . For the `Add`, `Mul`, `Sub`, and `Div` cases, there is a result `b` for the left hand side folding, and using the
+method. For the `Add`, `Mul`, `Sub`, and `Div` cases, there is a result `b` for the left hand side folding, and using the
 latter as initial value, there is a final result. For the `Inv` case, there is just one result `b`. The interesting cases are
 of:
 

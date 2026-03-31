@@ -15,8 +15,8 @@ enum Op:
   case Add, Sub, Mul, Div, Inv
 enum Tree[T]:
   val result: T
-  case Leaf[T](override val result: T) extends Tree[T]
-  case Node[T](override val result: T,
+  case Leaf[T](result: T) extends Tree[T]
+  case Node[T](result: T,
                operator: Op,
                left: Option[Tree[T]],
                right: Option[Tree[T]]) extends Tree[T]

@@ -6,14 +6,26 @@ Lesson 05: Monoids (cont'd)
 Let us see what happens in this three lines:
 
 ```Scala
-import cats.Monoid
+//import cats.instances.int.* // not needed
 import cats.syntax.monoid.*
 0 |+| 1 |+| 3 |+| 7
 ```
 
-When `import`ing `Monoid`, the companion object contains `implicit`s for `Monoid` instances, and when the _rich wrapper_
-(syntax) class which defines the operator-method `|+|` is instantiated, it requires an `implicit` `Monoid[Int]` which it
-finds in scope - among those afore mentioned.
+When looking at `Semigroup` - a supertrait of `Monoid` -, the companion object `cats.kernel.Semigroup` contains an `implicit`
+`catsKernelCommutativeGroupForInt` method (could be just a value) for the `Int` type:
+
+```Scala
+package cats.kernel
+
+object Semigroup {
+  implicit def catsKernelCommutativeGroupForInt: CommutativeGroup[Int] =
+    cats.kernel.instances.int.catsKernelStdGroupForInt
+  implicit def catsKernelMonoidForString: Monoid[String] = cats.kernel.instances.string.catsKernelStdMonoidForString
+}
+```
+
+When the _rich wrapper_ (syntax) class which defines the operator-method `|+|` is instantiated, it requires an `implicit`
+`Monoid[Int]` which it finds in scope - among those afore mentioned.
 
 `String` `Monoid`
 -----------------
@@ -21,6 +33,7 @@ finds in scope - among those afore mentioned.
 Let us now show how "`2 plus 2 equals not 4`":
 
 ```Scala
+import cats.Monoid
 import cats.syntax.invariant.*
 //import cats.instances.string.* // not needed
 implicit val kittensMonoidForInt: Monoid[Int] = Monoid[String].imap(_.toInt)(_.toString)

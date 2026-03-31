@@ -46,8 +46,8 @@ enum Op:
   case Add, Sub, Mul, Div, Inv
 enum Tree[+T]:
   val result: T
-  case Leaf[+T](override val result: T) extends Tree[T]
-  case Node[+T](override val result: T,
+  case Leaf[+T](result: T) extends Tree[T]
+  case Node[+T](result: T,
                 operator: Op,
                 left: Option[Tree[T]],
                 right: Option[Tree[T]]) extends Tree[T]
@@ -299,9 +299,9 @@ Before the actual computation, we must make implicits the `DivisionRing`s which 
 ```Scala
 implicit val kittensIntRing: DivisionRing[Int] =
   new DivisionRing[Int]:
-    override val zero = 0d
-    override val one = 1d
-    override def negate(n: Int) = 0d - n
+    override val zero = 0
+    override val one = 1
+    override def negate(n: Int) = 0 - n
     override def reciprocal(n: Int) = ???
     override def plus(m: Int, n: Int) = m + n
     override def minus(m: Int, n: Int) = m - n
@@ -312,8 +312,8 @@ implicit def kittensExprRing[A]: DivisionRing[Expr[A]] =
   new DivisionRing[Expr[A]]:
     override val zero = Zero
     override val one = One
-    override def negate(n: Expr[A]) = Inv(n)
-    override def reciprocal(n: Expr[A]) = ???
+    override def negate(n: Expr[A]) = Sub(Zero, n)
+    override def reciprocal(n: Expr[A]) = Div(One, n)
     override def plus(m: Expr[A], n: Expr[A]) = Add(m, n)
     override def minus(m: Expr[A], n: Expr[A]) = Sub(m, n)
     override def times(m: Expr[A], n: Expr[A]) = Mul(m, n)

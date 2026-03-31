@@ -21,13 +21,13 @@ enum Expr[+T]:
 
 object Expr extends JavaTokenParsers:
 
-  type unit = Expr.Zero.type | Expr.One.type
+  type unit = Zero.type | One.type
 
   type Writerʹ[T] = Writer[String, T]
 
   type Exprʹ[T] = Writerʹ[Expr[T]]
 
-  type Doubleʹ = Writer[String, Double]
+  type Doubleʹ = Writerʹ[Double]
 
   def putʹ[T, U](valʹ: T)(log: Writerʹ[U]*)(msg: String): Writerʹ[T] =
     putT[Id, String, T](valʹ)(log.foldRight(msg)(_.swap.value + _) + "\n")
@@ -35,7 +35,7 @@ object Expr extends JavaTokenParsers:
   def putʹ[T](valʹ: T)(msg: String): Writerʹ[T] =
     putʹ(valʹ)()(msg)
 
-  def expr(implicit unit: unit): Parser[Exprʹ[Int | Double]] =
+  def expr(using unit): Parser[Exprʹ[Int | Double]] =
     term ~ rep(("+"|"-") ~ term) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "+" ~ rhs) =>
@@ -45,7 +45,7 @@ object Expr extends JavaTokenParsers:
       }
     }
 
-  def term(implicit unit: unit): Parser[Exprʹ[Int | Double]] =
+  def term(using unit): Parser[Exprʹ[Int | Double]] =
     factor ~ rep(("*"|"/") ~ factor) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "*" ~ rhs) =>
@@ -55,9 +55,9 @@ object Expr extends JavaTokenParsers:
       }
     }
 
-  def factor(implicit unit: unit): Parser[Exprʹ[Int | Double]] =
+  def factor(using unit): Parser[Exprʹ[Int | Double]] =
     ("+"|"-") ~ literal ^^ {
-      case "-" ~ rhs if unit eq Zero =>
+      case "-" ~ rhs if summon[unit] eq Zero =>
         putʹ(Inv(rhs.value))(rhs)("unary negation")
       case "+" ~ rhs =>
         putʹ(Add(Zero, rhs.value))(rhs)("addition with zero")
@@ -66,7 +66,7 @@ object Expr extends JavaTokenParsers:
     } |
     literal
 
-  def literal(implicit unit: unit): Parser[Exprʹ[Int | Double]] =
+  def literal(using unit): Parser[Exprʹ[Int | Double]] =
     floatingPointNumber ^^ { n =>
       try
         n.toInt match
@@ -79,16 +79,16 @@ object Expr extends JavaTokenParsers:
           case 1d => putʹ(One)("constant one: Double")
           case n  => putʹ(Val(n))(s"value $n: Double")
     } |
-    "("~> expr(using unit) <~")" ^^ { _.tell("parentheses\n") }
+    "("~> expr <~")" ^^ { _.tell("parentheses\n") }
 
   implicit class ExprInterpolator(private val sc: StringContext) extends AnyVal:
-    def x(args: Any*)(implicit unit: unit): Exprʹ[Int | Double] =
+    def x(args: Any*)(using unit): Exprʹ[Int | Double] =
       val inp = (sc.parts zip (args :+ "")).foldLeft("") {
         case (r, (p, a)) => r + p + a
       }
       parseAll(expr, inp).get
 
-  def eval(expr: Expr[Double])(implicit unit: unit): Doubleʹ =
+  def eval(expr: Expr[Double])(using unit: unit): Doubleʹ =
     def evalʹ(xa: Expr[Double]): TailRec[Doubleʹ] =
       xa match
         case Zero              => done(putʹ(0d)("constant zero"))
@@ -173,7 +173,7 @@ object Expr extends JavaTokenParsers:
 
   final case class Builder[T](lhs: Exprʹ[T], private var save: List[Exprʹ[T]]):
     private def fill(n: Int) = List.fill(0 max n)(())
-    def swapping(implicit unit: unit) =
+    def swapping(using unit) =
       Builder(putʹ(swap(lhs.value))(lhs)("swapping"), save)
     def add(rhs: Expr[T], n: Int = 1)(using m: String = "") =
       Builder (

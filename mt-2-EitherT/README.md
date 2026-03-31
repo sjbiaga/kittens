@@ -101,7 +101,8 @@ that return respectively, an `Either[C, D]` and an `F[Either[C, D]]`, both invok
 Methods à la `map` or `flatMap`
 -------------------------------
 
-The majority of these methods resort to other two, `transform` and `flatTransform` methods:
+The majority of these methods resort to other two (most general in that they allow both type arguments `A` and `B` to change
+to, respectively, perhaps different `C` and `D`), `transform` and `flatTransform` methods:
 
 ```Scala
 def transform[C, D](f: Either[A, B] => Either[C, D])(implicit F: Functor[F]): EitherT[F, C, D] =
@@ -111,7 +112,8 @@ def flatTransform[C, D](f: Either[A, B] => F[Either[C, D]])(implicit F: FlatMap[
   EitherT(F.flatMap(value)(f))
 ```
 
-Both return an `EitherT[F, C, D]`. The (slight) difference between the two is that:
+The `f` in both has `Either[A, B]` (the nested type of `EitherT#value`) as source type and both return an `EitherT[F, C, D]`.
+The (slight) difference between the two is that:
 
 - the latter's parameter is a function resulting lifted to an `F[Either[C, D]]`, while the former returns a bare `Either[C, D]`;
 
@@ -257,8 +259,8 @@ def semiflatTap[C](f: B => F[C])(implicit F: Monad[F]): EitherT[F, A, B] =
 def leftSemiflatTap[C](f: A => F[C])(implicit F: Monad[F]): EitherT[F, A, B] =
   leftSemiflatMap(F.tapF(f))
 
-def biSemiflatTap[C, D](fa: A => F[C], fb: B => F[D])(implicit F: FlatMap[F]): EitherT[F, A, B] =
-  biSemiflatMap(F.tapF(fa), F.tapF(fb))
+def biSemiflatTap[C, D](f: A => F[C], g: B => F[D])(implicit F: FlatMap[F]): EitherT[F, A, B] =
+  biSemiflatMap(F.tapF(f), F.tapF(g))
 ```
 
 where `tapF` is a `Functor` method:
@@ -368,7 +370,7 @@ As [mentioned](#methods-based-on-transform), `recover` uses `transform`:
 def recover(pf: PartialFunction[A, B])(implicit F: Functor[F]): EitherT[F, A, B] =
   transform {
     case Left(a) if pf.isDefinedAt(a) => Right(pf(a))
-    case eab => eab
+    case eab                          => eab
   }
 ```
 
@@ -380,7 +382,7 @@ As [mentioned](#methods-based-on-flattransform), `recoverWith` uses `flatTransfo
 def recoverWith(pf: PartialFunction[A, EitherT[F, A, B]])(implicit F: Monad[F]): EitherT[F, A, B] =
   flatTransform {
     case Left(a) if pf.isDefinedAt(a) => pf(a).value
-    case other                        => F.pure(other)
+    case eab                          => F.pure(eab)
   }
 ```
 
@@ -399,7 +401,7 @@ def ensureOr[AA >: A](onFailure: B => AA)(f: B => Boolean)(implicit F: Functor[F
   }
 ```
 
-A left-value remains unchanged, whereas a `Right(b: B)` remains unchanged only if `f(b)` is false, when it is swapped to
+A left-value remains unchanged, whereas a `Right(b: B)` remains unchanged unless `f(b)` is false, when it is swapped to
 `Left(onFailure(b))`.
 
 Lastly, the `rethrowT` method almost identifies with `MonadError#rethrow`:
@@ -502,7 +504,7 @@ The `bitraverse` method, unlike `traverse`, cannot make a composition, so
 
 2. `F.traverse` has arguments the `value` and the anonymous function from (1),
 
-2. identically with step (3) for `traverse`, unwrap, and double-wrap takes place:
+2. identically with step (3) for `traverse`, unwrap, and double-wrap (first in `EitherT`, second in `G`) takes place:
 
 ```Scala
 def bitraverse[G[_], C, D](f: A => G[C], g: B => G[D])(implicit F: Traverse[F], G: Applicative[G]): G[EitherT[F, C, D]] =
@@ -525,7 +527,7 @@ The method `toValidated` is similar, but the return type is `F[Validated[A, B]]`
 list) and `toValidatedNec` (non-empty chain) are alike - allowing to collect the "invalid results" to, respectively, a
 `NonEmptyList` and a `NonEmptyChain`.
 
-A separate method `withValidated`, applies an `f` to a `Validated` (whose "invalid" type `A` may be aa collection) type, and
+A separate method `withValidated`, applies an `f` to a `Validated` (whose "invalid" type `A` may be a collection) type, and
 then back to an `EitherT` again, thus allowing to "momentarily" accumulate errors:
 
 ```Scala
@@ -691,7 +693,7 @@ have `flatMap`). Also note that the context bound `M[_]: Monad` is required beca
 `Applicative` - an "applicative functor", which is another term for "monad".
 
 A typeclass instance of the [`Defer`](https://github.com/sjbiaga/kittens/blob/main/recursion-4-Defer/README.md) typeclass
-asks for an `implicit` `F; Defer[F]` typeclass instance in scope. Given the `fa: => EitherT[F, L, A]` parameter, the method
+asks for an `implicit` `F: Defer[F]` typeclass instance in scope. Given the `fa: => EitherT[F, L, A]` parameter, the method
 `defer` is invoked with receiver `F` and argument `fa.value`. This argument uses `fa` which is a call-by-name parameter, but
 the `defer` method is also passed a call-by-name argument, so `fa.value` will not be evaluated: the call-by-name flavor of
 the `fa` parameter continues in the argument `fa.value`:

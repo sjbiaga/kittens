@@ -65,7 +65,7 @@ import WriterT.*
 
 object Expr extends JavaTokenParsers:
 
-  type unit = Expr.Zero.type | Expr.One.type
+  type unit = Zero.type | One.type
 
   type Validatedʹ[T] = Validated[Vector[String], T]
 
@@ -73,7 +73,7 @@ object Expr extends JavaTokenParsers:
 
   type Exprʹ[T] = Writerʹ[Expr[T]]
 
-  type Doubleʹ = WriterT[Validatedʹ, String, Double]
+  type Doubleʹ = Writerʹ[Double]
 
   given [T]: Conversion[Validatedʹ[T], T] = _.getOrElse(null.asInstanceOf[T])
 
@@ -82,7 +82,7 @@ object Expr extends JavaTokenParsers:
       def empty[A]: Expr[A] = unit
       def combineK[A](_x: Expr[A], y: Expr[A]): Expr[A] = y // because of log.foldRight(...)(_.value.combine(_))
 
-  implicit def kittensExprMonoidʹ[A: Monoid](implicit unit: unit): Monoid[Expr[A]] =
+  implicit def kittensExprMonoidʹ[A: Monoid](using unit): Monoid[Expr[A]] =
     kittensExprMonoidKʹ.algebra[A]
 
   def putʹ[T: Monoid](valʹ: T)(log: Writerʹ[T]*)(msg: String, isValid: Boolean = true)(implicit indent: String): Writerʹ[T] =
@@ -157,7 +157,7 @@ Solution - Part 1 - Parser
 --------------------------
 
 ```Scala
-  def expr(implicit unit: unit, indent: String): Parser[Exprʹ[Double]] =
+  def expr(using unit, String): Parser[Exprʹ[Double]] =
     term ~ rep(("+"|"-") ~ term) ^^ {
       case lhs ~ rhs => rhs.foldLeft(lhs) {
         case (lhs, "+" ~ rhs) =>

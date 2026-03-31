@@ -88,7 +88,7 @@ We will use the same implementation as in
 [Lesson 04 - The N Queens Problem - the "trampoline" algorithm](https://github.com/sjbiaga/kittens/blob/main/queens-3-trampoline/README.md#the-n-queens-problem---the-trampoline-algorithm):
 
 ```Scala
-def queens[M[_]: Monad](using M: Long, board: Board): M[Unit] =
+def queens[M[_]: Monad: Defer](using M: Long, board: Board): M[Unit] =
   var maxSolutions = M
   def tqueens(k: Int, q: Point)(implicit currentSolution: Solution): Trampoline[Unit] =
     if q.row == board.N
@@ -144,7 +144,7 @@ given Long = 2 // max number of solutions
 def qEval = try queens[Eval].value catch MaxSolutionsReached => ()
 def qTailRec = try queens[TailRec].result catch MaxSolutionsReached => ()
 def qIO = try queens[IO].unsafeRunSync() catch MaxSolutionsReached => ()
-def qCatsTrampoline = try { val f = queens[CatsTrampoline].runTailRec; f() } catch MaxSolutionsReached => ()
+def qCatsTrampoline = try queens[CatsTrampoline].runTailRec.apply() catch MaxSolutionsReached => ()
 //def qId = try queens[Id] catch MaxSolutionsReached => ()
 ```
 

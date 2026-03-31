@@ -14,7 +14,7 @@ case class ValF[T](n: T) extends ExprF[Nothing]
 case class FacF[+R, T](n: R, k: T) extends ExprF[R]
 
 object ExprF:
-  implicit val kittensExprFunctor: Functor[ExprF] =
+  implicit val kittensExprFFunctor: Functor[ExprF] =
      new Functor[ExprF]:
        override def map[A, B](xa: ExprF[A])(f: A => B): ExprF[B] =
          xa match

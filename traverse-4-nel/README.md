@@ -27,6 +27,6 @@ G.map2(f(head), Traverse[List].traverse(tail)(f))(NonEmptyList(_, _))
 and `G: Applicative[G]` had a fail fast semantics, failing on `head` would not have short circuited the traversal on `tail`.
 
 The reader is urged to visit the implementation of other typeclass instances of the `Traverse` typeclass, like for the
-optional types `scala.Option`, `cats.data.Validated`, and `cats.data.IoR`, `Vector` or `MapK[K, _]`.
+optional types `scala.Option`, `cats.data.Validated`, and `cats.data.IoR`, `Vector` or `Map[K, _]`.
 
 [First](https://github.com/sjbiaga/kittens/blob/main/traverse-1-list/README.md) [Previous](https://github.com/sjbiaga/kittens/blob/main/traverse-3-lazylist/README.md) [Next](https://github.com/sjbiaga/kittens/blob/main/traverse-5-set-expr/README.md) [Last](https://github.com/sjbiaga/kittens/blob/main/traverse-7-poke/README.md)

@@ -93,7 +93,7 @@ Of course, with this `Option` monoid we _cannot_ `get` a value from `None`.
 
 ---
 
-Aside being said, we can find out where does the automagically created monoid comes from:
+Aside being said, we can find out where does the automagically created monoid originate:
 
 ```scala
 scala> kittensMonoidForOption[Int]
@@ -103,21 +103,28 @@ val res0: cats.kernel.Monoid[Option[Int]] = cats.instances.InvariantMonoidalInst
 so, if we search the `Cats` repository, here is what we can find out:
 
 ```Scala
-implicit val catsInvariantMonoidalSemigroup: InvariantMonoidal[Semigroup] = new InvariantMonoidal[Semigroup] {
-  def product[A, B](fa: Semigroup[A], fb: Semigroup[B]): Semigroup[(A, B)] =
-    (x, y) => fa.combine(x._1, y._1) -> fb.combine(x._2, y._2)
+implicit def catsSemigroupalForMonoid: InvariantSemigroupal[Monoid] =
+  new InvariantSemigroupal[Monoid] {
+    def product[A, B](fa: Monoid[A], fb: Monoid[B]): Monoid[(A, B)] =
+      new Monoid[(A, B)] {
+        val empty = fa.empty -> fb.empty
+        def combine(x: (A, B), y: (A, B)): (A, B) = fa.combine(x._1, y._1) -> fb.combine(x._2, y._2)
+      }
 
-  def imap[A, B](fa: Semigroup[A])(f: A => B)(g: B => A): Semigroup[B] = // line #5
-    (x, y) => f(fa.combine(g(x), g(y)))                                  // line #6
-
-  def unit: Semigroup[Unit] = implicitly
-}
+    def imap[A, B](fa: Monoid[A])(f: A => B)(g: B => A): Monoid[B] = // line #09
+      new Monoid[B] {                                                // line #10
+        def empty: B = f(fa.empty)                                   // line #11
+                                                                     // line #12
+        def combine(x: B, y: B): B = f(fa.combine(g(x), g(y)))       // line #13
+      }                                                              // line #14
+  }
 ```
 
-We can see that the `catsInvariantMonoidalSemigroup` value is a typeclass instance for the `Semigroup` typeclass of the
-`Invariant` functor (meaning `Semigroup` _is_ an `Invariant` - monoidal - functor), which we mentioned in
+We can see that the `catsSemigroupalForMonoid` value is a typeclass instance for the `Monoid` typeclass of the
+`InvariantSemigroupal` functor (meaning `Monoid` _is_ an `Invariant` - semigroupal - functor), which we mentioned in
 [Lesson 03 - `Expr` as `Functor`](https://github.com/sjbiaga/kittens/blob/main/expr-03-swap/README.md#expr-as-functor). The
-magic is thus in lines #5-#6, specifically `f(fa.combine(g(x), g(y)))`: `g` represents unwrapping, while `f` - the wrapping.
+magic is thus in lines #09-#14, specifically line #13 `f(fa.combine(g(x), g(y)))`: `g` represents unwrapping, while `f` - the
+wrapping.
 
 ---
 
@@ -137,7 +144,7 @@ implement correctly the wrapping:
 ```Scala
 import cats.Eq
 implicit def kittensMonoidForOption[A](implicit M: Monoid[A], E: Eq[A]): Monoid[Option[A]] =
-  M.imap { (it: A) => if E.eqv(it, M.empty) then Option.empty[A] else Option.apply[A](it) } (_.getOrElse(M.empty))
+  M.imap { (it: A) => if M.isEmpty(it) then Option.empty[A] else Option.apply[A](it) } (_.getOrElse(M.empty))
 ```
 
 Now, all the following `eq`ual `None`:

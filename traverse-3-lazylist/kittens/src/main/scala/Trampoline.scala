@@ -9,10 +9,10 @@ enum Trampoline[+A]:
 
   import Trampoline.*
 
-  final def map[B](fun: A => B): Trampoline[B] =
+  def map[B](fun: A => B): Trampoline[B] =
     this.flatMap(fun andThen pure)
 
-  final def flatMap[B](sequel: A => Trampoline[B]): Trampoline[B] =
+  def flatMap[B](sequel: A => Trampoline[B]): Trampoline[B] =
     FlatMap(this, sequel)
 
   @annotation.tailrec
@@ -28,16 +28,16 @@ enum Trampoline[+A]:
     case FlatMap(FlatMap(self, prequel), sequel) =>
       FlatMap(self, prequel :: sequel)()
 
-    override def toString(): String =
-      @tailrec
-      def count(self: Trampoline[?], result: Int): Int =
-        self match
-          case FlatMap(self, _) => count(self, 1 + result)
-          case _                => result
-      this match
-        case Done(value) => s"Done($value)"
-        case Call(closure) => s"Call($closure)"
-        case FlatMap(self, sequel) => s"${count(this, 0)}FlatMap($self,$sequel)"
+  override def toString(): String =
+    @tailrec
+    def count(self: Trampoline[?], result: Int): Int =
+      self match
+        case FlatMap(self, _) => count(self, result + 1)
+        case _                => result
+    this match
+      case Done(value) => s"Done($value)"
+      case Call(closure) => s"Call($closure)"
+      case FlatMap(self, sequel) => s"${count(this, 0)}FlatMap($self,$sequel)"
 
 object Trampoline:
 

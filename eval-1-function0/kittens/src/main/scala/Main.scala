@@ -70,7 +70,9 @@ object Function0ʹ:
         new Function0ʹ(f0)
 
 object Main:
+
   def main(args: Array[String]): Unit =
     implicit val as: Algorithms = Algorithms(20, 0)
-    println(as.fib.mapK(Function0ʹ.counting).runTailRec()())
+    val f0ʹ = as.fib.mapK(Function0ʹ.counting).runTailRec
+    println(f0ʹ())
     println(as.counter)

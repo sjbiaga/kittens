@@ -15,8 +15,8 @@ one method - except `pure` - being definable in terms of other one/two/three.
 // Cats’ Monad methods inter-definable in terms of each other
 
 trait Monad[F[_]] extends FlatMap[F] with Applicative[F]:
-  def ap[A, B](ff: F[A => B])(fa: F[A]): F[B] = flatMap(ff)(map(fa)(_))
-  def ap[A, B](ff: F[A => B])(fa: F[A]): F[B] = map(ff)(map(fa)(_)).flatten
+  def ap[A, B](ff: F[A => B])(fa: F[A]): F[B] = flatMap(ff)(map(fa))
+  def ap[A, B](ff: F[A => B])(fa: F[A]): F[B] = map(ff)(map(fa)).flatten
   def flatten[A](ffa: F[F[A]]): F[A] = flatMap(ffa)(identity)
   def flatMap[A, B](fa: F[A])(fun: A => F[B]): F[B] = map(fa)(fun).flatten
   def flatMap[A, B](fa: F[A])(fun: A => F[B]): F[B] = ap(pure(fun))(fa).flatten

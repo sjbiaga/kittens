@@ -15,8 +15,8 @@ enum Op:
   case Add, Sub, Mul, Div, Inv
 enum Tree[T]:
   val result: T
-  case Leaf[T](override val result: T) extends Tree[T]
-  case Node[T](override val result: T,
+  case Leaf[T](result: T) extends Tree[T]
+  case Node[T](result: T,
                operator: Op,
                left: Option[Tree[T]],
                right: Option[Tree[T]]) extends Tree[T]
@@ -84,7 +84,7 @@ val eval: unit ?=> FunctionKʹ[Ring, Expr, Tree] =
 ```
 
 This solution is inefficient, because of the evaluation of the subtrees with every node using `evalʹ`. The alternative is
-more involved, but simple: we avoid top level `exprʹ`, and use a nested method with the same name that builds the tree while
+more involved, but simple: we avoid top level `evalʹ`, and use a nested method with the same name that builds the tree while
 computing the results in the `DivisionRing[A]` only once.
 
 ```Scala
