@@ -1,4 +1,4 @@
-jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjimport cats.data.Validated
+import cats.data.Validated
 
 import Expr.*
 import cats.data.Validated.{ Valid, Invalid }
